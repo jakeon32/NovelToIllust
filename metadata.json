@@ -1,0 +1,5 @@
+{
+  "name": "Novel to Illustration AI",
+  "description": "An AI-powered application that reads novel text, divides it into scenes, and generates illustrations for each scene. Users can provide reference images for characters, backgrounds, and art styles to guide the visual output.",
+  "requestFramePermissions": []
+}
