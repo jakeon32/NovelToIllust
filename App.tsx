@@ -2,11 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { Character, Scene, ImageFile, Story, Background } from './types';
 import { generateScenesFromText, generateIllustration, generateTitleFromText, editIllustration } from './services/geminiService';
 import { loadStories, saveStories, migrateFromLocalStorage, isIndexedDBAvailable } from './utils/storage';
+import { supabase } from './services/supabaseClient';
+import { loadStoriesFromSupabase, saveStoriesToSupabase, deleteStoryFromSupabase, saveStoryToSupabase } from './services/supabaseStorage';
+import type { User } from '@supabase/supabase-js';
 import ReferenceImageUpload from './components/ReferenceImageUpload';
 import SceneCard from './components/SceneCard';
 import Loader from './components/Loader';
 import StorySidebar from './components/StorySidebar';
 import ImageModal from './components/ImageModal';
+import Auth from './components/Auth';
 import PlusIcon from './components/icons/PlusIcon';
 import TrashIcon from './components/icons/TrashIcon';
 import SparklesIcon from './components/icons/SparklesIcon';
@@ -27,6 +31,8 @@ const dataUrlToImageFile = (dataUrl: string, name: string = 'image.png'): ImageF
 };
 
 const App: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [stories, setStories] = useState<Story[]>([]);
   const [currentStoryId, setCurrentStoryId] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
@@ -36,30 +42,48 @@ const App: React.FC = () => {
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0 });
 
+  // Authentication state management
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   useEffect(() => {
     const initializeStorage = async () => {
+      if (!user) return; // Wait for user to be loaded
+
       try {
-        if (!isIndexedDBAvailable()) {
-          console.warn('IndexedDB is not available, using localStorage fallback');
-          setError('브라우저가 IndexedDB를 지원하지 않습니다. 일부 기능이 제한될 수 있습니다.');
-        }
+        // Load stories from Supabase
+        let loadedStories = await loadStoriesFromSupabase();
 
-        // Try to migrate data from localStorage if exists
-        let loadedStories = await migrateFromLocalStorage();
-
-        // If no migrated data, load from IndexedDB
+        // If no stories in Supabase, try to migrate from IndexedDB
         if (loadedStories.length === 0) {
-          loadedStories = await loadStories();
-        }
+          console.log('No stories in Supabase, checking IndexedDB for migration...');
 
-        // Migrate existing data: add name to backgrounds if missing
-        loadedStories = loadedStories.map((story: Story) => ({
-          ...story,
-          backgrounds: (story.backgrounds || []).map((bg: any, bgIndex: number) => ({
-            ...bg,
-            name: bg.name || `배경 ${bgIndex + 1}`,
-          })),
-        }));
+          // Try to migrate data from localStorage if exists
+          let localStories = await migrateFromLocalStorage();
+
+          // If no migrated data, load from IndexedDB
+          if (localStories.length === 0) {
+            localStories = await loadStories();
+          }
+
+          if (localStories.length > 0) {
+            console.log(`Migrating ${localStories.length} stories from IndexedDB to Supabase...`);
+            await saveStoriesToSupabase(localStories);
+            loadedStories = localStories;
+          }
+        }
 
         if (loadedStories.length > 0) {
           setStories(loadedStories);
@@ -75,16 +99,17 @@ const App: React.FC = () => {
     };
 
     initializeStorage();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const saveStoriesAsync = async () => {
-      if (stories.length > 0) {
+      if (stories.length > 0 && user) {
         try {
-          await saveStories(stories);
+          // Save all stories to Supabase (debounced)
+          await saveStoriesToSupabase(stories);
         } catch (e) {
-          console.error("Failed to save stories to IndexedDB:", e);
-          setError("스토리를 저장할 수 없습니다. 브라우저 저장 공간 문제가 발생했습니다.");
+          console.error("Failed to save stories to Supabase:", e);
+          setError("스토리를 저장할 수 없습니다.");
         }
       }
     };
@@ -95,13 +120,13 @@ const App: React.FC = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [stories]);
+  }, [stories, user]);
 
   const currentStory = stories.find(s => s.id === currentStoryId);
 
   const handleNewStory = () => {
     const newStory: Story = {
-      id: `story-${Date.now()}`,
+      id: crypto.randomUUID(),
       title: '새 스토리',
       novelText: '',
       characters: [],
@@ -114,16 +139,25 @@ const App: React.FC = () => {
     setIsSidebarOpen(false);
   };
   
-  const handleDeleteStory = (storyId: string) => {
-    const updatedStories = stories.filter(s => s.id !== storyId);
-    setStories(updatedStories);
+  const handleDeleteStory = async (storyId: string) => {
+    try {
+      // Delete from Supabase
+      await deleteStoryFromSupabase(storyId);
 
-    if (currentStoryId === storyId) {
-        if (updatedStories.length > 0) {
-            setCurrentStoryId(updatedStories[0].id);
-        } else {
-            handleNewStory();
-        }
+      // Update local state
+      const updatedStories = stories.filter(s => s.id !== storyId);
+      setStories(updatedStories);
+
+      if (currentStoryId === storyId) {
+          if (updatedStories.length > 0) {
+              setCurrentStoryId(updatedStories[0].id);
+          } else {
+              handleNewStory();
+          }
+      }
+    } catch (e) {
+      console.error("Failed to delete story:", e);
+      setError("스토리를 삭제하는데 실패했습니다.");
     }
   };
 
@@ -144,7 +178,7 @@ const App: React.FC = () => {
   const handleAddCharacter = () => {
     if (!currentStory) return;
     const newCharacter: Character = {
-      id: `char-${Date.now()}`,
+      id: crypto.randomUUID(),
       name: `캐릭터 ${currentStory.characters.length + 1}`,
       image: null,
     };
@@ -174,7 +208,7 @@ const App: React.FC = () => {
   const handleAddBackground = () => {
     if (!currentStory) return;
     const newBackground: Background = {
-      id: `bg-${Date.now()}`,
+      id: crypto.randomUUID(),
       name: `배경 ${currentStory.backgrounds.length + 1}`,
       image: null as any, // Will be set by user
     };
@@ -226,7 +260,7 @@ const App: React.FC = () => {
 
       const sceneDescriptions = await generateScenesFromText(currentStory.novelText);
       const newScenes: Scene[] = sceneDescriptions.map((desc, index) => ({
-        id: `scene-${index}-${Date.now()}`,
+        id: crypto.randomUUID(),
         description: desc,
         imageUrl: null,
         isGenerating: false,
@@ -471,6 +505,20 @@ const App: React.FC = () => {
     }
   };
   
+  // Show loading screen while checking authentication
+  if (authLoading) {
+    return (
+      <div className="bg-gray-900 h-screen flex items-center justify-center">
+        <Loader text="로딩 중..." />
+      </div>
+    );
+  }
+
+  // Show Auth component if not logged in
+  if (!user) {
+    return <Auth />;
+  }
+
   if (!currentStory) {
     return (
         <div className="bg-gray-900 h-screen flex items-center justify-center">
@@ -512,7 +560,19 @@ const App: React.FC = () => {
                         글로 쓴 이야기를 시각적 걸작으로 변환하세요.
                     </p>
                 </div>
-                <div className="w-6 md:hidden"></div>
+                <div className="flex items-center gap-3">
+                  <div className="hidden sm:block text-sm text-gray-400">
+                    {user?.email}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                    }}
+                    className="px-3 py-1.5 text-sm text-gray-300 hover:text-white border border-gray-600 hover:border-gray-500 rounded-lg transition-colors"
+                  >
+                    로그아웃
+                  </button>
+                </div>
               </div>
             </header>
             
