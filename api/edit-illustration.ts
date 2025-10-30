@@ -23,7 +23,39 @@ export default async function handler(req: any, res: any) {
         },
       },
       {
-        text: `Edit the image based on this instruction: "${editPrompt}". Only change what is requested.`,
+        text: `**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+**🎨 IMAGE EDIT REQUEST**
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+
+Edit Instruction: "${editPrompt}"
+
+**⚠️ CRITICAL CONSISTENCY REQUIREMENTS:**
+
+**1. PRESERVE EXISTING STYLE (MANDATORY):**
+   • Maintain the EXACT art style of the original image
+   • Keep the same line work thickness, shading technique, and brush strokes
+   • Preserve the color palette and color grading
+   • Match the level of detail and artistic quality
+   • The edited result MUST look like it's from the same artwork
+
+**2. MINIMAL CHANGES ONLY:**
+   • ONLY modify what is explicitly requested in the edit instruction
+   • Do NOT change unrelated elements
+   • Preserve all other characters, objects, and background elements exactly as they are
+   • Maintain the original composition and framing
+
+**3. SEAMLESS INTEGRATION:**
+   • Any new or modified elements must blend naturally with the existing style
+   • Match lighting, shadows, and atmospheric effects
+   • Ensure color harmony with the rest of the image
+   • The edit should be undetectable - as if it was always part of the original
+
+**4. QUALITY PRESERVATION:**
+   • Maintain the same resolution and image quality
+   • Keep the same level of polish and finish
+   • Do not introduce artifacts or style inconsistencies
+
+Think of this as carefully retouching a photograph - change ONLY what's requested while keeping everything else identical.`,
       },
     ];
 
