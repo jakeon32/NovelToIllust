@@ -2,11 +2,9 @@
 
 소설 텍스트를 AI가 분석하여 자동으로 일러스트를 생성하는 웹 애플리케이션입니다.
 
-[![Deploy to GitHub Pages](https://github.com/jakeon32/NovelToIllust/actions/workflows/deploy.yml/badge.svg)](https://github.com/jakeon32/NovelToIllust/actions/workflows/deploy.yml)
-
 ## 🌐 Live Demo
 
-**배포된 앱 바로가기:** https://jakeon32.github.io/NovelToIllust/
+**배포된 앱 바로가기:** https://novel-to-illust.vercel.app/
 
 ## 📖 프로젝트 소개
 
@@ -54,8 +52,7 @@ Novel to Illustration AI는 작가와 창작자를 위한 도구로, 소설이�
 | Vite | 빌드 도구 |
 | Tailwind CSS | 스타일링 |
 | Google Gemini API | AI 텍스트 분석 및 이미지 생성 |
-| GitHub Actions | CI/CD |
-| GitHub Pages | 배포 |
+| Vercel | 배포 및 Serverless Functions |
 
 ## 🚀 로컬 실행 방법
 
@@ -84,8 +81,16 @@ Novel to Illustration AI는 작가와 창작자를 위한 도구로, 소설이�
    ```
 
 4. **개발 서버 실행**
+
+   **옵션 A: Vercel 개발 서버 (API 함수 포함)**
    ```bash
    npm run dev
+   ```
+   처음 실행 시 `vercel login` 필요
+
+   **옵션 B: Vite만 실행 (UI 테스트용)**
+   ```bash
+   npm run dev:vite
    ```
 
    브라우저에서 http://localhost:3000 접속
@@ -112,10 +117,15 @@ NovelToIllust/
 │   ├── Loader.tsx                # 로딩 인디케이터
 │   └── icons/                    # SVG 아이콘 컴포넌트
 ├── services/
-│   └── geminiService.ts          # Gemini API 통합 로직
-├── .github/workflows/
-│   └── deploy.yml                # GitHub Actions 배포 워크플로우
+│   └── geminiService.ts          # API 엔드포인트 호출 로직
+├── api/                          # Vercel Serverless Functions
+│   ├── generate-title.ts         # 제목 생성 API
+│   ├── generate-scenes.ts        # 장면 분석 API
+│   ├── generate-illustration.ts  # 일러스트 생성 API
+│   ├── edit-illustration.ts      # 이미지 편집 API
+│   └── generate-reference.ts     # 레퍼런스 생성 API
 ├── vite.config.ts                # Vite 설정
+├── vercel.json                   # Vercel 설정
 ├── tsconfig.json                 # TypeScript 설정
 └── package.json                  # 프로젝트 의존성
 ```
@@ -146,12 +156,34 @@ NovelToIllust/
    - "Edit" 버튼으로 자연어 수정 ("배경을 밤으로 바꿔줘")
    - "Download" 버튼으로 PNG 저장
 
-## 🔒 개인정보 보호
+## 🔒 보안 및 개인정보 보호
 
-- 모든 데이터는 **브라우저의 localStorage**에 저장
-- 서버에 데이터 전송 없음 (Gemini API 제외)
-- API 키는 환경 변수로 관리
+### 데이터 저장
+- 모든 프로젝트 데이터는 **브라우저의 localStorage**에 저장
+- 서버에 프로젝트 데이터 전송 없음
 - 생성된 이미지는 base64로 로컬 저장
+
+### API 키 보호
+- API 키는 Vercel 환경 변수로 안전하게 관리
+- 클라이언트 코드에 API 키 노출 없음
+- Vercel Serverless Functions를 통한 프록시 방식으로 Gemini API 호출
+
+**보안 구조:**
+```
+사용자 → Vercel Frontend → Vercel Serverless Function → Gemini API
+                             ↑ API 키는 여기에만 존재
+```
+
+## 🚀 배포하기
+
+자세한 배포 가이드는 [DEPLOYMENT.md](DEPLOYMENT.md)를 참고하세요.
+
+### 빠른 배포 (Vercel)
+
+1. [Vercel](https://vercel.com)에 가입
+2. GitHub 저장소 import
+3. 환경 변수 `GEMINI_API_KEY` 설정
+4. Deploy 버튼 클릭!
 
 ## 🤝 기여하기
 
