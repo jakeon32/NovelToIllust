@@ -28,35 +28,77 @@ export default async function handler(req: any, res: any) {
       : '';
 
     parts.push(
-      { text: `Your task is to create a single, cohesive illustration for the following scene description. You will be given reference images for art style, background(s), and potentially specific characters if they are mentioned in the scene.
+      { text: `Your task is to create a single, cohesive illustration for the following scene description. You MUST use the provided reference images to maintain PERFECT CONSISTENCY across all generated scenes.
 
 ${shotTypeInstruction}
 
 Scene Description: "${sceneDescription}"
 
-**CRITICAL INSTRUCTIONS:**
-1.  **Art Style:** The final image must strictly adhere to the provided art style reference. This style dictates the overall look and feel, including line work, coloring, and texture.
-2.  **Background:** The setting should be inspired by the background reference image(s). If multiple are provided, blend their elements to create a cohesive environment that fits the scene description.
-3.  **Character Consistency (HIGHEST PRIORITY):**
-    *   **Analyze and Replicate:** Before drawing, mentally list the key visual traits of any character reference provided (e.g., "spiky blonde hair, green eyes, red jacket, scar over left eye"). Your final drawing **MUST** replicate these features with **extreme accuracy**.
-    *   **Mentioned Characters Only:** Only draw characters who are explicitly mentioned in the scene description. Reference images are provided for these characters.
-    *   **High-Fidelity Match:** If a character is mentioned, their appearance in your illustration (facial structure, hair style and color, eye color, clothing, and any defining marks) **must be a perfect match** to their reference image. Consistency is paramount.
-    *   **Redraw, Don't Copy:** **DO NOT** simply copy and paste the character from the reference. You must **REDRAW** the character from scratch in a new pose, with an expression that fits the scene's action and mood, while maintaining their core visual identity from the reference.
-    *   **No Unmentioned Characters:** If no characters are mentioned in the scene description, **DO NOT add any people** to the illustration. Focus solely on the described environment and mood.
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+**🎨 ABSOLUTE CONSISTENCY REQUIREMENTS:**
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+
+**1. ART STYLE CONSISTENCY (MANDATORY):**
+   • You WILL be provided with an art style reference image
+   • EVERY aspect must match: line work thickness, shading technique, color palette, brush strokes, texture
+   • Study the reference carefully: note the level of detail, contrast, saturation, and artistic technique
+   • This is NOT a suggestion - the art style MUST be IDENTICAL to the reference
+   • If the reference is watercolor, use watercolor. If it's digital art, use digital art style
+   • Maintain the EXACT same level of realism/stylization as shown in the reference
+
+**2. BACKGROUND/SETTING CONSISTENCY (MANDATORY):**
+   • You WILL be provided with background reference image(s)
+   • Identify key elements: architecture style, color scheme, lighting mood, environmental details
+   • The setting in your illustration MUST feel like it belongs in the same world as the reference
+   • Reuse architectural elements, color palettes, and atmospheric qualities from the reference
+   • If the reference shows a fantasy castle, maintain that medieval fantasy aesthetic
+   • Environmental consistency is KEY for immersion
+
+**3. CHARACTER CONSISTENCY (HIGHEST PRIORITY - CRITICAL):**
+   • You WILL be provided with character reference images for characters mentioned in this scene
+   • BEFORE drawing, carefully analyze EVERY visual detail of each character:
+     - Exact hair color, style, and length
+     - Precise eye color and shape
+     - Facial structure and features
+     - Body type and build
+     - Clothing style, colors, and specific garments
+     - Any distinctive marks: scars, tattoos, accessories
+   • Your illustration MUST replicate these features with 100% ACCURACY
+   • Character appearance must be IDENTICAL to the reference - this is NON-NEGOTIABLE
+   • Think of this as drawing the SAME character in a new pose/situation
+   • Only draw characters explicitly mentioned in the scene description
+   • If NO characters are mentioned, create an environment-focused illustration
+
+**4. VISUAL CONSISTENCY ACROSS SCENES:**
+   • Remember: These images will be viewed together as a sequence
+   • Use the SAME color grading and lighting style as established in references
+   • Maintain the SAME level of detail throughout
+   • Keep the SAME artistic quality and finish
+   • The viewer should immediately recognize this as part of the same story
+
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+**⚠️ CRITICAL REMINDERS:**
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+
+• STUDY each reference image carefully before drawing
+• When in doubt, refer back to the references
+• Consistency > Creativity - match the references precisely
+• This scene is part of a visual narrative - maintain continuity
+• Your goal: Make it look like the same artist drew all scenes using the same characters in the same world
 `
       }
     );
 
     if (artStyle) {
-      parts.push({ text: "This is the reference for the overall ART STYLE:" });
+      parts.push({ text: "═══════════════════════════════════════\n🎨 ART STYLE REFERENCE (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is your PRIMARY style reference. Every illustration MUST match this style EXACTLY. Study the line work, coloring technique, shading style, level of detail, and overall aesthetic. Your output MUST look like it was created by the same artist using the same technique." });
       parts.push({ inlineData: { mimeType: artStyle.mimeType, data: artStyle.base64 } });
     }
 
     if (backgrounds && backgrounds.length > 0) {
       backgrounds.forEach((bg: any, index: number) => {
         const label = backgrounds.length > 1
-          ? `This is reference ${index + 1} for the BACKGROUND/SETTING:`
-          : "This is the reference for the BACKGROUND/SETTING:";
+          ? `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE ${index + 1} (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.`
+          : "═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.";
         parts.push({ text: label });
         parts.push({ inlineData: { mimeType: bg.image.mimeType, data: bg.image.base64 } });
       });
@@ -64,7 +106,7 @@ Scene Description: "${sceneDescription}"
 
     relevantCharacters.forEach((char: any) => {
       if (char.image) {
-        parts.push({ text: `This is the HIGH-PRIORITY reference for the character named "${char.name}". Replicate their appearance with extreme accuracy as instructed.` });
+        parts.push({ text: `═══════════════════════════════════════\n👤 CHARACTER REFERENCE: "${char.name}" (CRITICAL - HIGHEST PRIORITY):\n═══════════════════════════════════════\n\n⚠️ THIS IS CRITICAL: Study this character's appearance in EXTREME DETAIL:\n• Hair: exact color, style, length, texture\n• Face: eye color/shape, nose, mouth, facial structure, skin tone\n• Body: build, height proportions\n• Clothing: specific garments, colors, accessories, style\n• Distinctive features: scars, tattoos, glasses, jewelry, etc.\n\nYou MUST draw THIS EXACT character. Think of them as a real person you're drawing from multiple angles. Every visual detail must match this reference PERFECTLY. The viewer must instantly recognize this as the same character. This is NON-NEGOTIABLE.` });
         parts.push({ inlineData: { mimeType: char.image.mimeType, data: char.image.base64 } });
       }
     });
