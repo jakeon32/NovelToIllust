@@ -157,16 +157,29 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
 
     if (storyError) throw storyError;
 
-    // Delete existing related data
-    await supabase.from('scenes').delete().eq('story_id', storyId);
-    await supabase.from('characters').delete().eq('story_id', storyId);
-    await supabase.from('backgrounds').delete().eq('story_id', storyId);
+    // Get current scene/character/background IDs to detect deletions
+    const { data: existingScenes } = await supabase
+      .from('scenes')
+      .select('id')
+      .eq('story_id', storyId);
 
-    // Insert scenes
+    const { data: existingCharacters } = await supabase
+      .from('characters')
+      .select('id')
+      .eq('story_id', storyId);
+
+    const { data: existingBackgrounds } = await supabase
+      .from('backgrounds')
+      .select('id')
+      .eq('story_id', storyId);
+
+    // Upsert scenes (insert or update)
     if (story.scenes.length > 0) {
+      const sceneIds = story.scenes.map(s => ensureUUID(s.id));
+
       const { error: scenesError } = await supabase
         .from('scenes')
-        .insert(
+        .upsert(
           story.scenes.map((scene, index) => ({
             id: ensureUUID(scene.id),
             story_id: storyId,
@@ -175,45 +188,94 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
             aspect_ratio: scene.aspectRatio,
             image_url: scene.imageUrl,
             order_index: index,
-          }))
+          })),
+          { onConflict: 'id' }
         );
 
       if (scenesError) throw scenesError;
+
+      // Delete scenes that are no longer in the story
+      if (existingScenes && existingScenes.length > 0) {
+        const scenesToDelete = existingScenes
+          .filter(s => !sceneIds.includes(s.id))
+          .map(s => s.id);
+
+        if (scenesToDelete.length > 0) {
+          await supabase.from('scenes').delete().in('id', scenesToDelete);
+        }
+      }
+    } else {
+      // If no scenes, delete all existing scenes
+      await supabase.from('scenes').delete().eq('story_id', storyId);
     }
 
-    // Insert characters
+    // Upsert characters (insert or update)
     if (story.characters.length > 0) {
+      const characterIds = story.characters.map(c => ensureUUID(c.id));
+
       const { error: charactersError } = await supabase
         .from('characters')
-        .insert(
+        .upsert(
           story.characters.map((character, index) => ({
             id: ensureUUID(character.id),
             story_id: storyId,
             name: character.name,
             image_url: character.image ? imageFileToDataUrl(character.image) : null,
             order_index: index,
-          }))
+          })),
+          { onConflict: 'id' }
         );
 
       if (charactersError) throw charactersError;
+
+      // Delete characters that are no longer in the story
+      if (existingCharacters && existingCharacters.length > 0) {
+        const charactersToDelete = existingCharacters
+          .filter(c => !characterIds.includes(c.id))
+          .map(c => c.id);
+
+        if (charactersToDelete.length > 0) {
+          await supabase.from('characters').delete().in('id', charactersToDelete);
+        }
+      }
+    } else {
+      // If no characters, delete all existing characters
+      await supabase.from('characters').delete().eq('story_id', storyId);
     }
 
-    // Insert backgrounds (only those with images)
+    // Upsert backgrounds (only those with images)
     const validBackgrounds = story.backgrounds.filter(bg => bg.image !== null);
     if (validBackgrounds.length > 0) {
+      const backgroundIds = validBackgrounds.map(bg => ensureUUID(bg.id));
+
       const { error: backgroundsError } = await supabase
         .from('backgrounds')
-        .insert(
+        .upsert(
           validBackgrounds.map((background, index) => ({
             id: ensureUUID(background.id),
             story_id: storyId,
             name: background.name,
             image_url: imageFileToDataUrl(background.image),
             order_index: index,
-          }))
+          })),
+          { onConflict: 'id' }
         );
 
       if (backgroundsError) throw backgroundsError;
+
+      // Delete backgrounds that are no longer in the story
+      if (existingBackgrounds && existingBackgrounds.length > 0) {
+        const backgroundsToDelete = existingBackgrounds
+          .filter(bg => !backgroundIds.includes(bg.id))
+          .map(bg => bg.id);
+
+        if (backgroundsToDelete.length > 0) {
+          await supabase.from('backgrounds').delete().in('id', backgroundsToDelete);
+        }
+      }
+    } else {
+      // If no backgrounds, delete all existing backgrounds
+      await supabase.from('backgrounds').delete().eq('story_id', storyId);
     }
 
     console.log('Story saved to Supabase successfully:', story.id);
