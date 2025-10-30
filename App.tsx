@@ -38,9 +38,17 @@ const App: React.FC = () => {
       const savedStories = localStorage.getItem('novel-ai-stories');
       if (savedStories) {
         const parsedStories = JSON.parse(savedStories);
-        setStories(parsedStories);
-        if (parsedStories.length > 0) {
-          setCurrentStoryId(parsedStories[0].id);
+        // Migrate old data: add aspectRatio to scenes that don't have it
+        const migratedStories = parsedStories.map((story: Story) => ({
+          ...story,
+          scenes: story.scenes.map((scene: Scene) => ({
+            ...scene,
+            aspectRatio: scene.aspectRatio || '1:1', // Default to square if not set
+          })),
+        }));
+        setStories(migratedStories);
+        if (migratedStories.length > 0) {
+          setCurrentStoryId(migratedStories[0].id);
         } else {
           handleNewStory();
         }
@@ -172,6 +180,7 @@ const App: React.FC = () => {
         imageUrl: null,
         isGenerating: false,
         shotType: 'automatic',
+        aspectRatio: '1:1',
       }));
       handleUpdateCurrentStory({ scenes: newScenes, title });
     } catch (err) {
@@ -193,8 +202,15 @@ const App: React.FC = () => {
     }
 
     try {
-      const imageUrl = await generateIllustration(scene.description, currentStory.characters, currentStory.backgrounds, currentStory.artStyle, scene.shotType);
-      
+      const imageUrl = await generateIllustration(
+        scene.description,
+        currentStory.characters,
+        currentStory.backgrounds,
+        currentStory.artStyle,
+        scene.shotType,
+        scene.aspectRatio
+      );
+
       handleUpdateCurrentStory(prevStory => ({
         scenes: prevStory.scenes.map(s => s.id === scene.id ? { ...s, imageUrl, isGenerating: false } : s)
       }));
@@ -266,6 +282,12 @@ const App: React.FC = () => {
   const handleSceneShotTypeChange = (sceneId: string, shotType: string) => {
     handleUpdateCurrentStory(prevStory => ({
       scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, shotType } : s)
+    }));
+  };
+
+  const handleSceneAspectRatioChange = (sceneId: string, aspectRatio: string) => {
+    handleUpdateCurrentStory(prevStory => ({
+      scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, aspectRatio } : s)
     }));
   };
 
@@ -468,13 +490,14 @@ const App: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {currentStory.scenes.map((scene) => (
-                    <SceneCard 
-                        key={scene.id} 
-                        scene={scene} 
+                    <SceneCard
+                        key={scene.id}
+                        scene={scene}
                         onRegenerate={() => generateSingleIllustration(scene)}
                         onView={setSelectedSceneForModal}
                         onDelete={handleDeleteScene}
                         onShotTypeChange={handleSceneShotTypeChange}
+                        onAspectRatioChange={handleSceneAspectRatioChange}
                     />
                     ))}
                 </div>

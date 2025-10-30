@@ -8,7 +8,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { sceneDescription, characters, backgrounds, artStyle, shotType } = req.body;
+  const { sceneDescription, characters, backgrounds, artStyle, shotType, aspectRatio } = req.body;
 
   if (!sceneDescription) {
     return res.status(400).json({ error: 'Scene description is required' });
@@ -116,6 +116,7 @@ Scene Description: "${sceneDescription}"
       contents: { parts },
       config: {
         responseModalities: [Modality.IMAGE],
+        ...(aspectRatio && { aspectRatio }),
       },
     });
 

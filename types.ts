@@ -22,6 +22,7 @@ export interface Scene {
   imageUrl: string | null;
   isGenerating: boolean;
   shotType: string; // e.g., 'automatic', 'wide_shot', 'close_up'
+  aspectRatio: string; // e.g., '1:1', '16:9', '9:16'
 }
 
 export interface Story {

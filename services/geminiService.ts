@@ -48,7 +48,8 @@ export const generateIllustration = async (
   characters: Character[],
   backgrounds: Background[],
   artStyle: ImageFile | null,
-  shotType: string
+  shotType: string,
+  aspectRatio: string
 ): Promise<string> => {
   try {
     const response = await fetch(`${API_BASE}/api/generate-illustration`, {
@@ -60,6 +61,7 @@ export const generateIllustration = async (
         backgrounds,
         artStyle,
         shotType,
+        aspectRatio,
       }),
     });
 

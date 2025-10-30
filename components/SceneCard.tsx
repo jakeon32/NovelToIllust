@@ -11,6 +11,7 @@ interface SceneCardProps {
   onView: (scene: Scene) => void;
   onDelete: (sceneId: string) => void;
   onShotTypeChange: (sceneId: string, shotType: string) => void;
+  onAspectRatioChange: (sceneId: string, aspectRatio: string) => void;
 }
 
 const shotTypes = [
@@ -24,8 +25,16 @@ const shotTypes = [
     { value: 'dutch_angle', label: '더치 앵글' },
 ];
 
+const aspectRatios = [
+    { value: '1:1', label: '정사각형 (1:1)' },
+    { value: '16:9', label: '가로 (16:9)' },
+    { value: '9:16', label: '세로 (9:16)' },
+    { value: '4:3', label: '가로 (4:3)' },
+    { value: '3:4', label: '세로 (3:4)' },
+];
 
-const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDelete, onShotTypeChange }) => {
+
+const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDelete, onShotTypeChange, onAspectRatioChange }) => {
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg group relative flex flex-col justify-between">
       <div>
@@ -57,18 +66,33 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDe
         </div>
         <div className="p-4">
           <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">{scene.description}</p>
-          <div className="mt-4">
-            <label htmlFor={`shot-type-${scene.id}`} className="block text-xs font-medium text-gray-400 mb-1">촬영 구도</label>
-            <select
-                id={`shot-type-${scene.id}`}
-                value={scene.shotType}
-                onChange={(e) => onShotTypeChange(scene.id, e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2"
-            >
-                {shotTypes.map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                ))}
-            </select>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor={`shot-type-${scene.id}`} className="block text-xs font-medium text-gray-400 mb-1">촬영 구도</label>
+              <select
+                  id={`shot-type-${scene.id}`}
+                  value={scene.shotType}
+                  onChange={(e) => onShotTypeChange(scene.id, e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2"
+              >
+                  {shotTypes.map(type => (
+                      <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor={`aspect-ratio-${scene.id}`} className="block text-xs font-medium text-gray-400 mb-1">비율</label>
+              <select
+                  id={`aspect-ratio-${scene.id}`}
+                  value={scene.aspectRatio}
+                  onChange={(e) => onAspectRatioChange(scene.id, e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2"
+              >
+                  {aspectRatios.map(ratio => (
+                      <option key={ratio.value} value={ratio.value}>{ratio.label}</option>
+                  ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
