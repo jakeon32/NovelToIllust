@@ -270,12 +270,43 @@ const App: React.FC = () => {
   };
 
   const handleDownloadImage = (imageUrl: string, filename: string) => {
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Convert base64 data URL to Blob for better mobile support
+      const arr = imageUrl.split(',');
+      const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      const blob = new Blob([u8arr], { type: mime });
+
+      // Create blob URL
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Create download link
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      link.style.display = 'none';
+
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: open in new tab for mobile browsers that don't support download
+      const newWindow = window.open(imageUrl, '_blank');
+      if (!newWindow) {
+        alert('다운로드에 실패했습니다. 팝업 차단을 해제하고 다시 시도해주세요.');
+      }
+    }
   };
   
   if (!currentStory) {
