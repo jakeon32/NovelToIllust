@@ -1,7 +1,6 @@
 {
   "name": "novel-to-illustration-ai",
   "private": true,
-  "homepage": "https://jakeon32.github.io/NovelToIllust",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
