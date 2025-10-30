@@ -15,6 +15,39 @@
 
 ---
 
+## [2025-01-30] - 작화 스타일 일관성 수정 (우선 처리)
+
+### Fixed - 레퍼런스 이미지 생성 시 작화 스타일 적용
+**문제**: 배경과 캐릭터 레퍼런스를 AI로 생성할 때 작화 스타일이 반영되지 않음
+- 작화 스타일: 수채화 설정
+- 생성된 배경/캐릭터: 디지털 아트 스타일
+- 최종 장면: 스타일 불일치로 어색함
+
+**해결**: 레퍼런스 이미지 생성 시 작화 스타일 참조
+- `generateReferenceImage` 함수에 `artStyle` 파라미터 추가
+- API에서 작화 스타일 이미지를 레퍼런스로 포함
+- 라인워크, 채색, 쉐이딩, 디테일 레벨 일치 지침 포함
+
+**효과**:
+- ✅ 모든 생성 이미지가 작화 스타일과 일치
+- ✅ 캐릭터 레퍼런스: 일관된 스타일
+- ✅ 배경 레퍼런스: 일관된 스타일
+- ✅ 최종 장면: 완벽한 시각적 통일성
+
+**예시 워크플로우**:
+1. 작화 스타일 설정: 수채화
+2. 캐릭터 생성: 수채화 스타일 적용 ✅
+3. 배경 생성: 수채화 스타일 적용 ✅
+4. 장면 생성: 모든 요소가 수채화로 통일 ✅
+
+### Technical Details
+- `services/geminiService.ts`: `generateReferenceImage`에 artStyle 파라미터 추가
+- `api/generate-reference.ts`: artStyle 레퍼런스 포함 및 상세 프롬프트 추가
+- `components/ReferenceImageUpload.tsx`: artStyle prop 추가 및 전달
+- `App.tsx`: 모든 ReferenceImageUpload에 currentStory.artStyle 전달
+
+---
+
 ## [2025-01-30] - Phase 1 완료
 
 ### Added - 주요 기능 추가
