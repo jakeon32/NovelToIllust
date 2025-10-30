@@ -116,7 +116,11 @@ Scene Description: "${sceneDescription}"
       contents: { parts },
       config: {
         responseModalities: [Modality.IMAGE],
-        ...(aspectRatio && { aspectRatio }),
+        ...(aspectRatio && {
+          imageConfig: {
+            aspectRatio: aspectRatio,
+          }
+        }),
       },
     });
 
