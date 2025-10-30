@@ -21,6 +21,12 @@ export default async function handler(req: any, res: any) {
       new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
     );
 
+    // Find which backgrounds are actually mentioned in this specific scene
+    const relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
+      bg.name.trim() &&
+      new RegExp(`\\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
+    );
+
     const parts: any[] = [];
 
     const shotTypeInstruction = shotType && shotType !== 'automatic'
@@ -94,11 +100,11 @@ Scene Description: "${sceneDescription}"
       parts.push({ inlineData: { mimeType: artStyle.mimeType, data: artStyle.base64 } });
     }
 
-    if (backgrounds && backgrounds.length > 0) {
-      backgrounds.forEach((bg: any, index: number) => {
-        const label = backgrounds.length > 1
-          ? `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE ${index + 1} (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.`
-          : "═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.";
+    if (relevantBackgrounds && relevantBackgrounds.length > 0) {
+      relevantBackgrounds.forEach((bg: any, index: number) => {
+        const label = relevantBackgrounds.length > 1
+          ? `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE ${index + 1}: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene. Analyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.`
+          : `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene. Analyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.`;
         parts.push({ text: label });
         parts.push({ inlineData: { mimeType: bg.image.mimeType, data: bg.image.base64 } });
       });

@@ -50,6 +50,15 @@ const App: React.FC = () => {
           loadedStories = await loadStories();
         }
 
+        // Migrate existing data: add name to backgrounds if missing
+        loadedStories = loadedStories.map((story: Story) => ({
+          ...story,
+          backgrounds: (story.backgrounds || []).map((bg: any, bgIndex: number) => ({
+            ...bg,
+            name: bg.name || `배경 ${bgIndex + 1}`,
+          })),
+        }));
+
         if (loadedStories.length > 0) {
           setStories(loadedStories);
           setCurrentStoryId(loadedStories[0].id);
@@ -154,13 +163,22 @@ const App: React.FC = () => {
     handleUpdateCurrentStory({ characters: updatedCharacters });
   };
   
-  const handleAddBackground = (image: ImageFile) => {
-    if (!currentStory || currentStory.backgrounds.length >= 2) return;
+  const handleAddBackground = () => {
+    if (!currentStory) return;
     const newBackground: Background = {
       id: `bg-${Date.now()}`,
-      image: image,
+      name: `배경 ${currentStory.backgrounds.length + 1}`,
+      image: null as any, // Will be set by user
     };
     handleUpdateCurrentStory({ backgrounds: [...currentStory.backgrounds, newBackground] });
+  };
+
+  const handleBackgroundChange = <T extends keyof Background>(id: string, field: T, value: Background[T]) => {
+    if (!currentStory) return;
+    const updatedBackgrounds = currentStory.backgrounds.map((bg) =>
+      bg.id === id ? { ...bg, [field]: value } : bg
+    );
+    handleUpdateCurrentStory({ backgrounds: updatedBackgrounds });
   };
 
   const handleRemoveBackground = (id: string) => {
@@ -401,41 +419,42 @@ const App: React.FC = () => {
             {/* Step 1: Add Reference Images */}
             <section className="bg-gray-800/50 p-6 rounded-xl shadow-2xl border border-gray-700">
                 <h2 className="text-2xl font-bold mb-4 text-indigo-300">1. 레퍼런스 이미지 추가 (선택사항)</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="mb-6">
                 <ReferenceImageUpload label="아트 스타일 레퍼런스" image={currentStory.artStyle} onImageChange={(img) => handleUpdateCurrentStory({ artStyle: img })} />
-                <div>
-                    <div className="space-y-4">
-                        {currentStory.backgrounds.map(bg => (
-                            <div key={bg.id} className="relative group w-full">
-                                <label className="block text-sm font-medium text-gray-300 mb-1 truncate">배경: {bg.image.name}</label>
-                                <div className="w-full h-48 bg-gray-800/50 rounded-md flex items-center justify-center p-2 border-2 border-gray-600 border-dashed">
-                                    <img
-                                        src={`data:${bg.image.mimeType};base64,${bg.image.base64}`}
-                                        alt={bg.image.name}
-                                        className="max-h-full max-w-full object-contain rounded-md"
-                                    />
-                                    <button
-                                        onClick={() => handleRemoveBackground(bg.id)}
-                                        className="absolute top-8 right-2 bg-gray-900/70 text-white rounded-full p-1.5 hover:bg-red-600/80 transition-colors"
-                                        aria-label="Remove background"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                        
-                        {currentStory.backgrounds.length < 2 && (
-                            <ReferenceImageUpload
-                                label="배경 레퍼런스 추가"
-                                image={null}
-                                onImageChange={(img) => { if (img) handleAddBackground(img); }}
-                            />
-                        )}
-                    </div>
                 </div>
+                <div className="mb-6">
+                <h3 className="text-xl font-semibold mb-4 text-gray-300">배경</h3>
+                <div className="space-y-4">
+                    {currentStory.backgrounds.map((bg) => (
+                    <div key={bg.id} className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-gray-900/70 rounded-lg border border-gray-700">
+                        <div className="flex-1 w-full">
+                        <input
+                            type="text"
+                            value={bg.name}
+                            onChange={(e) => handleBackgroundChange(bg.id, 'name', e.target.value)}
+                            className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="배경 이름 (예: 왕궁 대전, 마법의 숲)"
+                        />
+                        </div>
+                        <div className="flex-1 w-full">
+                        <ReferenceImageUpload label={`${bg.name} 이미지`} image={bg.image} onImageChange={(img) => handleBackgroundChange(bg.id, 'image', img)} />
+                        </div>
+                        <button
+                        onClick={() => handleRemoveBackground(bg.id)}
+                        className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                        >
+                        <TrashIcon className="w-6 h-6" />
+                        </button>
+                    </div>
+                    ))}
+                </div>
+                <button
+                    onClick={handleAddBackground}
+                    className="mt-4 inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500"
+                >
+                    <PlusIcon className="w-5 h-5 mr-2" />
+                    배경 추가
+                </button>
                 </div>
                 <div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-300">캐릭터</h3>

@@ -82,12 +82,16 @@ export const migrateFromLocalStorage = async (): Promise<Story[]> => {
     if (savedStories) {
       const parsedStories = JSON.parse(savedStories);
 
-      // Migrate old data: add aspectRatio to scenes that don't have it
-      const migratedStories = parsedStories.map((story: Story) => ({
+      // Migrate old data: add aspectRatio to scenes and name to backgrounds
+      const migratedStories = parsedStories.map((story: Story, storyIndex: number) => ({
         ...story,
         scenes: story.scenes.map((scene: any) => ({
           ...scene,
           aspectRatio: scene.aspectRatio || '1:1', // Default to square if not set
+        })),
+        backgrounds: (story.backgrounds || []).map((bg: any, bgIndex: number) => ({
+          ...bg,
+          name: bg.name || `배경 ${bgIndex + 1}`, // Default name if not set
         })),
       }));
 

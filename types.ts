@@ -13,6 +13,7 @@ export interface Character {
 
 export interface Background {
   id: string;
+  name: string;
   image: ImageFile;
 }
 
