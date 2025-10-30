@@ -59,7 +59,7 @@ const App: React.FC = () => {
         localStorage.setItem('novel-ai-stories', JSON.stringify(stories));
       } catch (e) {
         console.error("Failed to save stories to localStorage. Storage might be full.", e);
-        setError("Could not save the story. The browser's storage is likely full. Please try using smaller reference images or clear some space.");
+        setError("스토리를 저장할 수 없습니다. 브라우저 저장 공간이 가득 찼습니다. 더 작은 레퍼런스 이미지를 사용하거나 공간을 확보해주세요.");
       }
     } else {
       // Clean up localStorage if all stories are deleted
@@ -72,7 +72,7 @@ const App: React.FC = () => {
   const handleNewStory = () => {
     const newStory: Story = {
       id: `story-${Date.now()}`,
-      title: 'New Story',
+      title: '새 스토리',
       novelText: '',
       characters: [],
       backgrounds: [],
@@ -115,7 +115,7 @@ const App: React.FC = () => {
     if (!currentStory) return;
     const newCharacter: Character = {
       id: `char-${Date.now()}`,
-      name: `Character ${currentStory.characters.length + 1}`,
+      name: `캐릭터 ${currentStory.characters.length + 1}`,
       image: null,
     };
     handleUpdateCurrentStory({ characters: [...currentStory.characters, newCharacter] });
@@ -152,7 +152,7 @@ const App: React.FC = () => {
 
   const handleAnalyzeNovel = async () => {
     if (!currentStory || !currentStory.novelText.trim()) {
-      setError("Please enter some novel text.");
+      setError("소설 텍스트를 입력해주세요.");
       return;
     }
     setIsAnalyzing(true);
@@ -161,7 +161,7 @@ const App: React.FC = () => {
     
     try {
         let title = currentStory.title;
-        if (title === 'New Story' || title === 'Untitled Story') {
+        if (title === '새 스토리' || title === 'Untitled Story' || title === 'New Story') {
             title = await generateTitleFromText(currentStory.novelText);
         }
 
@@ -175,7 +175,7 @@ const App: React.FC = () => {
       }));
       handleUpdateCurrentStory({ scenes: newScenes, title });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred.");
+      setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -204,7 +204,7 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error(`Failed to generate illustration for scene ${scene.id}:`, err);
-      setError(`Failed to generate illustration. Please try again.`);
+      setError(`일러스트 생성에 실패했습니다. 다시 시도해주세요.`);
       
       handleUpdateCurrentStory(prevStory => ({
         scenes: prevStory.scenes.map(s => s.id === scene.id ? { ...s, isGenerating: false } : s)
@@ -221,7 +221,7 @@ const App: React.FC = () => {
 
     const originalImageFile = dataUrlToImageFile(sceneToEdit.imageUrl);
     if (!originalImageFile) {
-        setError("Could not process the original image for editing.");
+        setError("편집을 위한 원본 이미지를 처리할 수 없습니다.");
         return;
     }
 
@@ -245,7 +245,7 @@ const App: React.FC = () => {
         }
     } catch (err) {
         console.error(`Failed to edit illustration for scene ${sceneId}:`, err);
-        setError(`Failed to apply edits. Please try again.`);
+        setError(`편집 적용에 실패했습니다. 다시 시도해주세요.`);
 
         handleUpdateCurrentStory(prevStory => ({
             scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, isGenerating: false } : s)
@@ -281,7 +281,7 @@ const App: React.FC = () => {
   if (!currentStory) {
     return (
         <div className="bg-gray-900 h-screen flex items-center justify-center">
-            <Loader text="Loading stories..."/>
+            <Loader text="스토리 로딩 중..."/>
         </div>
     )
   }
@@ -313,10 +313,10 @@ const App: React.FC = () => {
                 </button>
                 <div className="flex-1 text-center">
                     <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-500">
-                        Novel to Illustration AI
+                        소설 AI 일러스트 생성기
                     </h1>
                     <p className="mt-2 text-md sm:text-lg text-gray-400">
-                        Turn your written stories into visual masterpieces.
+                        글로 쓴 이야기를 시각적 걸작으로 변환하세요.
                     </p>
                 </div>
                 <div className="w-6 md:hidden"></div>
@@ -325,7 +325,7 @@ const App: React.FC = () => {
             
             {error && (
             <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-md relative mb-6" role="alert">
-                <strong className="font-bold">Error: </strong>
+                <strong className="font-bold">오류: </strong>
                 <span className="block sm:inline">{error}</span>
                  <button onClick={() => setError(null)} className="absolute top-0 bottom-0 right-0 px-4 py-3" aria-label="Close">
                     <svg className="fill-current h-6 w-6 text-red-400" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
@@ -336,14 +336,14 @@ const App: React.FC = () => {
             <div className="space-y-12">
             {/* Step 1: Add Reference Images */}
             <section className="bg-gray-800/50 p-6 rounded-xl shadow-2xl border border-gray-700">
-                <h2 className="text-2xl font-bold mb-4 text-indigo-300">1. Add Reference Images (Optional)</h2>
+                <h2 className="text-2xl font-bold mb-4 text-indigo-300">1. 레퍼런스 이미지 추가 (선택사항)</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <ReferenceImageUpload label="Art Style Reference" image={currentStory.artStyle} onImageChange={(img) => handleUpdateCurrentStory({ artStyle: img })} />
+                <ReferenceImageUpload label="아트 스타일 레퍼런스" image={currentStory.artStyle} onImageChange={(img) => handleUpdateCurrentStory({ artStyle: img })} />
                 <div>
                     <div className="space-y-4">
                         {currentStory.backgrounds.map(bg => (
                             <div key={bg.id} className="relative group w-full">
-                                <label className="block text-sm font-medium text-gray-300 mb-1 truncate">Background: {bg.image.name}</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1 truncate">배경: {bg.image.name}</label>
                                 <div className="w-full h-48 bg-gray-800/50 rounded-md flex items-center justify-center p-2 border-2 border-gray-600 border-dashed">
                                     <img
                                         src={`data:${bg.image.mimeType};base64,${bg.image.base64}`}
@@ -364,17 +364,17 @@ const App: React.FC = () => {
                         ))}
                         
                         {currentStory.backgrounds.length < 2 && (
-                            <ReferenceImageUpload 
-                                label="Add Background Reference"
-                                image={null} 
-                                onImageChange={(img) => { if (img) handleAddBackground(img); }} 
+                            <ReferenceImageUpload
+                                label="배경 레퍼런스 추가"
+                                image={null}
+                                onImageChange={(img) => { if (img) handleAddBackground(img); }}
                             />
                         )}
                     </div>
                 </div>
                 </div>
                 <div>
-                <h3 className="text-xl font-semibold mb-4 text-gray-300">Characters</h3>
+                <h3 className="text-xl font-semibold mb-4 text-gray-300">캐릭터</h3>
                 <div className="space-y-4">
                     {currentStory.characters.map((char) => (
                     <div key={char.id} className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-gray-900/70 rounded-lg border border-gray-700">
@@ -384,11 +384,11 @@ const App: React.FC = () => {
                             value={char.name}
                             onChange={(e) => handleCharacterChange(char.id, 'name', e.target.value)}
                             className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Character Name"
+                            placeholder="캐릭터 이름"
                         />
                         </div>
                         <div className="flex-1 w-full">
-                        <ReferenceImageUpload label={`Image for ${char.name}`} image={char.image} onImageChange={(img) => handleCharacterChange(char.id, 'image', img)} />
+                        <ReferenceImageUpload label={`${char.name} 이미지`} image={char.image} onImageChange={(img) => handleCharacterChange(char.id, 'image', img)} />
                         </div>
                         <button
                         onClick={() => handleRemoveCharacter(char.id)}
@@ -404,17 +404,17 @@ const App: React.FC = () => {
                     className="mt-4 inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500"
                 >
                     <PlusIcon className="w-5 h-5 mr-2" />
-                    Add Character
+                    캐릭터 추가
                 </button>
                 </div>
             </section>
 
             {/* Step 2: Input Novel Text */}
             <section className="bg-gray-800/50 p-6 rounded-xl shadow-2xl border border-gray-700">
-                <h2 className="text-2xl font-bold mb-4 text-indigo-300">2. Paste Your Novel Text</h2>
+                <h2 className="text-2xl font-bold mb-4 text-indigo-300">2. 소설 텍스트 입력</h2>
                 <textarea
                 className="w-full h-60 p-4 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 placeholder-gray-500 text-gray-300"
-                placeholder="Paste a chapter or a scene from your novel here..."
+                placeholder="소설의 장면이나 챕터를 여기에 붙여넣으세요..."
                 value={currentStory.novelText}
                 onChange={(e) => handleUpdateCurrentStory({ novelText: e.target.value })}
                 />
@@ -424,16 +424,16 @@ const App: React.FC = () => {
                     disabled={isAnalyzing || !currentStory.novelText.trim()}
                     className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500 disabled:bg-indigo-900/50 disabled:cursor-not-allowed transition-colors"
                     >
-                    Analyze Novel & Create Scenes
+                    소설 분석 및 장면 생성
                     </button>
-                    {isAnalyzing && <Loader text="Analyzing text..." />}
+                    {isAnalyzing && <Loader text="텍스트 분석 중..." />}
                  </div>
             </section>
             
             {/* Step 3: Generated Scenes & Illustrations */}
             {currentStory.scenes.length > 0 && (
                 <section>
-                <h2 className="text-2xl font-bold mb-6 text-center text-indigo-300">3. Generated Scenes & Illustrations</h2>
+                <h2 className="text-2xl font-bold mb-6 text-center text-indigo-300">3. 생성된 장면 및 일러스트</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {currentStory.scenes.map((scene) => (
@@ -457,8 +457,8 @@ const App: React.FC = () => {
                         <FilmIcon className="w-12 h-12 text-teal-400"/>
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold text-teal-300">Next Step: Bring Your Story to Life!</h3>
-                        <p className="text-gray-400 mt-1">Your generated illustrations form a perfect storyboard. Consider using a text-to-video AI service like Google Veo to animate these scenes and create a stunning trailer for your novel.</p>
+                        <h3 className="text-xl font-bold text-teal-300">다음 단계: 스토리에 생명을 불어넣으세요!</h3>
+                        <p className="text-gray-400 mt-1">생성된 일러스트는 완벽한 스토리보드를 형성합니다. Google Veo와 같은 텍스트-비디오 AI 서비스를 사용하여 이 장면들을 애니메이션화하고 소설의 멋진 트레일러를 만들어보세요.</p>
                     </div>
                 </section>
             )}

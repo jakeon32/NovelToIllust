@@ -112,7 +112,7 @@ const ReferenceImageUpload: React.FC<ReferenceImageUploadProps> = ({ label, onIm
       <div className="mt-1 flex flex-col border-2 border-gray-600 border-dashed rounded-md h-48 bg-gray-800/50 relative">
         {isCompressing || isGenerating ? (
           <div className="w-full h-full flex flex-col justify-center items-center">
-            <Loader text={isCompressing ? "Processing..." : "Generating AI image..."} />
+            <Loader text={isCompressing ? "처리 중..." : "AI 이미지 생성 중..."} />
           </div>
         ) : !image ? (
           <div className="h-full flex flex-col">
@@ -122,14 +122,14 @@ const ReferenceImageUpload: React.FC<ReferenceImageUploadProps> = ({ label, onIm
                 className={`flex-1 p-2 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'upload' ? 'bg-gray-700 text-indigo-300' : 'text-gray-400 hover:bg-gray-700/50'}`}
               >
                 <PhotoIcon className="w-5 h-5"/>
-                Upload
+                업로드
               </button>
               <button
                 onClick={() => setActiveTab('generate')}
                 className={`flex-1 p-2 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'generate' ? 'bg-gray-700 text-indigo-300' : 'text-gray-400 hover:bg-gray-700/50'}`}
               >
                 <SparklesIcon className="w-5 h-5"/>
-                Generate
+                생성
               </button>
             </div>
             <div className="flex-1 p-2 sm:p-4 flex flex-col items-center justify-center">
@@ -141,7 +141,7 @@ const ReferenceImageUpload: React.FC<ReferenceImageUploadProps> = ({ label, onIm
                         htmlFor={`file-upload-${label.replace(/\s+/g, '-')}`}
                         className="relative cursor-pointer bg-gray-800 rounded-md font-medium text-indigo-400 hover:text-indigo-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-900 focus-within:ring-indigo-500 px-1"
                     >
-                        <span>Upload a file</span>
+                        <span>파일 업로드</span>
                         <input
                         id={`file-upload-${label.replace(/\s+/g, '-')}`}
                         name={`file-upload-${label.replace(/\s+/g, '-')}`}
@@ -153,14 +153,14 @@ const ReferenceImageUpload: React.FC<ReferenceImageUploadProps> = ({ label, onIm
                         />
                     </label>
                     </div>
-                    <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                    <p className="text-xs text-gray-500">PNG, JPG 최대 10MB</p>
                 </div>
               ) : (
                 <div className="w-full flex flex-col h-full justify-center">
                   <textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="e.g., A majestic white wolf, digital art"
+                    placeholder="예: 위엄있는 하얀 늑대, 디지털 아트"
                     className="w-full flex-1 p-2 bg-gray-900/80 border border-gray-500 rounded-md text-sm text-gray-300 placeholder-gray-500 focus:ring-1 focus:ring-indigo-500 resize-none"
                   />
                   <button
@@ -169,7 +169,7 @@ const ReferenceImageUpload: React.FC<ReferenceImageUploadProps> = ({ label, onIm
                     className="mt-2 w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-900/50 disabled:cursor-not-allowed"
                   >
                     <SparklesIcon className="w-4 h-4 mr-2" />
-                    Generate
+                    생성
                   </button>
                 </div>
               )}
@@ -179,13 +179,13 @@ const ReferenceImageUpload: React.FC<ReferenceImageUploadProps> = ({ label, onIm
           <div className="w-full h-full flex items-center justify-center">
             <img
               src={`data:${image.mimeType};base64,${image.base64}`}
-              alt="Preview"
+              alt="미리보기"
               className="max-h-full max-w-full object-contain rounded-md"
             />
             <button
               onClick={handleRemoveImage}
               className="absolute top-2 right-2 bg-gray-900/70 text-white rounded-full p-1.5 hover:bg-red-600/80 transition-colors"
-              aria-label="Remove image"
+              aria-label="이미지 제거"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />

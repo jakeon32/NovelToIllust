@@ -54,7 +54,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ scene, onClose, onRegenerate, o
              <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors"
-              aria-label="Close"
+              aria-label="닫기"
             >
               <XMarkIcon className="w-6 h-6" />
             </button>
@@ -62,22 +62,22 @@ const ImageModal: React.FC<ImageModalProps> = ({ scene, onClose, onRegenerate, o
         
         <div className="flex-grow flex items-center justify-center overflow-hidden my-4">
           {scene.isGenerating ? (
-            <Loader text={isEditing ? "Applying edit..." : "Regenerating..."} />
+            <Loader text={isEditing ? "편집 적용 중..." : "재생성 중..."} />
           ) : isEditing ? (
              <div className="w-full h-full flex flex-col md:flex-row gap-4 p-4">
                 <div className="md:w-1/2 flex items-center justify-center bg-black/20 rounded-lg overflow-hidden">
                     <img
                         src={scene.imageUrl!}
-                        alt="Editing preview"
+                        alt="편집 미리보기"
                         className="max-h-full max-w-full object-contain"
                     />
                 </div>
                 <div className="md:w-1/2 flex flex-col">
-                    <h3 className="text-lg font-semibold text-indigo-300 mb-2">Edit Image</h3>
-                    <p className="text-sm text-gray-400 mb-4">Describe the change you want to make. For example, "make the sky purple" or "add a hat on the man".</p>
+                    <h3 className="text-lg font-semibold text-indigo-300 mb-2">이미지 편집</h3>
+                    <p className="text-sm text-gray-400 mb-4">변경하고 싶은 내용을 설명해주세요. 예: "하늘을 보라색으로 바꿔줘" 또는 "남자에게 모자를 추가해줘"</p>
                     <textarea
                         className="w-full flex-1 p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 transition-colors placeholder-gray-500"
-                        placeholder="e.g., Change the character's shirt to red"
+                        placeholder="예: 캐릭터의 셔츠를 빨간색으로 바꿔줘"
                         value={editPrompt}
                         onChange={(e) => setEditPrompt(e.target.value)}
                     />
@@ -88,13 +88,13 @@ const ImageModal: React.FC<ImageModalProps> = ({ scene, onClose, onRegenerate, o
                             className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-900/50 disabled:cursor-not-allowed"
                          >
                             <SparklesIcon className="w-5 h-5 mr-2" />
-                            Apply Edit
+                            편집 적용
                          </button>
                          <button
                             onClick={() => setIsEditing(false)}
                             className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600"
                          >
-                            Cancel
+                            취소
                          </button>
                     </div>
                 </div>
@@ -106,7 +106,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ scene, onClose, onRegenerate, o
               className="max-h-full max-w-full object-contain"
             />
           ) : (
-            <div className="text-gray-500">Image not available.</div>
+            <div className="text-gray-500">이미지를 사용할 수 없습니다.</div>
           )}
         </div>
 
@@ -117,7 +117,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ scene, onClose, onRegenerate, o
             className="inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <PencilIcon className="w-5 h-5 mr-2" />
-            Edit
+            편집
           </button>
           <button
             onClick={() => onRegenerate(scene.id)}
@@ -125,7 +125,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ scene, onClose, onRegenerate, o
             className="inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ArrowPathIcon className="w-5 h-5 mr-2" />
-            Regenerate
+            재생성
           </button>
           <button
             onClick={handleDownload}
@@ -133,7 +133,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ scene, onClose, onRegenerate, o
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500 disabled:bg-indigo-900/50 disabled:cursor-not-allowed"
           >
             <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
-            Download
+            다운로드
           </button>
         </div>
       </div>
