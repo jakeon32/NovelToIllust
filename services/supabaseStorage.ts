@@ -104,6 +104,7 @@ export async function loadStoriesFromSupabase(): Promise<Story[]> {
           id: c.id,
           name: c.name,
           image: c.image_url ? dataUrlToImageFile(c.image_url, c.name) : null,
+          description: c.description || undefined,
         })),
         backgrounds: (backgroundsData || []).map(b => ({
           id: b.id,
@@ -221,6 +222,7 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
             story_id: storyId,
             name: character.name,
             image_url: character.image ? imageFileToDataUrl(character.image) : null,
+            description: character.description || null,
             order_index: index,
           })),
           { onConflict: 'id' }

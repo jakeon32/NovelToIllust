@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Character, Scene, ImageFile, Story, Background } from './types';
-import { generateScenesFromText, generateIllustration, generateTitleFromText, editIllustration } from './services/geminiService';
+import { generateScenesFromText, generateIllustration, generateTitleFromText, editIllustration, analyzeCharacter } from './services/geminiService';
 import { loadStories, saveStories, migrateFromLocalStorage, isIndexedDBAvailable } from './utils/storage';
 import { supabase } from './services/supabaseClient';
 import { loadStoriesFromSupabase, saveStoriesToSupabase, deleteStoryFromSupabase, saveStoryToSupabase } from './services/supabaseStorage';
@@ -185,11 +185,30 @@ const App: React.FC = () => {
     handleUpdateCurrentStory({ characters: [...currentStory.characters, newCharacter] });
   };
   
-  const handleCharacterChange = <T extends keyof Character>(id: string, field: T, value: Character[T]) => {
+  const handleCharacterChange = async <T extends keyof Character>(id: string, field: T, value: Character[T]) => {
       if (!currentStory) return;
-      const updatedCharacters = currentStory.characters.map((char) =>
+
+      let updatedCharacters = currentStory.characters.map((char) =>
         char.id === id ? { ...char, [field]: value } : char
       );
+
+      // If image is being updated and a new image is provided, automatically analyze it
+      if (field === 'image' && value) {
+        console.log('🔍 Analyzing character appearance...');
+        try {
+          const description = await analyzeCharacter(value as ImageFile);
+          console.log('✅ Character analysis complete:', description.substring(0, 100) + '...');
+
+          // Update the character with both image and description
+          updatedCharacters = updatedCharacters.map((char) =>
+            char.id === id ? { ...char, image: value as ImageFile, description } : char
+          );
+        } catch (error) {
+          console.error('Failed to analyze character:', error);
+          // Continue anyway with just the image
+        }
+      }
+
       console.log('👤 Character updated:', {
         characterId: id,
         field,

@@ -125,3 +125,23 @@ export const generateReferenceImage = async (prompt: string, artStyle: ImageFile
     throw new Error("Failed to generate the reference image.");
   }
 };
+
+export const analyzeCharacter = async (image: ImageFile): Promise<string> => {
+  try {
+    const response = await fetch(`${API_BASE}/api/analyze-character`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.description;
+  } catch (error) {
+    console.error("Error analyzing character:", error);
+    throw new Error("Failed to analyze character appearance.");
+  }
+};

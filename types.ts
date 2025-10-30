@@ -9,6 +9,7 @@ export interface Character {
   id: string;
   name: string;
   image: ImageFile | null;
+  description?: string; // AI-generated detailed description of character appearance
 }
 
 export interface Background {
