@@ -33,6 +33,8 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedSceneForModal, setSelectedSceneForModal] = useState<Scene | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
     const initializeStorage = async () => {
@@ -260,6 +262,37 @@ const App: React.FC = () => {
     }
   };
   
+  const generateAllScenes = async () => {
+    if (!currentStory) return;
+
+    // Find scenes without images
+    const scenesToGenerate = currentStory.scenes.filter(scene => !scene.imageUrl && !scene.isGenerating);
+
+    if (scenesToGenerate.length === 0) {
+      setError('생성할 장면이 없습니다. 모든 장면에 이미 이미지가 있습니다.');
+      return;
+    }
+
+    setIsGeneratingAll(true);
+    setGenerationProgress({ current: 0, total: scenesToGenerate.length });
+    setError(null);
+
+    for (let i = 0; i < scenesToGenerate.length; i++) {
+      const scene = scenesToGenerate[i];
+      setGenerationProgress({ current: i + 1, total: scenesToGenerate.length });
+
+      try {
+        await generateSingleIllustration(scene);
+      } catch (err) {
+        console.error(`Failed to generate illustration for scene ${scene.id}:`, err);
+        // Continue with next scene even if one fails
+      }
+    }
+
+    setIsGeneratingAll(false);
+    setGenerationProgress({ current: 0, total: 0 });
+  };
+
   const handleEditIllustration = async (sceneId: string, editPrompt: string) => {
     const sceneToEdit = currentStory?.scenes.find(s => s.id === sceneId);
     if (!currentStory || !sceneToEdit || !sceneToEdit.imageUrl) return;
@@ -317,6 +350,12 @@ const App: React.FC = () => {
   const handleSceneAspectRatioChange = (sceneId: string, aspectRatio: string) => {
     handleUpdateCurrentStory(prevStory => ({
       scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, aspectRatio } : s)
+    }));
+  };
+
+  const handleSceneDescriptionChange = (sceneId: string, description: string) => {
+    handleUpdateCurrentStory(prevStory => ({
+      scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, description } : s)
     }));
   };
 
@@ -516,8 +555,25 @@ const App: React.FC = () => {
             {/* Step 3: Generated Scenes & Illustrations */}
             {currentStory.scenes.length > 0 && (
                 <section>
-                <h2 className="text-2xl font-bold mb-6 text-center text-indigo-300">3. 생성된 장면 및 일러스트</h2>
-                
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                  <h2 className="text-2xl font-bold text-indigo-300">3. 생성된 장면 및 일러스트</h2>
+                  <div className="flex items-center gap-4">
+                    {isGeneratingAll && generationProgress.total > 0 && (
+                      <div className="text-sm text-gray-400">
+                        진행: {generationProgress.current}/{generationProgress.total}
+                      </div>
+                    )}
+                    <button
+                      onClick={generateAllScenes}
+                      disabled={isGeneratingAll || currentStory.scenes.every(s => s.imageUrl || s.isGenerating)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-900/50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500"
+                    >
+                      <SparklesIcon className="w-5 h-5 mr-2" />
+                      {isGeneratingAll ? '생성 중...' : '모든 장면 생성'}
+                    </button>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {currentStory.scenes.map((scene) => (
                     <SceneCard
@@ -528,6 +584,7 @@ const App: React.FC = () => {
                         onDelete={handleDeleteScene}
                         onShotTypeChange={handleSceneShotTypeChange}
                         onAspectRatioChange={handleSceneAspectRatioChange}
+                        onDescriptionChange={handleSceneDescriptionChange}
                     />
                     ))}
                 </div>

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Scene } from '../types';
 import Loader from './Loader';
 import ArrowPathIcon from './icons/ArrowPathIcon';
 import SparklesIcon from './icons/SparklesIcon';
 import TrashIcon from './icons/TrashIcon';
+import PencilIcon from './icons/PencilIcon';
 
 interface SceneCardProps {
   scene: Scene;
@@ -12,6 +13,7 @@ interface SceneCardProps {
   onDelete: (sceneId: string) => void;
   onShotTypeChange: (sceneId: string, shotType: string) => void;
   onAspectRatioChange: (sceneId: string, aspectRatio: string) => void;
+  onDescriptionChange: (sceneId: string, description: string) => void;
 }
 
 const shotTypes = [
@@ -34,7 +36,22 @@ const aspectRatios = [
 ];
 
 
-const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDelete, onShotTypeChange, onAspectRatioChange }) => {
+const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDelete, onShotTypeChange, onAspectRatioChange, onDescriptionChange }) => {
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editedDescription, setEditedDescription] = useState(scene.description);
+
+  const handleSaveDescription = () => {
+    if (editedDescription.trim() && editedDescription !== scene.description) {
+      onDescriptionChange(scene.id, editedDescription);
+    }
+    setIsEditingDescription(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedDescription(scene.description);
+    setIsEditingDescription(false);
+  };
+
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg group relative flex flex-col justify-between">
       <div>
@@ -65,7 +82,42 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDe
           )}
         </div>
         <div className="p-4">
-          <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">{scene.description}</p>
+          {isEditingDescription ? (
+            <div className="space-y-2">
+              <textarea
+                value={editedDescription}
+                onChange={(e) => setEditedDescription(e.target.value)}
+                className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md text-gray-300 text-sm leading-relaxed focus:ring-1 focus:ring-indigo-500 resize-none"
+                rows={3}
+                placeholder="장면 설명을 입력하세요..."
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveDescription}
+                  className="flex-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-md transition-colors"
+                >
+                  저장
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs rounded-md transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="relative group/desc">
+              <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">{scene.description}</p>
+              <button
+                onClick={() => setIsEditingDescription(true)}
+                className="absolute top-0 right-0 p-1 text-gray-500 hover:text-indigo-400 opacity-0 group-hover/desc:opacity-100 transition-opacity"
+                title="설명 편집"
+              >
+                <PencilIcon className="w-4 h-4" />
+              </button>
+            </div>
+          )}
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div>
               <label htmlFor={`shot-type-${scene.id}`} className="block text-xs font-medium text-gray-400 mb-1">촬영 구도</label>
