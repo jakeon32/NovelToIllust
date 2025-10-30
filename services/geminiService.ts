@@ -1,7 +1,10 @@
 import type { ImageFile, Character, Background } from '../types';
 
 // API base URL - works both in development and production
-const API_BASE = import.meta.env.DEV ? '' : '';
+// Empty string = same-origin requests
+// In development: Vite proxy forwards /api/* to production
+// In production: Same-origin API calls
+const API_BASE = '';
 
 export const generateTitleFromText = async (novelText: string): Promise<string> => {
   try {

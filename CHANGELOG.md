@@ -15,6 +15,79 @@
 
 ---
 
+## [2025-10-30] - 레퍼런스 변경 반영 개선 및 로컬 개발 환경 구축
+
+### Fixed - 레퍼런스 변경 시 최신 데이터 사용
+**문제**: 레퍼런스 이미지(캐릭터, 배경, 작화 스타일)를 변경한 후 장면을 재생성해도 이전 레퍼런스가 사용되는 문제
+
+**원인**:
+- `generateSingleIllustration` 함수가 Scene 객체를 직접 전달받아 오래된 참조(closure) 사용
+- React state 업데이트 시점과 함수 실행 시점의 불일치
+
+**해결**:
+- `generateSingleIllustration` 함수 시그니처 변경: `Scene` 객체 → `sceneId` 문자열
+- 함수 내부에서 최신 `stories` state에서 직접 story 조회
+- 모든 호출 지점 업데이트 (SceneCard, ImageModal, generateAllScenes)
+
+**디버깅 로그 추가**:
+- 레퍼런스 변경 시 로그: 캐릭터, 배경, 아트 스타일
+- 이미지 생성 시 로그: 전달된 레퍼런스 정보, imagePreview
+- 이미지 비교 로그: 새 이미지와 이전 이미지가 실제로 다른지 해시 비교
+
+### Added - 로컬 개발 환경 구축
+
+**문제**: 로컬 개발 시 API 엔드포인트 404 오류 및 CORS 문제
+- Vite 개발 서버는 프론트엔드만 제공
+- API 엔드포인트는 Vercel Serverless Functions로 구현
+- 직접 프로덕션 API 호출 시 CORS 차단
+
+**해결**: Vite 프록시 설정
+```typescript
+// vite.config.ts
+proxy: {
+  '/api': {
+    target: 'https://novel-to-illust.vercel.app',
+    changeOrigin: true,
+    secure: true,
+  }
+}
+```
+
+**효과**:
+- ✅ 로컬 개발 시 `/api/*` 요청이 자동으로 프로덕션 서버로 프록시
+- ✅ CORS 문제 완전 해결 (same-origin 요청으로 변환)
+- ✅ 프로덕션 배포 시에도 정상 작동 (프록시는 개발 모드에서만 동작)
+
+### Technical Details
+- `App.tsx:224-323`: generateSingleIllustration 함수 리팩토링
+  - sceneId 파라미터로 변경
+  - 최신 story 조회 로직 추가
+  - 상세 디버깅 로그 추가
+  - 이미지 해시 비교로 중복 생성 감지
+- `App.tsx:154-210`: 레퍼런스 변경 핸들러에 로그 추가
+  - handleCharacterChange, handleBackgroundChange, handleArtStyleChange
+- `App.tsx:638`: ImageModal onRegenerate prop 업데이트
+- `vite.config.ts:10-17`: API 프록시 설정 추가
+- `services/geminiService.ts:3-7`: API_BASE 단순화 (빈 문자열)
+
+### Development Notes
+**로컬 개발 환경**:
+```
+브라우저 → localhost:3003/api/generate-scenes
+       → Vite 프록시
+       → https://novel-to-illust.vercel.app/api/generate-scenes
+       → 응답 반환
+```
+
+**프로덕션 환경**:
+```
+브라우저 → https://novel-to-illust.vercel.app/api/generate-scenes
+       → Vercel Serverless Function
+       → 응답 반환
+```
+
+---
+
 ## [2025-01-30] - 작화 스타일 일관성 수정 (우선 처리)
 
 ### Fixed - 레퍼런스 이미지 생성 시 작화 스타일 적용

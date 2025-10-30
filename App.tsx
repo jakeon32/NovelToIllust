@@ -156,6 +156,12 @@ const App: React.FC = () => {
       const updatedCharacters = currentStory.characters.map((char) =>
         char.id === id ? { ...char, [field]: value } : char
       );
+      console.log('👤 Character updated:', {
+        characterId: id,
+        field,
+        hasImage: field === 'image' ? !!value : 'N/A',
+        timestamp: new Date().toISOString()
+      });
       handleUpdateCurrentStory({ characters: updatedCharacters });
   };
   
@@ -180,6 +186,12 @@ const App: React.FC = () => {
     const updatedBackgrounds = currentStory.backgrounds.map((bg) =>
       bg.id === id ? { ...bg, [field]: value } : bg
     );
+    console.log('🏞️ Background updated:', {
+      backgroundId: id,
+      field,
+      hasImage: field === 'image' ? !!value : 'N/A',
+      timestamp: new Date().toISOString()
+    });
     handleUpdateCurrentStory({ backgrounds: updatedBackgrounds });
   };
 
@@ -187,6 +199,14 @@ const App: React.FC = () => {
     if (!currentStory) return;
     const updatedBackgrounds = currentStory.backgrounds.filter((bg) => bg.id !== id);
     handleUpdateCurrentStory({ backgrounds: updatedBackgrounds });
+  };
+
+  const handleArtStyleChange = (artStyle: ImageFile | null) => {
+    console.log('🎨 Art style updated:', {
+      hasImage: !!artStyle,
+      timestamp: new Date().toISOString()
+    });
+    handleUpdateCurrentStory({ artStyle });
   };
 
   const handleAnalyzeNovel = async () => {
@@ -221,42 +241,94 @@ const App: React.FC = () => {
     }
   };
   
-  const generateSingleIllustration = async (scene: Scene) => {
+  const generateSingleIllustration = async (sceneId: string) => {
     if (!currentStory) return;
 
+    // Get the latest scene data from current story
+    const scene = currentStory.scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+
     handleUpdateCurrentStory(prevStory => ({
-        scenes: prevStory.scenes.map(s => s.id === scene.id ? { ...s, isGenerating: true } : s)
+        scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, isGenerating: true } : s)
     }));
 
-    if (selectedSceneForModal && selectedSceneForModal.id === scene.id) {
+    if (selectedSceneForModal && selectedSceneForModal.id === sceneId) {
         setSelectedSceneForModal(prev => prev ? { ...prev, isGenerating: true } : null);
     }
 
+    // Get the absolute latest references from currentStory
+    const latestStory = stories.find(s => s.id === currentStoryId);
+    if (!latestStory) return;
+
+    console.log('🎨 Generating with latest references:', {
+      sceneDescription: scene.description,
+      characters: latestStory.characters.map(c => ({
+        name: c.name,
+        hasImage: !!c.image,
+        imagePreview: c.image ? c.image.base64.substring(0, 50) + '...' : 'NO IMAGE'
+      })),
+      backgrounds: latestStory.backgrounds.map(b => ({
+        name: b.name,
+        hasImage: !!b.image,
+        imagePreview: b.image ? b.image.base64.substring(0, 50) + '...' : 'NO IMAGE'
+      })),
+      artStyle: latestStory.artStyle ? {
+        hasImage: true,
+        imagePreview: latestStory.artStyle.base64.substring(0, 50) + '...'
+      } : 'NO ART STYLE'
+    });
+
+    console.log('📊 Current story state check:', {
+      storyId: latestStory.id,
+      totalCharacters: latestStory.characters.length,
+      totalBackgrounds: latestStory.backgrounds.length,
+      timestamp: new Date().toISOString()
+    });
+
     try {
+      console.log('🚀 Calling API to generate illustration...');
       const imageUrl = await generateIllustration(
         scene.description,
-        currentStory.characters,
-        currentStory.backgrounds,
-        currentStory.artStyle,
+        latestStory.characters,
+        latestStory.backgrounds,
+        latestStory.artStyle,
         scene.shotType,
         scene.aspectRatio
       );
 
+      // Compare with previous image to detect if it's actually different
+      const previousImage = currentStory.scenes.find(s => s.id === sceneId)?.imageUrl;
+      const imageHash = imageUrl.substring(imageUrl.length - 50, imageUrl.length); // Last 50 chars as hash
+      const previousHash = previousImage ? previousImage.substring(previousImage.length - 50, previousImage.length) : 'none';
+
+      console.log('✅ API returned image:', {
+        imageUrlLength: imageUrl.length,
+        imagePreview: imageUrl.substring(0, 100) + '...',
+        imageHash: imageHash,
+        previousImageHash: previousHash,
+        isDifferent: imageHash !== previousHash,
+        timestamp: new Date().toISOString()
+      });
+
+      if (imageHash === previousHash && previousImage) {
+        console.warn('⚠️ WARNING: Generated image is IDENTICAL to previous image! This should not happen with AI generation.');
+      }
+
       handleUpdateCurrentStory(prevStory => ({
-        scenes: prevStory.scenes.map(s => s.id === scene.id ? { ...s, imageUrl, isGenerating: false } : s)
+        scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, imageUrl, isGenerating: false } : s)
       }));
 
-      if (selectedSceneForModal && selectedSceneForModal.id === scene.id) {
+      if (selectedSceneForModal && selectedSceneForModal.id === sceneId) {
         setSelectedSceneForModal(prev => prev ? { ...prev, imageUrl, isGenerating: false } : null);
       }
     } catch (err) {
-      console.error(`Failed to generate illustration for scene ${scene.id}:`, err);
+      console.error(`Failed to generate illustration for scene ${sceneId}:`, err);
       setError(`일러스트 생성에 실패했습니다. 다시 시도해주세요.`);
-      
+
       handleUpdateCurrentStory(prevStory => ({
-        scenes: prevStory.scenes.map(s => s.id === scene.id ? { ...s, isGenerating: false } : s)
+        scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, isGenerating: false } : s)
       }));
-       if (selectedSceneForModal && selectedSceneForModal.id === scene.id) {
+       if (selectedSceneForModal && selectedSceneForModal.id === sceneId) {
         setSelectedSceneForModal(prev => prev ? { ...prev, isGenerating: false } : null);
       }
     }
@@ -282,7 +354,7 @@ const App: React.FC = () => {
       setGenerationProgress({ current: i + 1, total: scenesToGenerate.length });
 
       try {
-        await generateSingleIllustration(scene);
+        await generateSingleIllustration(scene.id);
       } catch (err) {
         console.error(`Failed to generate illustration for scene ${scene.id}:`, err);
         // Continue with next scene even if one fails
@@ -459,7 +531,7 @@ const App: React.FC = () => {
             <section className="bg-gray-800/50 p-6 rounded-xl shadow-2xl border border-gray-700">
                 <h2 className="text-2xl font-bold mb-4 text-indigo-300">1. 레퍼런스 이미지 추가 (선택사항)</h2>
                 <div className="mb-6">
-                <ReferenceImageUpload label="아트 스타일 레퍼런스" image={currentStory.artStyle} onImageChange={(img) => handleUpdateCurrentStory({ artStyle: img })} />
+                <ReferenceImageUpload label="아트 스타일 레퍼런스" image={currentStory.artStyle} onImageChange={handleArtStyleChange} />
                 </div>
                 <div className="mb-6">
                 <h3 className="text-xl font-semibold mb-4 text-gray-300">배경</h3>
@@ -589,7 +661,7 @@ const App: React.FC = () => {
                     <SceneCard
                         key={scene.id}
                         scene={scene}
-                        onRegenerate={() => generateSingleIllustration(scene)}
+                        onRegenerate={(sceneId) => generateSingleIllustration(sceneId)}
                         onView={setSelectedSceneForModal}
                         onDelete={handleDeleteScene}
                         onShotTypeChange={handleSceneShotTypeChange}
@@ -621,7 +693,7 @@ const App: React.FC = () => {
         <ImageModal
             scene={selectedSceneForModal}
             onClose={() => setSelectedSceneForModal(null)}
-            onRegenerate={() => generateSingleIllustration(selectedSceneForModal)}
+            onRegenerate={generateSingleIllustration}
             onDownload={handleDownloadImage}
             onEdit={handleEditIllustration}
         />
