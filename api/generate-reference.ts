@@ -8,16 +8,41 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { prompt } = req.body;
+  const { prompt, artStyle } = req.body;
 
   if (!prompt) {
     return res.status(400).json({ error: 'Prompt is required' });
   }
 
   try {
+    const parts: any[] = [];
+
+    // If artStyle is provided, add it as a reference
+    if (artStyle) {
+      parts.push({
+        text: `You are generating a reference image. This image will be used as a reference for character or background consistency in a story illustration project.
+
+**🎨 ART STYLE REFERENCE (MANDATORY TO FOLLOW):**
+
+A primary art style has been established for this project. Study the reference image below carefully and replicate its style EXACTLY:
+- Line work thickness and technique
+- Coloring style and technique (watercolor, digital, oil painting, etc.)
+- Shading and lighting approach
+- Level of detail and realism
+- Brush strokes and texture
+- Color palette and saturation
+
+Your generated reference image MUST match this style perfectly so it can be used consistently with other images in the same project.`
+      });
+      parts.push({ inlineData: { mimeType: artStyle.mimeType, data: artStyle.base64 } });
+      parts.push({ text: `\n\nNow, generate a reference image with the following description, using the EXACT same art style as shown above:\n\n${prompt}` });
+    } else {
+      parts.push({ text: prompt });
+    }
+
     const response = await ai.models.generateContent({
       model: referenceImageModel,
-      contents: { parts: [{ text: prompt }] },
+      contents: { parts },
       config: {
         responseModalities: [Modality.IMAGE],
       },

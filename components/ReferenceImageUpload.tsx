@@ -10,6 +10,7 @@ interface ReferenceImageUploadProps {
   label: string;
   onImageChange: (image: ImageFile | null) => void;
   image: ImageFile | null;
+  artStyle?: ImageFile | null;
 }
 
 const compressImage = (file: File, maxWidth = 800, maxHeight = 800, quality = 0.75): Promise<{ base64: string; mimeType: string; }> => {
@@ -59,7 +60,7 @@ const compressImage = (file: File, maxWidth = 800, maxHeight = 800, quality = 0.
 };
 
 
-const ReferenceImageUpload: React.FC<ReferenceImageUploadProps> = ({ label, onImageChange, image }) => {
+const ReferenceImageUpload: React.FC<ReferenceImageUploadProps> = ({ label, onImageChange, image, artStyle }) => {
   const [isCompressing, setIsCompressing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompt, setPrompt] = useState('');
@@ -96,7 +97,7 @@ const ReferenceImageUpload: React.FC<ReferenceImageUploadProps> = ({ label, onIm
     if (!prompt.trim()) return;
     setIsGenerating(true);
     try {
-      const generatedImage = await generateReferenceImage(prompt);
+      const generatedImage = await generateReferenceImage(prompt, artStyle || null);
       onImageChange(generatedImage);
     } catch (error) {
       console.error("Failed to generate image:", error);

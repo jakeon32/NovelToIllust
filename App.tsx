@@ -476,7 +476,12 @@ const App: React.FC = () => {
                         />
                         </div>
                         <div className="flex-1 w-full">
-                        <ReferenceImageUpload label={`${bg.name} 이미지`} image={bg.image} onImageChange={(img) => handleBackgroundChange(bg.id, 'image', img)} />
+                        <ReferenceImageUpload
+                          label={`${bg.name} 이미지`}
+                          image={bg.image}
+                          onImageChange={(img) => handleBackgroundChange(bg.id, 'image', img)}
+                          artStyle={currentStory.artStyle}
+                        />
                         </div>
                         <button
                         onClick={() => handleRemoveBackground(bg.id)}
@@ -510,7 +515,12 @@ const App: React.FC = () => {
                         />
                         </div>
                         <div className="flex-1 w-full">
-                        <ReferenceImageUpload label={`${char.name} 이미지`} image={char.image} onImageChange={(img) => handleCharacterChange(char.id, 'image', img)} />
+                        <ReferenceImageUpload
+                          label={`${char.name} 이미지`}
+                          image={char.image}
+                          onImageChange={(img) => handleCharacterChange(char.id, 'image', img)}
+                          artStyle={currentStory.artStyle}
+                        />
                         </div>
                         <button
                         onClick={() => handleRemoveCharacter(char.id)}

@@ -103,12 +103,12 @@ export const editIllustration = async (
   }
 };
 
-export const generateReferenceImage = async (prompt: string): Promise<ImageFile> => {
+export const generateReferenceImage = async (prompt: string, artStyle: ImageFile | null): Promise<ImageFile> => {
   try {
     const response = await fetch(`${API_BASE}/api/generate-reference`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, artStyle }),
     });
 
     if (!response.ok) {
