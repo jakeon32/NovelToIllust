@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Character, Scene, ImageFile, Story, Background } from './types';
 import { generateScenesFromText, generateIllustration, generateTitleFromText, editIllustration } from './services/geminiService';
+import { loadStories, saveStories, migrateFromLocalStorage, isIndexedDBAvailable } from './utils/storage';
 import ReferenceImageUpload from './components/ReferenceImageUpload';
 import SceneCard from './components/SceneCard';
 import Loader from './components/Loader';
@@ -34,45 +35,55 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    try {
-      const savedStories = localStorage.getItem('novel-ai-stories');
-      if (savedStories) {
-        const parsedStories = JSON.parse(savedStories);
-        // Migrate old data: add aspectRatio to scenes that don't have it
-        const migratedStories = parsedStories.map((story: Story) => ({
-          ...story,
-          scenes: story.scenes.map((scene: Scene) => ({
-            ...scene,
-            aspectRatio: scene.aspectRatio || '1:1', // Default to square if not set
-          })),
-        }));
-        setStories(migratedStories);
-        if (migratedStories.length > 0) {
-          setCurrentStoryId(migratedStories[0].id);
+    const initializeStorage = async () => {
+      try {
+        if (!isIndexedDBAvailable()) {
+          console.warn('IndexedDB is not available, using localStorage fallback');
+          setError('브라우저가 IndexedDB를 지원하지 않습니다. 일부 기능이 제한될 수 있습니다.');
+        }
+
+        // Try to migrate data from localStorage if exists
+        let loadedStories = await migrateFromLocalStorage();
+
+        // If no migrated data, load from IndexedDB
+        if (loadedStories.length === 0) {
+          loadedStories = await loadStories();
+        }
+
+        if (loadedStories.length > 0) {
+          setStories(loadedStories);
+          setCurrentStoryId(loadedStories[0].id);
         } else {
           handleNewStory();
         }
-      } else {
+      } catch (e) {
+        console.error("Failed to load stories:", e);
+        setError('스토리를 불러오는데 실패했습니다.');
         handleNewStory();
       }
-    } catch (e) {
-      console.error("Failed to load stories from localStorage", e);
-      handleNewStory();
-    }
+    };
+
+    initializeStorage();
   }, []);
 
   useEffect(() => {
-    if (stories.length > 0) {
-      try {
-        localStorage.setItem('novel-ai-stories', JSON.stringify(stories));
-      } catch (e) {
-        console.error("Failed to save stories to localStorage. Storage might be full.", e);
-        setError("스토리를 저장할 수 없습니다. 브라우저 저장 공간이 가득 찼습니다. 더 작은 레퍼런스 이미지를 사용하거나 공간을 확보해주세요.");
+    const saveStoriesAsync = async () => {
+      if (stories.length > 0) {
+        try {
+          await saveStories(stories);
+        } catch (e) {
+          console.error("Failed to save stories to IndexedDB:", e);
+          setError("스토리를 저장할 수 없습니다. 브라우저 저장 공간 문제가 발생했습니다.");
+        }
       }
-    } else {
-      // Clean up localStorage if all stories are deleted
-      localStorage.removeItem('novel-ai-stories');
-    }
+    };
+
+    // Debounce saves to avoid too many writes
+    const timeoutId = setTimeout(() => {
+      saveStoriesAsync();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
   }, [stories]);
 
   const currentStory = stories.find(s => s.id === currentStoryId);
