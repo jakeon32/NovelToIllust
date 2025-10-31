@@ -36,6 +36,14 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [stories, setStories] = useState<Story[]>([]);
   const [currentStoryId, setCurrentStoryId] = useState<string | null>(null);
+
+  // Save currentStoryId to localStorage whenever it changes
+  useEffect(() => {
+    if (currentStoryId) {
+      localStorage.setItem('currentStoryId', currentStoryId);
+      console.log('💾 Current story ID saved:', currentStoryId);
+    }
+  }, [currentStoryId]);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSceneForModal, setSelectedSceneForModal] = useState<Scene | null>(null);
@@ -129,7 +137,18 @@ const App: React.FC = () => {
 
         if (loadedStories.length > 0) {
           setStories(loadedStories);
-          setCurrentStoryId(loadedStories[0].id);
+
+          // Restore previously selected story ID from localStorage
+          const savedStoryId = localStorage.getItem('currentStoryId');
+          const storyExists = savedStoryId && loadedStories.some(s => s.id === savedStoryId);
+
+          if (storyExists) {
+            setCurrentStoryId(savedStoryId);
+            console.log('✅ Restored current story ID from localStorage:', savedStoryId);
+          } else {
+            setCurrentStoryId(loadedStories[0].id);
+            console.log('ℹ️ No saved story ID found, using first story');
+          }
         } else {
           handleNewStory();
         }
