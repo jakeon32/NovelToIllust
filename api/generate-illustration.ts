@@ -8,7 +8,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { sceneDescription, characters, backgrounds, artStyle, shotType, aspectRatio } = req.body;
+  const { sceneDescription, characters, backgrounds, artStyle, artStyleDescription, shotType, aspectRatio } = req.body;
 
   if (!sceneDescription) {
     return res.status(400).json({ error: 'Scene description is required' });
@@ -96,15 +96,25 @@ Scene Description: "${sceneDescription}"
     );
 
     if (artStyle) {
-      parts.push({ text: "═══════════════════════════════════════\n🎨 ART STYLE REFERENCE (STYLE ONLY - NOT CHARACTER):\n═══════════════════════════════════════\n\n⚠️ IMPORTANT: This reference is ONLY for artistic style, NOT for character appearance!\n\n**USE FROM THIS REFERENCE:**\n• Line work thickness and quality\n• Coloring technique (digital, watercolor, oil painting, etc.)\n• Shading and lighting style\n• Color palette and saturation levels\n• Brush strokes and texture\n• Level of detail and realism\n• Overall artistic mood and atmosphere\n\n**COMPLETELY IGNORE FROM THIS REFERENCE:**\n• Any people, characters, or figures shown\n• Facial features or body types of any person\n• Clothing or character designs\n\n**Your task:** Extract ONLY the artistic technique and apply it to the characters provided separately below. Think of this as learning the artist's technique, NOT copying their subjects." });
+      // Include detailed text description if available (from AI analysis)
+      const artStyleDescriptionText = artStyleDescription
+        ? `\n\n📋 **DETAILED ART STYLE DESCRIPTION (EXTRACTED BY AI):**\n${artStyleDescription}\n\n⚠️ **This description provides exact details about the artistic technique. Follow it PRECISELY.**`
+        : '';
+
+      parts.push({ text: `═══════════════════════════════════════\n🎨 ART STYLE REFERENCE (STYLE ONLY - NOT CHARACTER):\n═══════════════════════════════════════\n\n⚠️ IMPORTANT: This reference is ONLY for artistic style, NOT for character appearance!${artStyleDescriptionText}\n\n**USE FROM THIS REFERENCE:**\n• Line work thickness and quality\n• Coloring technique (digital, watercolor, oil painting, etc.)\n• Shading and lighting style\n• Color palette and saturation levels\n• Brush strokes and texture\n• Level of detail and realism\n• Overall artistic mood and atmosphere\n\n**COMPLETELY IGNORE FROM THIS REFERENCE:**\n• Any people, characters, or figures shown\n• Facial features or body types of any person\n• Clothing or character designs\n\n**Your task:** Extract ONLY the artistic technique and apply it to the characters provided separately below. Think of this as learning the artist's technique, NOT copying their subjects.` });
       parts.push({ inlineData: { mimeType: artStyle.mimeType, data: artStyle.base64 } });
     }
 
     if (relevantBackgrounds && relevantBackgrounds.length > 0) {
       relevantBackgrounds.forEach((bg: any, index: number) => {
+        // Include detailed text description if available (from AI analysis)
+        const backgroundDescriptionText = bg.description
+          ? `\n\n📋 **DETAILED BACKGROUND DESCRIPTION (EXTRACTED BY AI):**\n${bg.description}\n\n⚠️ **This description provides exact details about the setting. Follow it PRECISELY.**`
+          : '';
+
         const label = relevantBackgrounds.length > 1
-          ? `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE ${index + 1}: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene. Analyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.`
-          : `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene. Analyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.`;
+          ? `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE ${index + 1}: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene.${backgroundDescriptionText}\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.`
+          : `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene.${backgroundDescriptionText}\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.`;
         parts.push({ text: label });
         parts.push({ inlineData: { mimeType: bg.image.mimeType, data: bg.image.base64 } });
       });

@@ -100,6 +100,7 @@ export async function loadStoriesFromSupabase(): Promise<Story[]> {
         title: storyData.title,
         novelText: storyData.novel_text,
         artStyle: storyData.art_style_url ? dataUrlToImageFile(storyData.art_style_url) : null,
+        artStyleDescription: storyData.art_style_description || undefined,
         characters: (charactersData || []).map(c => ({
           id: c.id,
           name: c.name,
@@ -110,11 +111,12 @@ export async function loadStoriesFromSupabase(): Promise<Story[]> {
           id: b.id,
           name: b.name,
           image: dataUrlToImageFile(b.image_url, b.name)!,
+          description: b.description || undefined,
         })),
         scenes: (scenesData || []).map(s => ({
           id: s.id,
           description: s.description,
-          imageUrl: s.image_url,
+          imageUrl: undefined, // Scene images are stored in local storage, not Supabase
           shotType: s.shot_type || 'medium_shot',
           aspectRatio: s.aspect_ratio || '1:1',
           isGenerating: false,
@@ -153,6 +155,7 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
         title: story.title,
         novel_text: story.novelText,
         art_style_url: story.artStyle ? imageFileToDataUrl(story.artStyle) : null,
+        art_style_description: story.artStyleDescription || null,
         updated_at: new Date().toISOString(),
       });
 
@@ -187,7 +190,7 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
             description: scene.description,
             shot_type: scene.shotType,
             aspect_ratio: scene.aspectRatio,
-            image_url: scene.imageUrl,
+            image_url: null, // Scene images are stored in local storage, not Supabase
             order_index: index,
           })),
           { onConflict: 'id' }
@@ -258,6 +261,7 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
             story_id: storyId,
             name: background.name,
             image_url: imageFileToDataUrl(background.image),
+            description: background.description || null,
             order_index: index,
           })),
           { onConflict: 'id' }
@@ -313,4 +317,107 @@ export async function deleteStoryFromSupabase(storyId: string): Promise<void> {
     console.error('Error deleting story from Supabase:', error);
     throw error;
   }
+}
+
+/**
+ * Calculate the size of a base64 image in bytes
+ */
+function calculateBase64ImageSize(base64: string): number {
+  // Base64 encoding increases size by ~33% (4/3)
+  // Remove data URL prefix if present
+  const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+
+  // Calculate actual bytes: (base64 length * 3) / 4
+  // Account for padding
+  const padding = (base64Data.match(/=/g) || []).length;
+  return Math.floor((base64Data.length * 3) / 4) - padding;
+}
+
+/**
+ * Calculate total storage usage for reference images (characters, backgrounds, art style)
+ * Scene images are NOT included as they are stored in local storage
+ */
+export async function calculateUserStorageUsage(): Promise<{
+  totalBytes: number;
+  totalMB: number;
+  breakdown: {
+    artStyles: number;
+    characters: number;
+    backgrounds: number;
+  };
+}> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    const stories = await loadStoriesFromSupabase();
+
+    let artStyleBytes = 0;
+    let characterBytes = 0;
+    let backgroundBytes = 0;
+
+    for (const story of stories) {
+      // Art style images
+      if (story.artStyle?.base64) {
+        artStyleBytes += calculateBase64ImageSize(story.artStyle.base64);
+      }
+
+      // Character reference images
+      for (const character of story.characters) {
+        if (character.image?.base64) {
+          characterBytes += calculateBase64ImageSize(character.image.base64);
+        }
+      }
+
+      // Background reference images
+      for (const background of story.backgrounds) {
+        if (background.image?.base64) {
+          backgroundBytes += calculateBase64ImageSize(background.image.base64);
+        }
+      }
+    }
+
+    const totalBytes = artStyleBytes + characterBytes + backgroundBytes;
+    const totalMB = totalBytes / (1024 * 1024);
+
+    return {
+      totalBytes,
+      totalMB: Math.round(totalMB * 100) / 100, // Round to 2 decimal places
+      breakdown: {
+        artStyles: artStyleBytes,
+        characters: characterBytes,
+        backgrounds: backgroundBytes,
+      },
+    };
+  } catch (error) {
+    console.error('Error calculating storage usage:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if user is within storage quota
+ * @param quotaMB - Storage quota in megabytes (default: 50MB)
+ * @returns Object with quota information
+ */
+export async function checkStorageQuota(quotaMB: number = 50): Promise<{
+  used: number; // MB
+  quota: number; // MB
+  remaining: number; // MB
+  percentage: number;
+  isOverQuota: boolean;
+}> {
+  const usage = await calculateUserStorageUsage();
+  const remaining = quotaMB - usage.totalMB;
+  const percentage = (usage.totalMB / quotaMB) * 100;
+
+  return {
+    used: usage.totalMB,
+    quota: quotaMB,
+    remaining: Math.max(0, remaining),
+    percentage: Math.min(100, Math.round(percentage * 100) / 100),
+    isOverQuota: usage.totalMB > quotaMB,
+  };
 }

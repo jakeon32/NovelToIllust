@@ -16,6 +16,7 @@ export interface Background {
   id: string;
   name: string;
   image: ImageFile;
+  description?: string; // AI-generated detailed description of background/setting
 }
 
 export interface Scene {
@@ -34,5 +35,6 @@ export interface Story {
   characters: Character[];
   backgrounds: Background[];
   artStyle: ImageFile | null;
+  artStyleDescription?: string; // AI-generated detailed description of art style
   scenes: Scene[];
 }

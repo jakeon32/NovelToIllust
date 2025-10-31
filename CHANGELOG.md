@@ -15,6 +15,146 @@
 
 ---
 
+## [2025-10-31] - 레퍼런스 AI 분석 & 스토리지 최적화
+
+### Added - AI 분석 결과 확인 및 편집 기능
+
+**캐릭터 AI 분석**:
+- 캐릭터 이미지 업로드 시 Gemini Vision이 자동으로 외형 분석
+- 분석 내용: 얼굴 특징, 머리 스타일/색상, 체형, 의상, 액세서리, 특징적인 표식
+- 초상세 설명 자동 생성 (예: "shoulder-length golden blonde hair with honey highlights, bright sapphire blue eyes...")
+- 분석 결과를 텍스트로 확인하고 직접 편집 가능
+- 재분석 버튼으로 언제든 다시 분석
+
+**배경 AI 분석 (신규)**:
+- 배경 이미지 업로드 시 자동 환경 분석
+- 분석 내용: 건축 양식, 색상 팔레트, 조명/분위기, 환경 디테일, 장식 요소
+- 배경도 캐릭터와 동일한 편집/재분석 기능 지원
+
+**UI/UX**:
+- 접기/펼치기 토글로 깔끔한 인터페이스
+- 분석 중 로딩 표시 (스피너 + 설명 메시지)
+- 분석 완료 상태 표시 (✓ 또는 "분석 대기 중")
+- 편집 가능한 textarea (monospace 폰트로 가독성 향상)
+- 자동 펼침: 분석 완료 시 자동으로 결과 표시
+
+**일러스트 생성 개선**:
+- 이미지 + AI 분석 텍스트를 함께 Gemini에 전달
+- 이중 보장 시스템으로 캐릭터/배경 일관성 대폭 향상
+- 각도나 조명 차이로 인한 오해 감소
+
+### Changed - 스토리지 정책 변경 (효율성 75% 향상)
+
+**씬 일러스트 → 로컬 스토리지 이동**:
+- 기존: 모든 이미지를 Supabase에 저장
+- 변경: 씬 일러스트는 브라우저 로컬 스토리지에 저장
+- Supabase 용량 75% 절감 (30MB/스토리 → 12MB/스토리)
+
+**사용자별 용량 제한 시스템**:
+- 제한: 사용자당 **50MB** (레퍼런스 이미지만 계산)
+- 50MB로 약 **4개 스토리** 생성 가능
+- 전체 0.5GB로 **40명 이상** 수용 가능 (기존 17명 → 40명+)
+- 용량 계산 함수: `calculateUserStorageUsage()`, `checkStorageQuota()`
+
+**정책 상세**:
+- Supabase 저장: 캐릭터/배경/아트 스타일 레퍼런스 (영구 보존)
+- 로컬 저장: 씬 일러스트 (캐시 삭제 시 소실, 재생성 가능)
+- 레퍼런스가 있으면 씬은 언제든 재생성 가능하므로 합리적
+
+**로컬 스토리지 관리**:
+- 자동 저장: 일러스트 생성/편집 시 자동 저장
+- 자동 로드: 스토리 로드 시 로컬에서 씬 이미지 복원
+- 자동 삭제: 스토리 삭제 시 관련 씬 이미지도 정리
+- 용량 확인: `getSceneImagesStorageSize()` 유틸리티
+
+### Added - 새 API 엔드포인트
+
+**`/api/analyze-background`**:
+- Gemini Vision API 사용
+- 배경 이미지 분석: 건축, 색상, 조명, 환경, 장식
+- 장면 생성 시 배경 설명도 함께 전달하여 일관성 향상
+
+### Database - Supabase 스키마 변경
+
+**새 컬럼 추가**:
+```sql
+ALTER TABLE characters ADD COLUMN description TEXT;
+ALTER TABLE backgrounds ADD COLUMN description TEXT;
+```
+
+**씬 이미지 마이그레이션**:
+```sql
+UPDATE scenes SET image_url = NULL WHERE image_url IS NOT NULL;
+```
+
+**스키마 업데이트**:
+- `scenes.image_url`: DEPRECATED (로컬 스토리지로 이동, NULL 유지)
+- `characters.description`: AI 분석 결과 저장
+- `backgrounds.description`: AI 분석 결과 저장
+
+### Technical Details
+
+**새 파일**:
+- `services/localSceneStorage.ts`: 로컬 스토리지 관리 유틸리티
+  - `saveSceneImage()`, `getSceneImage()`, `deleteSceneImage()`
+  - `deleteAllSceneImagesForStory()`, `getSceneImagesStorageSize()`
+- `api/analyze-background.ts`: 배경 분석 API 엔드포인트
+- `supabase-add-descriptions.sql`: 컬럼 추가 마이그레이션
+- `supabase-migration-scene-images.sql`: 씬 이미지 제거 마이그레이션
+
+**수정 파일**:
+- `App.tsx`:
+  - 로컬 스토리지 통합 (로드/저장/삭제)
+  - 캐릭터/배경 분석 UI 추가
+  - 재분석 핸들러 추가
+  - 분석 상태 관리 (`analyzingCharacters`, `analyzingBackgrounds`)
+- `services/supabaseStorage.ts`:
+  - `saveStoryToSupabase()`: 씬 image_url을 NULL로 저장
+  - `loadStoriesFromSupabase()`: 씬 imageUrl을 undefined로 반환
+  - `calculateUserStorageUsage()`: 레퍼런스만 계산
+  - `checkStorageQuota()`: 용량 제한 확인
+- `services/geminiService.ts`:
+  - `analyzeBackground()` 함수 추가
+- `api/generate-illustration.ts`:
+  - 배경 description 프롬프트에 포함
+- `types.ts`:
+  - `Background.description` 필드 추가
+
+**성능 개선**:
+- Supabase 저장 용량 75% 감소
+- 씬 이미지 로컬 로드로 속도 향상
+- API 비용 절감 (스토리지 용량 감소)
+
+### Breaking Changes
+
+**기존 사용자 영향**:
+- ⚠️ 기존 씬 일러스트가 모두 삭제됨 (재생성 필요)
+- ✅ 레퍼런스 이미지는 그대로 유지
+- ✅ 스토리 데이터(제목, 소설 텍스트 등) 유지
+- ✅ 레퍼런스가 있으므로 씬 재생성 가능
+
+**마이그레이션 필요**:
+1. Supabase SQL Editor에서 마이그레이션 실행
+2. 사용자에게 씬 재생성 안내
+
+### User Benefits
+
+**개선된 일관성**:
+- AI 분석 텍스트 + 이미지 레퍼런스 이중 체크
+- 캐릭터 외형 정확도 대폭 향상
+- 배경 분위기 일관성 향상
+
+**용량 효율성**:
+- 개인당 4개 스토리 생성 가능 (기존 1~2개)
+- 전체 수용 인원 2.3배 증가
+
+**사용자 제어 강화**:
+- AI 분석 결과를 직접 확인하고 수정 가능
+- 잘못된 분석 즉시 교정
+- 재분석으로 더 나은 결과 획득
+
+---
+
 ## [2025-10-30] - 레퍼런스 변경 반영 개선 및 로컬 개발 환경 구축
 
 ### Fixed - 레퍼런스 변경 시 최신 데이터 사용

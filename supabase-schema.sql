@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS scenes (
     description TEXT NOT NULL,
     shot_type TEXT DEFAULT 'medium_shot',
     aspect_ratio TEXT DEFAULT '1:1',
-    image_url TEXT,
+    image_url TEXT, -- DEPRECATED: Scene images are now stored in browser's local storage
     order_index INTEGER NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

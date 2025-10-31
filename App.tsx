@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Character, Scene, ImageFile, Story, Background } from './types';
-import { generateScenesFromText, generateIllustration, generateTitleFromText, editIllustration, analyzeCharacter } from './services/geminiService';
+import { generateScenesFromText, generateIllustration, generateTitleFromText, editIllustration, analyzeCharacter, analyzeBackground, analyzeArtStyle } from './services/geminiService';
 import { loadStories, saveStories, migrateFromLocalStorage, isIndexedDBAvailable } from './utils/storage';
 import { supabase } from './services/supabaseClient';
 import { loadStoriesFromSupabase, saveStoriesToSupabase, deleteStoryFromSupabase, saveStoryToSupabase } from './services/supabaseStorage';
+import { saveSceneImage, getSceneImage, deleteAllSceneImagesForStory } from './services/localSceneStorage';
 import type { User } from '@supabase/supabase-js';
 import ReferenceImageUpload from './components/ReferenceImageUpload';
 import SceneCard from './components/SceneCard';
@@ -41,6 +42,10 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0 });
+  const [analyzingCharacters, setAnalyzingCharacters] = useState<Record<string, boolean>>({});
+  const [analyzingBackgrounds, setAnalyzingBackgrounds] = useState<Record<string, boolean>>({});
+  const [analyzingArtStyle, setAnalyzingArtStyle] = useState(false);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
 
   // Authentication state management
   useEffect(() => {
@@ -84,6 +89,15 @@ const App: React.FC = () => {
             loadedStories = localStories;
           }
         }
+
+        // Load scene images from local storage
+        loadedStories = loadedStories.map(story => ({
+          ...story,
+          scenes: story.scenes.map(scene => ({
+            ...scene,
+            imageUrl: getSceneImage(story.id, scene.id) || undefined,
+          })),
+        }));
 
         if (loadedStories.length > 0) {
           setStories(loadedStories);
@@ -144,6 +158,10 @@ const App: React.FC = () => {
       // Delete from Supabase
       await deleteStoryFromSupabase(storyId);
 
+      // Delete scene images from local storage
+      deleteAllSceneImagesForStory(storyId);
+      console.log('🗑️ All scene images deleted from local storage');
+
       // Update local state
       const updatedStories = stories.filter(s => s.id !== storyId);
       setStories(updatedStories);
@@ -195,6 +213,7 @@ const App: React.FC = () => {
       // If image is being updated and a new image is provided, automatically analyze it
       if (field === 'image' && value) {
         console.log('🔍 Analyzing character appearance...');
+        setAnalyzingCharacters(prev => ({ ...prev, [id]: true }));
         try {
           const description = await analyzeCharacter(value as ImageFile);
           console.log('✅ Character analysis complete:', description.substring(0, 100) + '...');
@@ -203,9 +222,15 @@ const App: React.FC = () => {
           updatedCharacters = updatedCharacters.map((char) =>
             char.id === id ? { ...char, image: value as ImageFile, description } : char
           );
+
+          // Auto-expand the description after analysis
+          setExpandedDescriptions(prev => ({ ...prev, [id]: true }));
         } catch (error) {
           console.error('Failed to analyze character:', error);
+          setError('캐릭터 분석에 실패했습니다.');
           // Continue anyway with just the image
+        } finally {
+          setAnalyzingCharacters(prev => ({ ...prev, [id]: false }));
         }
       }
 
@@ -216,6 +241,35 @@ const App: React.FC = () => {
         timestamp: new Date().toISOString()
       });
       handleUpdateCurrentStory({ characters: updatedCharacters });
+  };
+
+  const handleReanalyzeCharacter = async (id: string) => {
+    if (!currentStory) return;
+
+    const character = currentStory.characters.find(c => c.id === id);
+    if (!character?.image) {
+      setError('캐릭터 이미지를 먼저 업로드해주세요.');
+      return;
+    }
+
+    console.log('🔄 Re-analyzing character appearance...');
+    setAnalyzingCharacters(prev => ({ ...prev, [id]: true }));
+
+    try {
+      const description = await analyzeCharacter(character.image);
+      console.log('✅ Re-analysis complete:', description.substring(0, 100) + '...');
+
+      const updatedCharacters = currentStory.characters.map((char) =>
+        char.id === id ? { ...char, description } : char
+      );
+
+      handleUpdateCurrentStory({ characters: updatedCharacters });
+    } catch (error) {
+      console.error('Failed to re-analyze character:', error);
+      setError('캐릭터 재분석에 실패했습니다.');
+    } finally {
+      setAnalyzingCharacters(prev => ({ ...prev, [id]: false }));
+    }
   };
   
   const handleRemoveCharacter = (id: string) => {
@@ -234,11 +288,37 @@ const App: React.FC = () => {
     handleUpdateCurrentStory({ backgrounds: [...currentStory.backgrounds, newBackground] });
   };
 
-  const handleBackgroundChange = <T extends keyof Background>(id: string, field: T, value: Background[T]) => {
+  const handleBackgroundChange = async <T extends keyof Background>(id: string, field: T, value: Background[T]) => {
     if (!currentStory) return;
-    const updatedBackgrounds = currentStory.backgrounds.map((bg) =>
+
+    let updatedBackgrounds = currentStory.backgrounds.map((bg) =>
       bg.id === id ? { ...bg, [field]: value } : bg
     );
+
+    // If image is being updated and a new image is provided, automatically analyze it
+    if (field === 'image' && value) {
+      console.log('🔍 Analyzing background setting...');
+      setAnalyzingBackgrounds(prev => ({ ...prev, [id]: true }));
+      try {
+        const description = await analyzeBackground(value as ImageFile);
+        console.log('✅ Background analysis complete:', description.substring(0, 100) + '...');
+
+        // Update the background with both image and description
+        updatedBackgrounds = updatedBackgrounds.map((bg) =>
+          bg.id === id ? { ...bg, image: value as ImageFile, description } : bg
+        );
+
+        // Auto-expand the description after analysis
+        setExpandedDescriptions(prev => ({ ...prev, [`bg_${id}`]: true }));
+      } catch (error) {
+        console.error('Failed to analyze background:', error);
+        setError('배경 분석에 실패했습니다.');
+        // Continue anyway with just the image
+      } finally {
+        setAnalyzingBackgrounds(prev => ({ ...prev, [id]: false }));
+      }
+    }
+
     console.log('🏞️ Background updated:', {
       backgroundId: id,
       field,
@@ -248,18 +328,92 @@ const App: React.FC = () => {
     handleUpdateCurrentStory({ backgrounds: updatedBackgrounds });
   };
 
+  const handleReanalyzeBackground = async (id: string) => {
+    if (!currentStory) return;
+
+    const background = currentStory.backgrounds.find(b => b.id === id);
+    if (!background?.image) {
+      setError('배경 이미지를 먼저 업로드해주세요.');
+      return;
+    }
+
+    console.log('🔄 Re-analyzing background setting...');
+    setAnalyzingBackgrounds(prev => ({ ...prev, [id]: true }));
+
+    try {
+      const description = await analyzeBackground(background.image);
+      console.log('✅ Re-analysis complete:', description.substring(0, 100) + '...');
+
+      const updatedBackgrounds = currentStory.backgrounds.map((bg) =>
+        bg.id === id ? { ...bg, description } : bg
+      );
+
+      handleUpdateCurrentStory({ backgrounds: updatedBackgrounds });
+    } catch (error) {
+      console.error('Failed to re-analyze background:', error);
+      setError('배경 재분석에 실패했습니다.');
+    } finally {
+      setAnalyzingBackgrounds(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
   const handleRemoveBackground = (id: string) => {
     if (!currentStory) return;
     const updatedBackgrounds = currentStory.backgrounds.filter((bg) => bg.id !== id);
     handleUpdateCurrentStory({ backgrounds: updatedBackgrounds });
   };
 
-  const handleArtStyleChange = (artStyle: ImageFile | null) => {
+  const handleArtStyleChange = async (artStyle: ImageFile | null) => {
     console.log('🎨 Art style updated:', {
       hasImage: !!artStyle,
       timestamp: new Date().toISOString()
     });
-    handleUpdateCurrentStory({ artStyle });
+
+    // If new art style image is provided, automatically analyze it
+    if (artStyle) {
+      console.log('🔍 Analyzing art style...');
+      setAnalyzingArtStyle(true);
+      try {
+        const description = await analyzeArtStyle(artStyle);
+        console.log('✅ Art style analysis complete:', description.substring(0, 100) + '...');
+
+        handleUpdateCurrentStory({ artStyle, artStyleDescription: description });
+
+        // Auto-expand the description after analysis
+        setExpandedDescriptions(prev => ({ ...prev, 'artStyle': true }));
+      } catch (error) {
+        console.error('Failed to analyze art style:', error);
+        setError('아트 스타일 분석에 실패했습니다.');
+        // Continue anyway with just the image
+        handleUpdateCurrentStory({ artStyle });
+      } finally {
+        setAnalyzingArtStyle(false);
+      }
+    } else {
+      handleUpdateCurrentStory({ artStyle, artStyleDescription: undefined });
+    }
+  };
+
+  const handleReanalyzeArtStyle = async () => {
+    if (!currentStory?.artStyle) {
+      setError('아트 스타일 이미지를 먼저 업로드해주세요.');
+      return;
+    }
+
+    console.log('🔄 Re-analyzing art style...');
+    setAnalyzingArtStyle(true);
+
+    try {
+      const description = await analyzeArtStyle(currentStory.artStyle);
+      console.log('✅ Re-analysis complete:', description.substring(0, 100) + '...');
+
+      handleUpdateCurrentStory({ artStyleDescription: description });
+    } catch (error) {
+      console.error('Failed to re-analyze art style:', error);
+      setError('아트 스타일 재분석에 실패했습니다.');
+    } finally {
+      setAnalyzingArtStyle(false);
+    }
   };
 
   const handleAnalyzeNovel = async () => {
@@ -345,6 +499,7 @@ const App: React.FC = () => {
         latestStory.characters,
         latestStory.backgrounds,
         latestStory.artStyle,
+        latestStory.artStyleDescription,
         scene.shotType,
         scene.aspectRatio
       );
@@ -365,6 +520,12 @@ const App: React.FC = () => {
 
       if (imageHash === previousHash && previousImage) {
         console.warn('⚠️ WARNING: Generated image is IDENTICAL to previous image! This should not happen with AI generation.');
+      }
+
+      // Save scene image to local storage
+      if (currentStoryId) {
+        saveSceneImage(currentStoryId, sceneId, imageUrl);
+        console.log('💾 Scene image saved to local storage');
       }
 
       handleUpdateCurrentStory(prevStory => ({
@@ -439,10 +600,16 @@ const App: React.FC = () => {
     try {
         const newImageUrl = await editIllustration(originalImageFile, editPrompt);
 
+        // Save edited scene image to local storage
+        if (currentStoryId) {
+          saveSceneImage(currentStoryId, sceneId, newImageUrl);
+          console.log('💾 Edited scene image saved to local storage');
+        }
+
         handleUpdateCurrentStory(prevStory => ({
             scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, imageUrl: newImageUrl, isGenerating: false } : s)
         }));
-        
+
         if (selectedSceneForModal && selectedSceneForModal.id === sceneId) {
             setSelectedSceneForModal(prev => prev ? { ...prev, imageUrl: newImageUrl, isGenerating: false } : null);
         }
@@ -610,36 +777,144 @@ const App: React.FC = () => {
             <section className="bg-gray-800/50 p-6 rounded-xl shadow-2xl border border-gray-700">
                 <h2 className="text-2xl font-bold mb-4 text-indigo-300">1. 레퍼런스 이미지 추가 (선택사항)</h2>
                 <div className="mb-6">
-                <ReferenceImageUpload label="아트 스타일 레퍼런스" image={currentStory.artStyle} onImageChange={handleArtStyleChange} />
+                  <ReferenceImageUpload label="아트 스타일 레퍼런스" image={currentStory.artStyle} onImageChange={handleArtStyleChange} />
+
+                  {/* Art Style AI Analysis Section */}
+                  {currentStory.artStyle && (
+                    <div className="mt-4 p-4 bg-gray-900/70 rounded-lg border border-gray-700">
+                      <div className="flex items-center justify-between mb-2">
+                        <button
+                          onClick={() => setExpandedDescriptions(prev => ({ ...prev, 'artStyle': !prev['artStyle'] }))}
+                          className="flex items-center gap-2 text-sm font-medium text-indigo-400 hover:text-indigo-300"
+                        >
+                          <svg
+                            className={`w-4 h-4 transition-transform ${expandedDescriptions['artStyle'] ? 'rotate-90' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                          AI 분석 결과 {currentStory.artStyleDescription ? '✓' : '(분석 대기 중)'}
+                        </button>
+                        {currentStory.artStyleDescription && (
+                          <button
+                            onClick={handleReanalyzeArtStyle}
+                            disabled={analyzingArtStyle}
+                            className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {analyzingArtStyle ? '분석 중...' : '재분석'}
+                          </button>
+                        )}
+                      </div>
+
+                      {analyzingArtStyle && (
+                        <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                          <div className="w-4 h-4 border-2 border-gray-400 border-t-indigo-400 rounded-full animate-spin"></div>
+                          <span>AI가 아트 스타일을 분석하고 있습니다...</span>
+                        </div>
+                      )}
+
+                      {expandedDescriptions['artStyle'] && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-500">
+                            일러스트 생성 시 이 설명을 참고합니다. 잘못된 부분이 있다면 직접 수정하세요.
+                          </p>
+                          <textarea
+                            value={currentStory.artStyleDescription || '이미지를 업로드하면 자동으로 분석됩니다.'}
+                            onChange={(e) => handleUpdateCurrentStory({ artStyleDescription: e.target.value })}
+                            disabled={!currentStory.artStyleDescription}
+                            className="w-full h-64 p-3 bg-gray-800 border border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-mono text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            placeholder="AI 분석 결과가 여기에 표시됩니다..."
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="mb-6">
                 <h3 className="text-xl font-semibold mb-4 text-gray-300">배경</h3>
                 <div className="space-y-4">
                     {currentStory.backgrounds.map((bg) => (
-                    <div key={bg.id} className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-gray-900/70 rounded-lg border border-gray-700">
-                        <div className="flex-1 w-full">
-                        <input
-                            type="text"
-                            value={bg.name}
-                            onChange={(e) => handleBackgroundChange(bg.id, 'name', e.target.value)}
-                            className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="배경 이름 (예: 왕궁 대전, 마법의 숲)"
-                        />
+                    <div key={bg.id} className="flex flex-col gap-4 p-4 bg-gray-900/70 rounded-lg border border-gray-700">
+                        <div className="flex flex-col sm:flex-row items-start gap-4">
+                          <div className="flex-1 w-full">
+                            <input
+                              type="text"
+                              value={bg.name}
+                              onChange={(e) => handleBackgroundChange(bg.id, 'name', e.target.value)}
+                              className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="배경 이름 (예: 왕궁 대전, 마법의 숲)"
+                            />
+                          </div>
+                          <div className="flex-1 w-full">
+                            <ReferenceImageUpload
+                              label={`${bg.name} 이미지`}
+                              image={bg.image}
+                              onImageChange={(img) => handleBackgroundChange(bg.id, 'image', img)}
+                              artStyle={currentStory.artStyle}
+                            />
+                          </div>
+                          <button
+                            onClick={() => handleRemoveBackground(bg.id)}
+                            className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                          >
+                            <TrashIcon className="w-6 h-6" />
+                          </button>
                         </div>
-                        <div className="flex-1 w-full">
-                        <ReferenceImageUpload
-                          label={`${bg.name} 이미지`}
-                          image={bg.image}
-                          onImageChange={(img) => handleBackgroundChange(bg.id, 'image', img)}
-                          artStyle={currentStory.artStyle}
-                        />
-                        </div>
-                        <button
-                        onClick={() => handleRemoveBackground(bg.id)}
-                        className="p-2 text-gray-400 hover:text-red-400 transition-colors"
-                        >
-                        <TrashIcon className="w-6 h-6" />
-                        </button>
+
+                        {/* AI Analysis Section */}
+                        {bg.image && (
+                          <div className="border-t border-gray-700 pt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <button
+                                onClick={() => setExpandedDescriptions(prev => ({ ...prev, [`bg_${bg.id}`]: !prev[`bg_${bg.id}`] }))}
+                                className="flex items-center gap-2 text-sm font-medium text-indigo-400 hover:text-indigo-300"
+                              >
+                                <svg
+                                  className={`w-4 h-4 transition-transform ${expandedDescriptions[`bg_${bg.id}`] ? 'rotate-90' : ''}`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                                AI 분석 결과 {bg.description ? '✓' : '(분석 대기 중)'}
+                              </button>
+                              {bg.description && (
+                                <button
+                                  onClick={() => handleReanalyzeBackground(bg.id)}
+                                  disabled={analyzingBackgrounds[bg.id]}
+                                  className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {analyzingBackgrounds[bg.id] ? '분석 중...' : '재분석'}
+                                </button>
+                              )}
+                            </div>
+
+                            {analyzingBackgrounds[bg.id] && (
+                              <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                                <div className="w-4 h-4 border-2 border-gray-400 border-t-indigo-400 rounded-full animate-spin"></div>
+                                <span>AI가 배경 환경을 분석하고 있습니다...</span>
+                              </div>
+                            )}
+
+                            {expandedDescriptions[`bg_${bg.id}`] && (
+                              <div className="space-y-2">
+                                <p className="text-xs text-gray-500">
+                                  일러스트 생성 시 이 설명을 참고합니다. 잘못된 부분이 있다면 직접 수정하세요.
+                                </p>
+                                <textarea
+                                  value={bg.description || '이미지를 업로드하면 자동으로 분석됩니다.'}
+                                  onChange={(e) => handleBackgroundChange(bg.id, 'description', e.target.value)}
+                                  disabled={!bg.description}
+                                  className="w-full h-64 p-3 bg-gray-800 border border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-mono text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  placeholder="AI 분석 결과가 여기에 표시됩니다..."
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
                     </div>
                     ))}
                 </div>
@@ -655,30 +930,85 @@ const App: React.FC = () => {
                 <h3 className="text-xl font-semibold mb-4 text-gray-300">캐릭터</h3>
                 <div className="space-y-4">
                     {currentStory.characters.map((char) => (
-                    <div key={char.id} className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-gray-900/70 rounded-lg border border-gray-700">
-                        <div className="flex-1 w-full">
-                        <input
-                            type="text"
-                            value={char.name}
-                            onChange={(e) => handleCharacterChange(char.id, 'name', e.target.value)}
-                            className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="캐릭터 이름"
-                        />
+                    <div key={char.id} className="flex flex-col gap-4 p-4 bg-gray-900/70 rounded-lg border border-gray-700">
+                        <div className="flex flex-col sm:flex-row items-start gap-4">
+                          <div className="flex-1 w-full">
+                            <input
+                              type="text"
+                              value={char.name}
+                              onChange={(e) => handleCharacterChange(char.id, 'name', e.target.value)}
+                              className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="캐릭터 이름"
+                            />
+                          </div>
+                          <div className="flex-1 w-full">
+                            <ReferenceImageUpload
+                              label={`${char.name} 이미지`}
+                              image={char.image}
+                              onImageChange={(img) => handleCharacterChange(char.id, 'image', img)}
+                              artStyle={currentStory.artStyle}
+                            />
+                          </div>
+                          <button
+                            onClick={() => handleRemoveCharacter(char.id)}
+                            className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                          >
+                            <TrashIcon className="w-6 h-6" />
+                          </button>
                         </div>
-                        <div className="flex-1 w-full">
-                        <ReferenceImageUpload
-                          label={`${char.name} 이미지`}
-                          image={char.image}
-                          onImageChange={(img) => handleCharacterChange(char.id, 'image', img)}
-                          artStyle={currentStory.artStyle}
-                        />
-                        </div>
-                        <button
-                        onClick={() => handleRemoveCharacter(char.id)}
-                        className="p-2 text-gray-400 hover:text-red-400 transition-colors"
-                        >
-                        <TrashIcon className="w-6 h-6" />
-                        </button>
+
+                        {/* AI Analysis Section */}
+                        {char.image && (
+                          <div className="border-t border-gray-700 pt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <button
+                                onClick={() => setExpandedDescriptions(prev => ({ ...prev, [char.id]: !prev[char.id] }))}
+                                className="flex items-center gap-2 text-sm font-medium text-indigo-400 hover:text-indigo-300"
+                              >
+                                <svg
+                                  className={`w-4 h-4 transition-transform ${expandedDescriptions[char.id] ? 'rotate-90' : ''}`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                                AI 분석 결과 {char.description ? '✓' : '(분석 대기 중)'}
+                              </button>
+                              {char.description && (
+                                <button
+                                  onClick={() => handleReanalyzeCharacter(char.id)}
+                                  disabled={analyzingCharacters[char.id]}
+                                  className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {analyzingCharacters[char.id] ? '분석 중...' : '재분석'}
+                                </button>
+                              )}
+                            </div>
+
+                            {analyzingCharacters[char.id] && (
+                              <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                                <div className="w-4 h-4 border-2 border-gray-400 border-t-indigo-400 rounded-full animate-spin"></div>
+                                <span>AI가 캐릭터 외형을 분석하고 있습니다...</span>
+                              </div>
+                            )}
+
+                            {expandedDescriptions[char.id] && (
+                              <div className="space-y-2">
+                                <p className="text-xs text-gray-500">
+                                  일러스트 생성 시 이 설명을 참고합니다. 잘못된 부분이 있다면 직접 수정하세요.
+                                </p>
+                                <textarea
+                                  value={char.description || '이미지를 업로드하면 자동으로 분석됩니다.'}
+                                  onChange={(e) => handleCharacterChange(char.id, 'description', e.target.value)}
+                                  disabled={!char.description}
+                                  className="w-full h-64 p-3 bg-gray-800 border border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-mono text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  placeholder="AI 분석 결과가 여기에 표시됩니다..."
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
                     </div>
                     ))}
                 </div>

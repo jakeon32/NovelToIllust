@@ -51,6 +51,7 @@ export const generateIllustration = async (
   characters: Character[],
   backgrounds: Background[],
   artStyle: ImageFile | null,
+  artStyleDescription: string | undefined,
   shotType: string,
   aspectRatio: string
 ): Promise<string> => {
@@ -63,6 +64,7 @@ export const generateIllustration = async (
         characters,
         backgrounds,
         artStyle,
+        artStyleDescription,
         shotType,
         aspectRatio,
       }),
@@ -143,5 +145,45 @@ export const analyzeCharacter = async (image: ImageFile): Promise<string> => {
   } catch (error) {
     console.error("Error analyzing character:", error);
     throw new Error("Failed to analyze character appearance.");
+  }
+};
+
+export const analyzeBackground = async (image: ImageFile): Promise<string> => {
+  try {
+    const response = await fetch(`${API_BASE}/api/analyze-background`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.description;
+  } catch (error) {
+    console.error("Error analyzing background:", error);
+    throw new Error("Failed to analyze background setting.");
+  }
+};
+
+export const analyzeArtStyle = async (image: ImageFile): Promise<string> => {
+  try {
+    const response = await fetch(`${API_BASE}/api/analyze-art-style`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.description;
+  } catch (error) {
+    console.error("Error analyzing art style:", error);
+    throw new Error("Failed to analyze art style.");
   }
 };
