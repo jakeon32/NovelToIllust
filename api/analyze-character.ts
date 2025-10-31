@@ -20,54 +20,35 @@ export default async function handler(req: any, res: any) {
       contents: {
         parts: [
           {
-            text: `Analyze this character image in extreme detail. Extract EVERY visual characteristic that would be needed to recreate this exact character in different scenes and poses.
+            text: `Analyze this character image and provide a CONCISE description focusing on key visual characteristics needed for consistent recreation. Keep it practical and scannable.
 
-**YOUR TASK:** Create a comprehensive character description that captures EVERY detail.
+**FORMAT YOUR RESPONSE (Keep each section brief, 1-2 sentences max):**
 
-**FORMAT YOUR RESPONSE AS A STRUCTURED LIST:**
-
-**FACE:**
-- Eye color: [specific shade]
-- Eye shape: [describe]
-- Eyebrow color and shape: [describe]
-- Nose: [describe shape and size]
-- Mouth: [describe shape, lip color]
-- Face shape: [oval, round, square, etc.]
-- Skin tone: [very specific shade description]
-- Facial features: [any marks, freckles, dimples, etc.]
+**FACE & EYES:**
+[Eye color (specific shade), skin tone, face shape. Note any distinctive facial features like marks or scars.]
 
 **HAIR:**
-- Color: [exact shade, e.g., "golden blonde", "dark brown with auburn highlights"]
-- Style: [describe cut and styling]
-- Length: [specific length]
-- Texture: [straight, wavy, curly, etc.]
-- Bangs: [yes/no, style if yes]
-- Accessories: [hair clips, bands, etc.]
+[Color (specific shade), style, length. Include any unique color variations or accessories.]
 
-**BODY:**
-- Build: [slim, athletic, muscular, etc.]
-- Height: [tall, average, short - relative impression]
-- Posture: [describe typical stance]
+**BODY & BUILD:**
+[Overall build (slim/athletic/etc.), approximate height, posture if distinctive.]
 
-**CLOTHING:**
-- Top: [describe in detail - color, style, material]
-- Bottom: [describe in detail]
-- Shoes: [if visible]
-- Colors: [list all clothing colors]
-- Style: [modern, fantasy, historical, etc.]
+**MAIN OUTFIT:**
+[Top and bottom - colors and key style. Keep to essentials only.]
 
-**ACCESSORIES:**
-- Jewelry: [earrings, necklaces, rings, etc.]
-- Glasses: [style if present]
-- Bags or items: [describe]
-- Other: [any other accessories]
+**DISTINCTIVE ACCESSORIES:**
+[Only the most noticeable items: glasses, jewelry, bags. Skip if none.]
 
-**DISTINCTIVE FEATURES:**
-- Unique characteristics: [scars, tattoos, birthmarks]
-- Expression: [typical facial expression]
-- Mood: [overall character vibe]
+**UNIQUE IDENTIFIERS:**
+[1-2 characteristics that make this character instantly recognizable. This is the most important section.]
 
-**IMPORTANT:** Be EXTREMELY specific. Instead of "blonde hair", say "shoulder-length golden blonde hair with subtle honey highlights". Instead of "blue eyes", say "bright sapphire blue eyes with a slight almond shape".`
+**OVERALL VIBE:**
+[One sentence: personality impression and typical expression.]
+
+**EXAMPLE OUTPUT:**
+"Bright sapphire blue eyes, fair skin, heart-shaped face. Shoulder-length golden blonde hair with honey highlights, straight with side-swept bangs. Slim build, average height. White button-up shirt, dark blue jeans. Black-rimmed round glasses, silver necklace. Instantly recognizable by: vibrant hair color and distinctive glasses. Professional yet approachable vibe, usually smiling warmly."
+
+**IMPORTANT:** Be specific with colors and key features, but avoid over-describing minor details. Focus on what an artist needs to maintain consistency across multiple scenes.`
           },
           {
             inlineData: {
