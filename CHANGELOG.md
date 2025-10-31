@@ -15,6 +15,157 @@
 
 ---
 
+## [2025-10-31 Hotfix 5] - 레퍼런스 분석 결과 저장 누락 수정
+
+### Fixed - 분석 결과가 장면 생성에 반영되지 않는 문제 해결
+
+**문제 상황**:
+```
+사용자: "캐릭터 다시 등록하면 새로운 분석결과가 장면 일러스트 생성에는 영향을 안줘.
+       분명 연결고리가 끊어져 있는 것임."
+```
+
+**재현 순서**:
+1. 캐릭터/배경/아트 스타일 이미지 업로드
+2. AI 분석 완료 → 분석 결과가 UI에 표시됨
+3. 장면 생성 클릭
+4. **문제**: 생성된 이미지가 분석 결과를 반영하지 않음
+5. 페이지 새로고침 → 분석 결과가 사라짐
+
+**근본 원인**:
+
+분석 완료 후 `setStories()`를 직접 호출하여 **React state만 업데이트**하고, **Supabase에는 저장하지 않음**:
+
+```typescript
+// 잘못된 코드 (3곳에서 발견)
+analyzeCharacter(image)
+  .then(description => {
+    setStories(prevStories =>  // ❌ 로컬 state만 업데이트
+      prevStories.map(story => ...)
+    );
+  });
+```
+
+**왜 문제가 되는가?**:
+1. `setStories`: React state만 업데이트 (메모리)
+2. `handleUpdateCurrentStory`: state 업데이트 + **디바운스 Supabase 자동 저장**
+3. 장면 생성 시: Supabase에서 데이터 조회 (최신 state 아님)
+4. 결과: 분석 결과가 없거나 오래된 데이터 사용
+
+**해결책**:
+
+모든 분석 완료 핸들러를 `handleUpdateCurrentStory`로 변경:
+
+```typescript
+// 수정된 코드
+analyzeCharacter(image)
+  .then(description => {
+    handleUpdateCurrentStory(prevStory => ({  // ✅ Supabase 자동 저장
+      characters: prevStory.characters.map(char =>
+        char.id === id ? { ...char, description } : char
+      ),
+    }));
+  });
+```
+
+**수정한 3곳**:
+1. **`handleCharacterChange`** (line 236-250)
+   - 캐릭터 이미지 업로드 → 분석 → description 저장
+2. **`handleBackgroundChange`** (line 329-343)
+   - 배경 이미지 업로드 → 분석 → description 저장
+3. **`handleArtStyleChange`** (line 404-414)
+   - 아트 스타일 이미지 업로드 → 분석 → artStyleDescription 저장
+
+### Technical Details
+
+**코드 변경 Before/After**:
+
+**Before (캐릭터 예시)**:
+```typescript
+analyzeCharacter(value as ImageFile)
+  .then(description => {
+    setStories(prevStories =>
+      prevStories.map(story =>
+        story.id === currentStoryId
+          ? {
+              ...story,
+              characters: story.characters.map(char =>
+                char.id === id ? { ...char, description } : char
+              ),
+            }
+          : story
+      )
+    );
+  });
+```
+
+**After (캐릭터 예시)**:
+```typescript
+analyzeCharacter(value as ImageFile)
+  .then(description => {
+    handleUpdateCurrentStory(prevStory => ({
+      characters: prevStory.characters.map(char =>
+        char.id === id ? { ...char, description } : char
+      ),
+    }));
+  });
+```
+
+**차이점**:
+- ❌ `setStories`: 로컬 state만 업데이트 (일시적)
+- ✅ `handleUpdateCurrentStory`: state 업데이트 + Supabase 저장 (영구적)
+
+**handleUpdateCurrentStory 내부 동작**:
+```typescript
+const handleUpdateCurrentStory = (updates) => {
+  setStories(prev => ...);  // 1. 즉시 UI 업데이트
+  debouncedSave();          // 2. 500ms 후 Supabase 자동 저장
+};
+```
+
+### User Impact
+
+**수정 전**:
+- ❌ 분석 결과가 장면 생성에 반영 안 됨
+- ❌ 페이지 새로고침 시 분석 결과 사라짐
+- ❌ 레퍼런스 재등록해도 이전 데이터 사용
+- ❌ 사용자 혼란 ("왜 안 바뀌지?")
+
+**수정 후**:
+- ✅ 분석 결과가 즉시 Supabase에 저장
+- ✅ 장면 생성 시 최신 분석 결과 사용
+- ✅ 페이지 새로고침해도 분석 결과 유지
+- ✅ 레퍼런스 재등록 시 즉시 반영
+- ✅ 일관된 사용자 경험
+
+**테스트 방법**:
+1. 캐릭터 이미지 업로드
+2. 분석 완료 대기 (5-10초)
+3. 개발자 도구 → Network → Supabase API 호출 확인
+4. Supabase 대시보드에서 description 필드 확인
+5. 장면 생성 → 분석 결과 반영 확인
+
+### Debugging Tips
+
+**분석 결과가 저장되는지 확인**:
+```javascript
+// 브라우저 콘솔에서
+console.log('Current story:', currentStory);
+console.log('Character descriptions:', currentStory.characters.map(c => c.description));
+```
+
+**Supabase에 저장되었는지 확인**:
+```sql
+-- Supabase SQL Editor
+SELECT
+  c.name,
+  LEFT(c.description, 100) as description_preview
+FROM characters c
+WHERE story_id = 'your-story-id';
+```
+
+---
+
 ## [2025-10-31 Hotfix 4] - 씬 이미지 스토리지 용량 문제 해결
 
 ### Fixed - QuotaExceededError 해결 (localStorage → IndexedDB)
