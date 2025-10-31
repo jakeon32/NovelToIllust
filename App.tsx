@@ -68,7 +68,7 @@ const App: React.FC = () => {
       if (!user) return; // Wait for user to be loaded
 
       try {
-        // Load stories from Supabase
+        // Load stories from Supabase (WITHOUT scenes - they're not stored there)
         let loadedStories = await loadStoriesFromSupabase();
 
         // If no stories in Supabase, try to migrate from IndexedDB
@@ -88,6 +88,27 @@ const App: React.FC = () => {
             await saveStoriesToSupabase(localStories);
             loadedStories = localStories;
           }
+        } else {
+          // CRITICAL: Restore scenes from IndexedDB
+          // Supabase doesn't store scenes, but IndexedDB does
+          console.log('📚 Restoring scenes from IndexedDB...');
+          const indexedDBStories = await loadStories();
+
+          loadedStories = loadedStories.map(supabaseStory => {
+            // Find matching story in IndexedDB
+            const indexedDBStory = indexedDBStories.find(s => s.id === supabaseStory.id);
+
+            if (indexedDBStory && indexedDBStory.scenes && indexedDBStory.scenes.length > 0) {
+              console.log(`✅ Restored ${indexedDBStory.scenes.length} scenes for story: ${supabaseStory.title}`);
+              return {
+                ...supabaseStory,
+                scenes: indexedDBStory.scenes, // Restore scenes from IndexedDB
+              };
+            }
+
+            // No scenes in IndexedDB, keep empty
+            return supabaseStory;
+          });
         }
 
         // Migrate scene images from localStorage to IndexedDB if needed
@@ -124,12 +145,20 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const saveStoriesAsync = async () => {
-      if (stories.length > 0 && user) {
+      if (stories.length > 0) {
         try {
-          // Save all stories to Supabase (debounced)
-          await saveStoriesToSupabase(stories);
+          // CRITICAL: Save to IndexedDB FIRST (for local persistence)
+          // This ensures scenes are not lost when switching tabs or refreshing
+          await saveStories(stories);
+          console.log('💾 Stories saved to IndexedDB (including scenes)');
+
+          // Then save to Supabase if user is logged in
+          if (user) {
+            await saveStoriesToSupabase(stories);
+            console.log('☁️ Stories saved to Supabase (excluding scenes)');
+          }
         } catch (e) {
-          console.error("Failed to save stories to Supabase:", e);
+          console.error("Failed to save stories:", e);
           setError("스토리를 저장할 수 없습니다.");
         }
       }
