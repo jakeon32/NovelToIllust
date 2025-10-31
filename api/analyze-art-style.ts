@@ -20,73 +20,32 @@ export default async function handler(req: any, res: any) {
       contents: {
         parts: [
           {
-            text: `Analyze this art style reference image in extreme detail. Extract EVERY artistic technique and visual characteristic that would be needed to recreate artwork in this exact same style.
+            text: `Analyze this art style reference and provide a CONCISE description focusing on the most important stylistic elements. Keep it brief and practical for artists to reference.
 
-**YOUR TASK:** Create a comprehensive art style description that captures EVERY stylistic element.
+**FORMAT YOUR RESPONSE (Keep each section to 1-2 sentences):**
 
-**FORMAT YOUR RESPONSE AS A STRUCTURED LIST:**
-
-**ARTISTIC MEDIUM & TECHNIQUE:**
-- Medium: [watercolor, oil painting, digital art, pencil sketch, etc.]
-- Technique: [traditional, digital, mixed media, etc.]
-- Finish: [rough, polished, textured, smooth, etc.]
-- Tool marks: [visible brush strokes, pen lines, pixel art, etc.]
+**MEDIUM & TECHNIQUE:**
+[Identify: watercolor/digital/oil/pencil, traditional/digital, visible brushwork or smooth]
 
 **LINE WORK:**
-- Line style: [clean, sketchy, bold, delicate, etc.]
-- Line weight: [uniform, varied, thick, thin, etc.]
-- Line quality: [smooth, rough, broken, continuous, etc.]
-- Outline presence: [strong outlines, no outlines, partial outlines, etc.]
+[Describe: line thickness, style (clean/sketchy), and outline presence]
 
-**COLOR PALETTE:**
-- Overall palette: [vibrant, muted, pastel, monochrome, limited, full spectrum, etc.]
-- Dominant colors: [list main colors with specific shades]
-- Color harmony: [complementary, analogous, triadic, etc.]
-- Color temperature: [warm, cool, neutral, mixed, etc.]
-- Saturation level: [highly saturated, desaturated, varied, etc.]
+**COLOR:**
+[Describe: overall palette (vibrant/muted/pastel), 2-3 dominant colors, warm/cool temperature]
 
 **SHADING & LIGHTING:**
-- Shading technique: [cell shading, soft gradient, hard shadows, no shading, etc.]
-- Shadow style: [realistic, stylized, minimal, dramatic, etc.]
-- Highlight style: [sharp, soft, specular, diffuse, etc.]
-- Light source: [clear directional, ambient, dramatic, flat, etc.]
-- Value range: [high contrast, low contrast, full range, limited range, etc.]
+[Describe: shading technique (cell shading/gradient/realistic), shadow style, contrast level]
 
-**TEXTURE & DETAIL:**
-- Texture level: [highly textured, smooth, varied, etc.]
-- Detail density: [highly detailed, simplified, selective detail, etc.]
-- Surface quality: [rough, smooth, grainy, clean, etc.]
-- Pattern usage: [heavy patterns, minimal, ornate, simple, etc.]
+**STYLE GENRE:**
+[Identify: anime/manga/western comic/realistic/impressionist/etc., and stylization level]
 
-**COMPOSITION & STYLE:**
-- Composition approach: [balanced, dynamic, static, asymmetric, etc.]
-- Perspective: [realistic, stylized, flat, isometric, etc.]
-- Proportions: [realistic, exaggerated, chibi, elongated, etc.]
-- Stylization level: [highly realistic, semi-realistic, stylized, abstract, etc.]
+**MOOD:**
+[One sentence: overall atmosphere and emotional tone]
 
-**ARTISTIC INFLUENCES:**
-- Art style genre: [anime, manga, western comic, renaissance, impressionist, etc.]
-- Cultural influence: [Japanese, Western, Eastern, etc.]
-- Era/period: [modern, classic, retro, contemporary, etc.]
-- Similar artists/styles: [if recognizable]
+**KEY DISTINCTIVE FEATURES:**
+[1-2 unique characteristics that define this style]
 
-**MOOD & ATMOSPHERE:**
-- Overall mood: [cheerful, dark, dreamy, energetic, calm, etc.]
-- Atmosphere: [light and airy, heavy and dense, ethereal, grounded, etc.]
-- Emotional tone: [warm, cold, inviting, distant, etc.]
-
-**TECHNICAL EXECUTION:**
-- Rendering quality: [professional, sketch-like, polished, rough, etc.]
-- Blending: [smooth blending, hard edges, no blending, etc.]
-- Edge treatment: [soft, sharp, varied, lost edges, etc.]
-- Brushwork visibility: [visible strokes, smooth finish, textured, etc.]
-
-**SPECIAL CHARACTERISTICS:**
-- Unique features: [any distinctive techniques or hallmarks]
-- Signature elements: [recurring visual motifs or patterns]
-- Special effects: [glow, blur, grain, halftone, etc.]
-
-**IMPORTANT:** Be EXTREMELY specific with every aspect. Instead of "colorful", say "vibrant saturated colors with emphasis on warm reds and oranges contrasted with cool blues". Instead of "nice shading", say "soft gradient cell shading with distinct but smooth transitions between light and shadow, using a cool-toned light source from upper left".`
+**IMPORTANT:** Be specific but concise. Instead of listing everything, focus on what makes this style unique and recognizable. For example: "Vibrant digital art with bold, thick outlines. Saturated warm colors (oranges, reds) contrasted with cool blues. Cell shading with strong shadows. Anime-inspired with slightly exaggerated proportions. Energetic and cheerful mood."`
           },
           {
             inlineData: {

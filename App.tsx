@@ -210,37 +210,51 @@ const App: React.FC = () => {
         char.id === id ? { ...char, [field]: value } : char
       );
 
-      // If image is being updated and a new image is provided, automatically analyze it
-      if (field === 'image' && value) {
-        console.log('🔍 Analyzing character appearance...');
-        setAnalyzingCharacters(prev => ({ ...prev, [id]: true }));
-        try {
-          const description = await analyzeCharacter(value as ImageFile);
-          console.log('✅ Character analysis complete:', description.substring(0, 100) + '...');
-
-          // Update the character with both image and description
-          updatedCharacters = updatedCharacters.map((char) =>
-            char.id === id ? { ...char, image: value as ImageFile, description } : char
-          );
-
-          // Auto-expand the description after analysis
-          setExpandedDescriptions(prev => ({ ...prev, [id]: true }));
-        } catch (error) {
-          console.error('Failed to analyze character:', error);
-          setError('캐릭터 분석에 실패했습니다.');
-          // Continue anyway with just the image
-        } finally {
-          setAnalyzingCharacters(prev => ({ ...prev, [id]: false }));
-        }
-      }
-
       console.log('👤 Character updated:', {
         characterId: id,
         field,
         hasImage: field === 'image' ? !!value : 'N/A',
         timestamp: new Date().toISOString()
       });
+
+      // Update UI immediately first
       handleUpdateCurrentStory({ characters: updatedCharacters });
+
+      // If image is being updated and a new image is provided, analyze it in background
+      if (field === 'image' && value) {
+        console.log('🔍 Analyzing character appearance...');
+        setAnalyzingCharacters(prev => ({ ...prev, [id]: true }));
+
+        // Run analysis in background (don't block UI)
+        analyzeCharacter(value as ImageFile)
+          .then(description => {
+            console.log('✅ Character analysis complete:', description.substring(0, 100) + '...');
+
+            // Update only the description (image already shown)
+            setStories(prevStories =>
+              prevStories.map(story =>
+                story.id === currentStoryId
+                  ? {
+                      ...story,
+                      characters: story.characters.map(char =>
+                        char.id === id ? { ...char, description } : char
+                      ),
+                    }
+                  : story
+              )
+            );
+
+            // Auto-expand the description after analysis
+            setExpandedDescriptions(prev => ({ ...prev, [id]: true }));
+          })
+          .catch(error => {
+            console.error('Failed to analyze character:', error);
+            setError('캐릭터 분석에 실패했습니다.');
+          })
+          .finally(() => {
+            setAnalyzingCharacters(prev => ({ ...prev, [id]: false }));
+          });
+      }
   };
 
   const handleReanalyzeCharacter = async (id: string) => {
@@ -295,37 +309,51 @@ const App: React.FC = () => {
       bg.id === id ? { ...bg, [field]: value } : bg
     );
 
-    // If image is being updated and a new image is provided, automatically analyze it
-    if (field === 'image' && value) {
-      console.log('🔍 Analyzing background setting...');
-      setAnalyzingBackgrounds(prev => ({ ...prev, [id]: true }));
-      try {
-        const description = await analyzeBackground(value as ImageFile);
-        console.log('✅ Background analysis complete:', description.substring(0, 100) + '...');
-
-        // Update the background with both image and description
-        updatedBackgrounds = updatedBackgrounds.map((bg) =>
-          bg.id === id ? { ...bg, image: value as ImageFile, description } : bg
-        );
-
-        // Auto-expand the description after analysis
-        setExpandedDescriptions(prev => ({ ...prev, [`bg_${id}`]: true }));
-      } catch (error) {
-        console.error('Failed to analyze background:', error);
-        setError('배경 분석에 실패했습니다.');
-        // Continue anyway with just the image
-      } finally {
-        setAnalyzingBackgrounds(prev => ({ ...prev, [id]: false }));
-      }
-    }
-
     console.log('🏞️ Background updated:', {
       backgroundId: id,
       field,
       hasImage: field === 'image' ? !!value : 'N/A',
       timestamp: new Date().toISOString()
     });
+
+    // Update UI immediately first
     handleUpdateCurrentStory({ backgrounds: updatedBackgrounds });
+
+    // If image is being updated and a new image is provided, analyze it in background
+    if (field === 'image' && value) {
+      console.log('🔍 Analyzing background setting...');
+      setAnalyzingBackgrounds(prev => ({ ...prev, [id]: true }));
+
+      // Run analysis in background (don't block UI)
+      analyzeBackground(value as ImageFile)
+        .then(description => {
+          console.log('✅ Background analysis complete:', description.substring(0, 100) + '...');
+
+          // Update only the description (image already shown)
+          setStories(prevStories =>
+            prevStories.map(story =>
+              story.id === currentStoryId
+                ? {
+                    ...story,
+                    backgrounds: story.backgrounds.map(bg =>
+                      bg.id === id ? { ...bg, description } : bg
+                    ),
+                  }
+                : story
+            )
+          );
+
+          // Auto-expand the description after analysis
+          setExpandedDescriptions(prev => ({ ...prev, [`bg_${id}`]: true }));
+        })
+        .catch(error => {
+          console.error('Failed to analyze background:', error);
+          setError('배경 분석에 실패했습니다.');
+        })
+        .finally(() => {
+          setAnalyzingBackgrounds(prev => ({ ...prev, [id]: false }));
+        });
+    }
   };
 
   const handleReanalyzeBackground = async (id: string) => {
@@ -369,28 +397,47 @@ const App: React.FC = () => {
       timestamp: new Date().toISOString()
     });
 
-    // If new art style image is provided, automatically analyze it
+    // Update UI immediately first
+    handleUpdateCurrentStory({ artStyle });
+
+    // If new art style image is provided, analyze it in background
     if (artStyle) {
       console.log('🔍 Analyzing art style...');
       setAnalyzingArtStyle(true);
-      try {
-        const description = await analyzeArtStyle(artStyle);
-        console.log('✅ Art style analysis complete:', description.substring(0, 100) + '...');
 
-        handleUpdateCurrentStory({ artStyle, artStyleDescription: description });
+      // Run analysis in background (don't block UI)
+      analyzeArtStyle(artStyle)
+        .then(description => {
+          console.log('✅ Art style analysis complete:', description.substring(0, 100) + '...');
 
-        // Auto-expand the description after analysis
-        setExpandedDescriptions(prev => ({ ...prev, 'artStyle': true }));
-      } catch (error) {
-        console.error('Failed to analyze art style:', error);
-        setError('아트 스타일 분석에 실패했습니다.');
-        // Continue anyway with just the image
-        handleUpdateCurrentStory({ artStyle });
-      } finally {
-        setAnalyzingArtStyle(false);
-      }
+          // Update only the description (image already shown)
+          setStories(prevStories =>
+            prevStories.map(story =>
+              story.id === currentStoryId
+                ? { ...story, artStyleDescription: description }
+                : story
+            )
+          );
+
+          // Auto-expand the description after analysis
+          setExpandedDescriptions(prev => ({ ...prev, 'artStyle': true }));
+        })
+        .catch(error => {
+          console.error('Failed to analyze art style:', error);
+          setError('아트 스타일 분석에 실패했습니다.');
+        })
+        .finally(() => {
+          setAnalyzingArtStyle(false);
+        });
     } else {
-      handleUpdateCurrentStory({ artStyle, artStyleDescription: undefined });
+      // Clear art style description if image is removed
+      setStories(prevStories =>
+        prevStories.map(story =>
+          story.id === currentStoryId
+            ? { ...story, artStyleDescription: undefined }
+            : story
+        )
+      );
     }
   };
 

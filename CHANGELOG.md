@@ -15,6 +15,75 @@
 
 ---
 
+## [2025-10-31 Hotfix] - UI 반응성 개선 및 분석 최적화
+
+### Fixed - 이미지 업로드 즉시 반영
+
+**문제**: 레퍼런스 이미지 업로드 시 AI 분석이 완료될 때까지 이미지가 표시되지 않음
+- 사용자가 이미지를 업로드해도 UI에 즉시 나타나지 않음
+- 새로고침하거나 스토리를 다시 선택해야 이미지 확인 가능
+- 사용자 경험 저하 및 혼란 야기
+
+**해결책**: 백그라운드 분석으로 전환
+- 이미지 업로드 → **즉시 UI 업데이트** → AI 분석 (백그라운드)
+- 분석이 완료되면 description만 별도로 업데이트
+- 사용자는 이미지를 즉시 확인하고 분석이 진행되는 것을 볼 수 있음
+
+**적용 대상**:
+- `handleCharacterChange()`: 캐릭터 이미지
+- `handleBackgroundChange()`: 배경 이미지
+- `handleArtStyleChange()`: 아트 스타일 이미지
+
+### Changed - 아트 스타일 분석 간소화
+
+**변경 전**: 매우 상세한 분석 (10+ 카테고리, 긴 설명)
+- 미디움/기법, 선 작업, 색상, 음영, 질감, 구도, 영향, 분위기, 기술, 특수 효과 등
+- 과도하게 상세하여 가독성 저하
+- 캐릭터/배경과 달리 전반적인 스타일 참고용으로는 과한 수준
+
+**변경 후**: 핵심 요소만 간결하게 (7개 카테고리, 각 1-2문장)
+- Medium & Technique
+- Line Work
+- Color
+- Shading & Lighting
+- Style Genre
+- Mood
+- Key Distinctive Features
+
+**예시 출력**:
+```
+"Vibrant digital art with bold, thick outlines.
+Saturated warm colors (oranges, reds) contrasted with cool blues.
+Cell shading with strong shadows.
+Anime-inspired with slightly exaggerated proportions.
+Energetic and cheerful mood."
+```
+
+**장점**:
+- ✅ 빠른 스캔 가능
+- ✅ 핵심 스타일 특징만 파악
+- ✅ 일러스트 생성 시 효율적인 참고
+- ✅ AI 응답 시간 단축 가능
+
+### Technical Details
+
+**수정 파일**:
+- `App.tsx`:
+  - `handleCharacterChange()`: 이미지 즉시 업데이트, 분석 비동기 처리
+  - `handleBackgroundChange()`: 이미지 즉시 업데이트, 분석 비동기 처리
+  - `handleArtStyleChange()`: 이미지 즉시 업데이트, 분석 비동기 처리
+  - `.then()/.catch()/.finally()` 패턴 사용
+- `api/analyze-art-style.ts`:
+  - 프롬프트 대폭 간소화
+  - 섹션 수 감소 (10+ → 7개)
+  - 각 섹션 길이 제한 (1-2 문장)
+
+**성능 개선**:
+- 이미지 업로드 → UI 반영: 즉시 (기존: 5~10초 대기)
+- 아트 스타일 분석 응답: 더 빠르고 간결
+
+---
+
 ## [2025-10-31] - 레퍼런스 AI 분석 & 스토리지 최적화
 
 ### Added - AI 분석 결과 확인 및 편집 기능
