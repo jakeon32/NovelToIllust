@@ -67,14 +67,8 @@ export async function loadStoriesFromSupabase(): Promise<Story[]> {
     const stories: Story[] = [];
 
     for (const storyData of storiesData) {
-      // Fetch scenes
-      const { data: scenesData, error: scenesError } = await supabase
-        .from('scenes')
-        .select('*')
-        .eq('story_id', storyData.id)
-        .order('order_index', { ascending: true });
-
-      if (scenesError) throw scenesError;
+      // Note: Scenes are NOT loaded from Supabase
+      // They are generated fresh each time from the novel text
 
       // Fetch characters
       const { data: charactersData, error: charactersError } = await supabase
@@ -113,14 +107,7 @@ export async function loadStoriesFromSupabase(): Promise<Story[]> {
           image: dataUrlToImageFile(b.image_url, b.name)!,
           description: b.description || undefined,
         })),
-        scenes: (scenesData || []).map(s => ({
-          id: s.id,
-          description: s.description,
-          imageUrl: undefined, // Scene images are stored in local storage, not Supabase
-          shotType: s.shot_type || 'medium_shot',
-          aspectRatio: s.aspect_ratio || '1:1',
-          isGenerating: false,
-        })),
+        scenes: [], // Scenes are NOT stored in Supabase - they are generated fresh from novel text
       };
 
       stories.push(story);
@@ -161,12 +148,11 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
 
     if (storyError) throw storyError;
 
-    // Get current scene/character/background IDs to detect deletions
-    const { data: existingScenes } = await supabase
-      .from('scenes')
-      .select('id')
-      .eq('story_id', storyId);
+    // Note: Scenes are NOT saved to Supabase
+    // They are generated fresh each time from the novel text
+    // Scene images are stored in browser's IndexedDB only
 
+    // Get current character/background IDs to detect deletions
     const { data: existingCharacters } = await supabase
       .from('characters')
       .select('id')
@@ -176,42 +162,6 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
       .from('backgrounds')
       .select('id')
       .eq('story_id', storyId);
-
-    // Upsert scenes (insert or update)
-    if (story.scenes.length > 0) {
-      const sceneIds = story.scenes.map(s => ensureUUID(s.id));
-
-      const { error: scenesError } = await supabase
-        .from('scenes')
-        .upsert(
-          story.scenes.map((scene, index) => ({
-            id: ensureUUID(scene.id),
-            story_id: storyId,
-            description: scene.description,
-            shot_type: scene.shotType,
-            aspect_ratio: scene.aspectRatio,
-            image_url: null, // Scene images are stored in local storage, not Supabase
-            order_index: index,
-          })),
-          { onConflict: 'id' }
-        );
-
-      if (scenesError) throw scenesError;
-
-      // Delete scenes that are no longer in the story
-      if (existingScenes && existingScenes.length > 0) {
-        const scenesToDelete = existingScenes
-          .filter(s => !sceneIds.includes(s.id))
-          .map(s => s.id);
-
-        if (scenesToDelete.length > 0) {
-          await supabase.from('scenes').delete().in('id', scenesToDelete);
-        }
-      }
-    } else {
-      // If no scenes, delete all existing scenes
-      await supabase.from('scenes').delete().eq('story_id', storyId);
-    }
 
     // Upsert characters (insert or update)
     if (story.characters.length > 0) {

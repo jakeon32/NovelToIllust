@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Scene } from '../types';
 import Loader from './Loader';
 import ArrowPathIcon from './icons/ArrowPathIcon';
@@ -43,6 +43,14 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDe
   const [isPromptExpanded, setIsPromptExpanded] = useState(false);
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
   const [editedPrompt, setEditedPrompt] = useState(scene.customPrompt || '');
+
+  // Auto-expand prompt section when a new prompt is generated
+  useEffect(() => {
+    if (scene.customPrompt && !scene.imageUrl && editedPrompt !== scene.customPrompt) {
+      setIsPromptExpanded(true);
+      setEditedPrompt(scene.customPrompt);
+    }
+  }, [scene.customPrompt, scene.imageUrl]);
 
   const handleSaveDescription = () => {
     if (editedDescription.trim() && editedDescription !== scene.description) {
@@ -143,19 +151,35 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDe
                 className="flex items-center justify-between w-full text-left text-xs font-medium text-gray-400 hover:text-gray-300 transition-colors"
               >
                 <span>생성 프롬프트 {isPromptExpanded ? '▼' : '▶'}</span>
-                {!isEditingPrompt && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsEditingPrompt(true);
-                      setIsPromptExpanded(true);
-                    }}
-                    className="p-1 text-gray-500 hover:text-indigo-400 transition-colors"
-                    title="프롬프트 편집"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {!isEditingPrompt && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm('프롬프트를 초기화하고 재생성하시겠습니까?')) {
+                            onCustomPromptChange(scene.id, '');
+                          }
+                        }}
+                        className="p-1 text-gray-500 hover:text-yellow-400 transition-colors"
+                        title="프롬프트 초기화 (재생성)"
+                      >
+                        <ArrowPathIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEditingPrompt(true);
+                          setIsPromptExpanded(true);
+                        }}
+                        className="p-1 text-gray-500 hover:text-indigo-400 transition-colors"
+                        title="프롬프트 편집"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
               </button>
 
               {isPromptExpanded && (

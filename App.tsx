@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Character, Scene, ImageFile, Story, Background } from './types';
-import { generateScenesFromText, generateIllustration, generateTitleFromText, editIllustration, analyzeCharacter, analyzeBackground, analyzeArtStyle } from './services/geminiService';
+import { generateScenesFromText, generateIllustration, generateTitleFromText, editIllustration, analyzeCharacter, analyzeBackground, analyzeArtStyle, generatePrompt } from './services/geminiService';
 import { loadStories, saveStories, migrateFromLocalStorage, isIndexedDBAvailable } from './utils/storage';
 import { supabase } from './services/supabaseClient';
 import { loadStoriesFromSupabase, saveStoriesToSupabase, deleteStoryFromSupabase, saveStoryToSupabase } from './services/supabaseStorage';
@@ -298,6 +298,16 @@ const App: React.FC = () => {
   
   const handleRemoveCharacter = (id: string) => {
     if (!currentStory) return;
+
+    const character = currentStory.characters.find(c => c.id === id);
+    const confirmMessage = character?.description
+      ? `"${character.name}" 캐릭터와 분석 내용을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`
+      : `"${character?.name}" 캐릭터를 삭제하시겠습니까?`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
     const updatedCharacters = currentStory.characters.filter((char) => char.id !== id);
     handleUpdateCurrentStory({ characters: updatedCharacters });
   };
@@ -391,11 +401,32 @@ const App: React.FC = () => {
 
   const handleRemoveBackground = (id: string) => {
     if (!currentStory) return;
+
+    const background = currentStory.backgrounds.find(b => b.id === id);
+    const confirmMessage = background?.description
+      ? `"${background.name}" 배경과 분석 내용을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`
+      : `"${background?.name}" 배경을 삭제하시겠습니까?`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
     const updatedBackgrounds = currentStory.backgrounds.filter((bg) => bg.id !== id);
     handleUpdateCurrentStory({ backgrounds: updatedBackgrounds });
   };
 
   const handleArtStyleChange = async (artStyle: ImageFile | null) => {
+    // If removing art style, ask for confirmation
+    if (!artStyle && currentStory?.artStyle) {
+      const confirmMessage = currentStory.artStyleDescription
+        ? '아트 스타일 레퍼런스와 분석 내용을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'
+        : '아트 스타일 레퍼런스를 삭제하시겠습니까?';
+
+      if (!window.confirm(confirmMessage)) {
+        return;
+      }
+    }
+
     console.log('🎨 Art style updated:', {
       hasImage: !!artStyle,
       timestamp: new Date().toISOString()
@@ -501,6 +532,39 @@ const App: React.FC = () => {
     const scene = currentStory.scenes.find(s => s.id === sceneId);
     if (!scene) return;
 
+    // STEP 1: If no customPrompt exists, generate it first and save it
+    if (!scene.customPrompt) {
+      console.log('📝 No custom prompt found, generating prompt first...');
+
+      try {
+        const generatedPrompt = await generatePrompt(
+          scene.description,
+          currentStory.characters,
+          currentStory.backgrounds,
+          currentStory.artStyleDescription,
+          scene.shotType
+        );
+
+        // Save the generated prompt to the scene
+        handleUpdateCurrentStory(prevStory => ({
+          scenes: prevStory.scenes.map(s =>
+            s.id === sceneId ? { ...s, customPrompt: generatedPrompt } : s
+          )
+        }));
+
+        console.log('✅ Prompt generated and saved:', generatedPrompt.substring(0, 200) + '...');
+        alert('프롬프트가 생성되었습니다. 장면 카드에서 프롬프트를 확인하고 수정한 후 다시 이미지 생성 버튼을 눌러주세요.');
+        return; // Stop here, user needs to review the prompt
+      } catch (err) {
+        console.error('Failed to generate prompt:', err);
+        setError('프롬프트 생성에 실패했습니다.');
+        return;
+      }
+    }
+
+    // STEP 2: If customPrompt exists, proceed with image generation
+    console.log('✅ Using existing custom prompt for image generation');
+
     handleUpdateCurrentStory(prevStory => ({
         scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, isGenerating: true } : s)
     }));
@@ -520,29 +584,45 @@ const App: React.FC = () => {
       timestamp: new Date().toISOString()
     });
 
-    console.log('🎨 Generating with latest references:', {
-      sceneDescription: scene.description,
-      characters: latestStory.characters.map(c => ({
+    console.log('\n' + '='.repeat(100));
+    console.log('🎨 FRONTEND: Preparing data for API call');
+    console.log('='.repeat(100));
+    console.log('📝 Scene Description:', scene.description);
+    console.log('📐 Shot Type:', scene.shotType);
+    console.log('📐 Aspect Ratio:', scene.aspectRatio);
+    console.log('\n👥 Characters to send:', latestStory.characters.length);
+    latestStory.characters.forEach((c, idx) => {
+      console.log(`   Character ${idx + 1}:`, {
         name: c.name,
         hasImage: !!c.image,
+        imageType: c.image?.mimeType,
+        imageSize: c.image?.base64?.length || 0,
         hasDescription: !!c.description,
-        descriptionPreview: c.description ? c.description.substring(0, 100) + '...' : 'NO DESCRIPTION',
-        imagePreview: c.image ? c.image.base64.substring(0, 50) + '...' : 'NO IMAGE'
-      })),
-      backgrounds: latestStory.backgrounds.map(b => ({
+        descriptionLength: c.description?.length || 0,
+        descriptionPreview: c.description ? c.description.substring(0, 100) + '...' : 'NO DESCRIPTION'
+      });
+    });
+    console.log('\n🏞️  Backgrounds to send:', latestStory.backgrounds.length);
+    latestStory.backgrounds.forEach((b, idx) => {
+      console.log(`   Background ${idx + 1}:`, {
         name: b.name,
         hasImage: !!b.image,
+        imageType: b.image?.mimeType,
+        imageSize: b.image?.base64?.length || 0,
         hasDescription: !!b.description,
-        descriptionPreview: b.description ? b.description.substring(0, 100) + '...' : 'NO DESCRIPTION',
-        imagePreview: b.image ? b.image.base64.substring(0, 50) + '...' : 'NO IMAGE'
-      })),
-      artStyle: latestStory.artStyle ? {
-        hasImage: true,
-        hasDescription: !!latestStory.artStyleDescription,
-        descriptionPreview: latestStory.artStyleDescription ? latestStory.artStyleDescription.substring(0, 100) + '...' : 'NO DESCRIPTION',
-        imagePreview: latestStory.artStyle.base64.substring(0, 50) + '...'
-      } : 'NO ART STYLE'
+        descriptionLength: b.description?.length || 0,
+        descriptionPreview: b.description ? b.description.substring(0, 100) + '...' : 'NO DESCRIPTION'
+      });
     });
+    console.log('\n🎨 Art Style to send:', latestStory.artStyle ? {
+      hasImage: true,
+      imageType: latestStory.artStyle.mimeType,
+      imageSize: latestStory.artStyle.base64?.length || 0,
+      hasDescription: !!latestStory.artStyleDescription,
+      descriptionLength: latestStory.artStyleDescription?.length || 0,
+      descriptionPreview: latestStory.artStyleDescription ? latestStory.artStyleDescription.substring(0, 100) + '...' : 'NO DESCRIPTION'
+    } : 'NO ART STYLE');
+    console.log('='.repeat(100) + '\n');
 
     console.log('📊 Current story state check:', {
       storyId: latestStory.id,

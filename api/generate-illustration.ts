@@ -14,18 +14,86 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'Scene description is required' });
   }
 
+  console.log('\n' + '='.repeat(100));
+  console.log('🔍 DEBUGGING: generate-illustration.ts received data');
+  console.log('='.repeat(100));
+  console.log('📝 Scene Description:', sceneDescription);
+  console.log('👥 Characters received:', characters?.length || 0);
+  characters?.forEach((char: any, idx: number) => {
+    console.log(`   Character ${idx + 1}:`, {
+      name: char.name,
+      hasImage: !!char.image,
+      hasDescription: !!char.description,
+      imageType: char.image?.mimeType,
+      imageSize: char.image?.base64?.length || 0,
+      descriptionPreview: char.description?.substring(0, 100) || 'NO DESCRIPTION'
+    });
+  });
+  console.log('🏞️  Backgrounds received:', backgrounds?.length || 0);
+  backgrounds?.forEach((bg: any, idx: number) => {
+    console.log(`   Background ${idx + 1}:`, {
+      name: bg.name,
+      hasImage: !!bg.image,
+      hasDescription: !!bg.description,
+      imageType: bg.image?.mimeType,
+      imageSize: bg.image?.base64?.length || 0,
+      descriptionPreview: bg.description?.substring(0, 100) || 'NO DESCRIPTION'
+    });
+  });
+  console.log('🎨 Art Style:', {
+    hasImage: !!artStyle,
+    hasDescription: !!artStyleDescription,
+    imageType: artStyle?.mimeType,
+    imageSize: artStyle?.base64?.length || 0,
+    descriptionPreview: artStyleDescription?.substring(0, 100) || 'NO DESCRIPTION'
+  });
+  console.log('='.repeat(100) + '\n');
+
   try {
     // Find which characters are actually mentioned in this specific scene
-    const relevantCharacters = (characters || []).filter((char: any) =>
+    let relevantCharacters = (characters || []).filter((char: any) =>
       char.name.trim() &&
       new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
     );
 
+    // FALLBACK: If no characters matched but we have characters, use all of them
+    // This ensures character consistency even when names aren't explicitly mentioned
+    if (relevantCharacters.length === 0 && characters && characters.length > 0) {
+      console.warn('⚠️ No characters matched by name filtering. Using ALL characters as fallback.');
+      relevantCharacters = characters;
+    }
+
     // Find which backgrounds are actually mentioned in this specific scene
-    const relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
+    let relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
       bg.name.trim() &&
       new RegExp(`\\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
     );
+
+    // FALLBACK: If no backgrounds matched but we have backgrounds, use all of them
+    if (relevantBackgrounds.length === 0 && backgrounds && backgrounds.length > 0) {
+      console.warn('⚠️ No backgrounds matched by name filtering. Using ALL backgrounds as fallback.');
+      relevantBackgrounds = backgrounds;
+    }
+
+    console.log('\n' + '='.repeat(100));
+    console.log('🎯 FINAL REFERENCE SELECTION');
+    console.log('='.repeat(100));
+    console.log('👥 Characters to use:', relevantCharacters.length);
+    relevantCharacters.forEach((char: any, idx: number) => {
+      console.log(`   ${idx + 1}. ${char.name} - has image: ${!!char.image}, has description: ${!!char.description}`);
+    });
+
+    console.log('🏞️  Backgrounds to use:', relevantBackgrounds.length);
+    relevantBackgrounds.forEach((bg: any, idx: number) => {
+      console.log(`   ${idx + 1}. ${bg.name} - has image: ${!!bg.image}, has description: ${!!bg.description}`);
+    });
+
+    console.log('🎨 Art Style:', artStyle ? 'YES' : 'NO');
+    if (artStyle) {
+      console.log(`   Has description: ${!!artStyleDescription}`);
+    }
+
+    console.log('='.repeat(100) + '\n');
 
     const parts: any[] = [];
 
@@ -84,20 +152,31 @@ Scene Description: "${sceneDescription}"
 
 **⚠️ READ THIS CHARACTER REFERENCE BEFORE ANYTHING ELSE! ⚠️**
 
-This character's appearance is NON-NEGOTIABLE and OVERRIDES ALL other references.${characterDescriptionText}
+This character's appearance is NON-NEGOTIABLE and OVERRIDES ALL other references.
+🔒 THIS CHARACTER'S FEATURES ARE LOCKED AND CANNOT BE CHANGED 🔒
+${characterDescriptionText}
 
-**MANDATORY: Study and memorize these specific features:**
+**MANDATORY: Study and memorize these UNCHANGEABLE features:**
 
-📍 **EYES (CRITICAL - MATCH EXACTLY):**
-   • EXACT eye color (study the reference image carefully)
-   • Eye shape and size
-   • Expression and gaze direction
-
-📍 **HAIR (CRITICAL - MATCH EXACTLY):**
-   • EXACT hair color (pay attention to unusual colors like grey, pink, blue, etc.)
+📍 **HAIR (🔒 LOCKED - NEVER CHANGE):**
+   • EXACT hair color from THIS image (NOT from any art style reference)
    • Hair style, cut, and length
    • Special features (dip-dye, highlights, hair accessories)
    • Bangs, texture, and styling
+   🚨 **This hair color is PERMANENT for this character across ALL scenes**
+
+📍 **EYES (🔒 LOCKED - NEVER CHANGE):**
+   • EXACT eye color from THIS image (NOT from any art style reference)
+   • Eye shape and size
+   • Expression and gaze direction
+   🚨 **This eye color is PERMANENT for this character across ALL scenes**
+
+📍 **CLOTHING & ACCESSORIES (🔒 LOCKED - NEVER CHANGE):**
+   • EXACT outfit and colors from THIS image
+   • Glasses, jewelry, or other accessories
+   • Any text on clothing
+   • Distinctive items
+   🚨 **This outfit is PERMANENT for this character across ALL scenes**
 
 📍 **FACE & SKIN:**
    • Exact skin tone
@@ -105,30 +184,29 @@ This character's appearance is NON-NEGOTIABLE and OVERRIDES ALL other references
    • Facial features (nose, mouth, eyebrows)
    • Any marks, freckles, or distinctive features
 
-📍 **CLOTHING & ACCESSORIES:**
-   • Exact outfit and colors
-   • Glasses, jewelry, or other accessories
-   • Any text on clothing
-   • Distinctive items
-
 📍 **BODY & BUILD:**
    • Body proportions and type
    • Posture and stance
 
 **YOUR ABSOLUTE REQUIREMENTS:**
 1. **FIRST**: Study this reference image and description thoroughly
-2. **MEMORIZE**: Every specific detail (eye color, hair color, clothing, accessories)
+2. **MEMORIZE**: Every specific detail - ESPECIALLY hair color, eye color, and outfit
 3. **WHEN DRAWING**: Replicate these features with 100% accuracy
-4. **IF UNCERTAIN**: Refer back to THIS reference, not the art style reference
-5. **REMEMBER**: This is the SAME character in a new situation, NOT a new character
+4. **IF UNCERTAIN**: Refer back to THIS reference, NEVER to the art style reference
+5. **REMEMBER**: This is the SAME character appearing in different scenes
 
 **🚨 CRITICAL CHECKS BEFORE GENERATING:**
-- Does my character have the EXACT SAME eye color as the reference?
-- Does my character have the EXACT SAME hair color and style as the reference?
-- Does my character have the EXACT SAME clothing and accessories as the reference?
-- If ANY answer is "no", STOP and study the reference again.
+- Does my character have the EXACT SAME hair color as THIS reference? (NOT art style)
+- Does my character have the EXACT SAME eye color as THIS reference? (NOT art style)
+- Does my character have the EXACT SAME outfit as THIS reference? (NOT art style)
+- If ANY answer is "no", STOP and study THIS reference again.
 
-The character's appearance is SACRED. This is NON-NEGOTIABLE.
+**WARNING:** If you see an "art style reference" image later with different hair/clothes:
+→ IGNORE that character's appearance completely!
+→ ONLY use that image's drawing technique!
+→ THIS character's appearance NEVER changes!
+
+The character's appearance is SACRED and PERMANENT. This is NON-NEGOTIABLE.
 ` });
         parts.push({ inlineData: { mimeType: char.image.mimeType, data: char.image.base64 } });
       }
@@ -141,7 +219,7 @@ The character's appearance is SACRED. This is NON-NEGOTIABLE.
     if (artStyle) {
       // Include detailed text description if available (from AI analysis)
       const artStyleDescriptionText = artStyleDescription
-        ? `\n\n📋 **DETAILED ART STYLE DESCRIPTION (EXTRACTED BY AI):**\n${artStyleDescription}\n\n⚠️ **This description provides exact details about the artistic technique. Follow it PRECISELY.**`
+        ? `\n\n📋 **DETAILED ART STYLE DESCRIPTION (EXTRACTED BY AI):**\n${artStyleDescription}\n\n⚠️ **This description provides exact details about the artistic TECHNIQUE ONLY. Follow it PRECISELY.**`
         : '';
 
       parts.push({ text: `
@@ -149,31 +227,47 @@ The character's appearance is SACRED. This is NON-NEGOTIABLE.
 🎨 ART STYLE REFERENCE (TECHNIQUE ONLY)
 ═══════════════════════════════════════
 
-⚠️ **IMPORTANT**: This reference is ONLY for artistic style and technique!
-⚠️ **DO NOT** use this reference for character appearance!${artStyleDescriptionText}
+🚨🚨🚨 **CRITICAL WARNING** 🚨🚨🚨
+This reference shows HOW to draw, NOT WHAT to draw!
+IF there are people/characters in this art style reference image:
+• **IGNORE their hair color completely** - Use ONLY the character reference hair color
+• **IGNORE their clothing completely** - Use ONLY the character reference clothing
+• **IGNORE their accessories completely** - Use ONLY the character reference accessories
+• **IGNORE their eye color completely** - Use ONLY the character reference eye color
+${artStyleDescriptionText}
 
-**APPLY FROM THIS REFERENCE:**
-• Line work thickness and quality
-• Coloring technique (digital, watercolor, oil painting, etc.)
-• Shading and lighting style
-• Color palette and saturation levels (EXCEPT for character-specific colors)
-• Brush strokes and texture
-• Level of detail and realism
-• Overall artistic mood and atmosphere
+**WHAT TO COPY FROM THIS REFERENCE (TECHNIQUE ONLY):**
+✅ Line work style (thin/thick, clean/sketchy)
+✅ How shading is applied (cell/gradient/painterly)
+✅ How colors blend and transition
+✅ Brush stroke texture and rendering style
+✅ Lighting and shadow technique
+✅ Overall polish level (sketchy vs polished)
+✅ Background rendering style
 
-**COMPLETELY IGNORE FROM THIS REFERENCE:**
-• Any people, characters, or figures shown
-• Facial features, eye color, hair color, body types
-• Character clothing or accessories
-• Character poses or expressions
+**WHAT TO ABSOLUTELY NEVER COPY (CHARACTER FEATURES):**
+❌ Hair color or style of people in this image
+❌ Clothing or outfits of people in this image
+❌ Eye color of people in this image
+❌ Accessories or jewelry of people in this image
+❌ Skin tone of people in this image
+❌ Body proportions of people in this image
 
-**YOUR TASK:**
-1. Study the CHARACTER reference(s) ABOVE - they define what to draw
-2. Study THIS art style reference - it defines HOW to draw
-3. Draw the CHARACTER from above using the TECHNIQUE from this reference
-4. Think: "Same character, different art style"
+**EXAMPLE OF CORRECT APPLICATION:**
+If art style shows: person with blue hair and futuristic clothes using smooth digital shading
+And character reference shows: person with brown hair and maid outfit
+You should draw: person with BROWN HAIR and MAID OUTFIT using SMOOTH DIGITAL SHADING
 
-**REMINDER**: The characters provided ABOVE have the ONLY correct appearance. This art style reference is just teaching you the drawing technique.
+**YOUR MANDATORY STEPS:**
+1. Look at CHARACTER reference → Remember: brown hair, maid outfit, amber eyes
+2. Look at THIS art style → Remember: smooth shading technique, clean lines
+3. Draw: Character with brown hair & maid outfit, rendered with smooth shading & clean lines
+4. **NEVER**: Draw character with different hair/clothes from art style reference
+
+**FINAL CHECK:**
+- Am I copying the DRAWING TECHNIQUE from this reference? ✓
+- Am I copying any HAIR COLOR from this reference? ✗ (FORBIDDEN)
+- Am I copying any CLOTHING from this reference? ✗ (FORBIDDEN)
 ` });
       parts.push({ inlineData: { mimeType: artStyle.mimeType, data: artStyle.base64 } });
     }
@@ -207,17 +301,31 @@ The character's appearance is SACRED. This is NON-NEGOTIABLE.
 **🚨 FINAL CHECKLIST BEFORE GENERATING:**
 **━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
 
-Before you generate the image, verify:
+Before you generate the image, MANDATORY verification:
 
-✓ I have studied the CHARACTER reference(s) at the beginning
-✓ I have memorized the EXACT eye color from the character reference
-✓ I have memorized the EXACT hair color and style from the character reference
-✓ I have memorized the EXACT clothing and accessories from the character reference
-✓ I am applying the ART STYLE technique to the character, NOT replacing the character
-✓ I am NOT copying any people from the art style reference
-✓ The background matches the setting references provided
+**CHARACTER APPEARANCE (from CHARACTER reference ONLY):**
+✓ I have the EXACT hair color from the CHARACTER reference (NOT art style)
+✓ I have the EXACT eye color from the CHARACTER reference (NOT art style)
+✓ I have the EXACT outfit from the CHARACTER reference (NOT art style)
+✓ I have the EXACT accessories from the CHARACTER reference (NOT art style)
 
-**Remember: The character's appearance is SACRED. Eye color, hair color, and distinctive features MUST match the character reference EXACTLY.**
+**TECHNIQUE APPLICATION (from ART STYLE reference):**
+✓ I am using the DRAWING TECHNIQUE from art style reference
+✓ I am using the SHADING STYLE from art style reference
+✓ I am using the LINE WORK style from art style reference
+
+**CRITICAL DOUBLE-CHECK:**
+❌ Did I accidentally copy hair color from art style image? → STOP and fix!
+❌ Did I accidentally copy clothing from art style image? → STOP and fix!
+❌ Did I accidentally copy accessories from art style image? → STOP and fix!
+
+**CORRECT MENTAL MODEL:**
+"I am drawing the CHARACTER from the character reference,
+using the DRAWING TECHNIQUE from the art style reference.
+The character's appearance stays the same, only the drawing technique changes."
+
+**Remember: The character's APPEARANCE (hair, eyes, clothes) comes from CHARACTER reference.
+The drawing TECHNIQUE (lines, shading, rendering) comes from ART STYLE reference.**
 ` });
     }
 
@@ -227,10 +335,27 @@ Before you generate the image, verify:
       .map((p: any) => p.text)
       .join('\n\n');
 
-    console.log('📝 Full prompt being sent to Gemini:');
-    console.log('='.repeat(80));
+    console.log('\n' + '='.repeat(100));
+    console.log('📦 PARTS ARRAY STRUCTURE');
+    console.log('='.repeat(100));
+    console.log('Total parts:', parts.length);
+    parts.forEach((part, idx) => {
+      if (part.text) {
+        console.log(`Part ${idx + 1}: TEXT (${part.text.length} chars)`);
+        console.log('   Preview:', part.text.substring(0, 150).replace(/\n/g, ' ') + '...');
+      } else if (part.inlineData) {
+        console.log(`Part ${idx + 1}: IMAGE`);
+        console.log('   MimeType:', part.inlineData.mimeType);
+        console.log('   Data size:', part.inlineData.data?.length || 0, 'chars');
+      }
+    });
+    console.log('='.repeat(100) + '\n');
+
+    console.log('\n' + '='.repeat(100));
+    console.log('📝 FULL TEXT PROMPT being sent to Gemini:');
+    console.log('='.repeat(100));
     console.log(textPrompt);
-    console.log('='.repeat(80));
+    console.log('='.repeat(100) + '\n');
 
     const response = await ai.models.generateContent({
       model: illustrationModel,

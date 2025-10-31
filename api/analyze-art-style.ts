@@ -20,32 +20,42 @@ export default async function handler(req: any, res: any) {
       contents: {
         parts: [
           {
-            text: `Analyze this art style reference and provide a CONCISE description focusing on the most important stylistic elements. Keep it brief and practical for artists to reference.
+            text: `Analyze this art style reference and provide a CONCISE description focusing ONLY on the drawing technique and artistic style. Keep it brief and practical for artists to reference.
+
+🚨 **CRITICAL RULES:**
+- **IGNORE** any characters, people, or figures in the image
+- **DO NOT** describe hair colors, eye colors, clothing, accessories, or character features
+- **FOCUS ONLY** on HOW the art is created, NOT what is depicted
+- Extract ONLY the technique, not the subject matter
 
 **FORMAT YOUR RESPONSE (Keep each section to 1-2 sentences):**
 
 **MEDIUM & TECHNIQUE:**
-[Identify: watercolor/digital/oil/pencil, traditional/digital, visible brushwork or smooth]
+[Identify: watercolor/digital/oil/pencil, traditional/digital, visible brushwork or smooth rendering]
 
 **LINE WORK:**
-[Describe: line thickness, style (clean/sketchy), and outline presence]
+[Describe: line thickness, style (clean/sketchy/minimal/bold), and outline treatment - NOT what the lines draw]
 
-**COLOR:**
-[Describe: overall palette (vibrant/muted/pastel), 2-3 dominant colors, warm/cool temperature]
+**COLOR APPLICATION:**
+[Describe: how colors are applied (gradient/flat/textured), saturation level (vibrant/muted), contrast approach - NOT specific colors of characters]
 
 **SHADING & LIGHTING:**
-[Describe: shading technique (cell shading/gradient/realistic), shadow style, contrast level]
+[Describe: shading technique (cell shading/gradient/realistic/painterly), shadow rendering style, contrast level]
 
 **STYLE GENRE:**
-[Identify: anime/manga/western comic/realistic/impressionist/etc., and stylization level]
+[Identify: anime/manga/western comic/realistic/impressionist/painterly/etc., and stylization level]
 
 **MOOD:**
-[One sentence: overall atmosphere and emotional tone]
+[One sentence: overall atmosphere created by the artistic technique]
 
 **KEY DISTINCTIVE FEATURES:**
-[1-2 unique characteristics that define this style]
+[1-2 unique TECHNICAL characteristics - e.g., "soft airbrush gradients with minimal outlines", "bold cell shading with high contrast"]
 
-**IMPORTANT:** Be specific but concise. Instead of listing everything, focus on what makes this style unique and recognizable. For example: "Vibrant digital art with bold, thick outlines. Saturated warm colors (oranges, reds) contrasted with cool blues. Cell shading with strong shadows. Anime-inspired with slightly exaggerated proportions. Energetic and cheerful mood."`
+**IMPORTANT:** Focus on technique ONLY. For example:
+✅ GOOD: "Smooth digital rendering with soft gradient shading. Clean thin outlines. High contrast between light and shadow."
+❌ BAD: "Character has pink hair and holographic jacket"
+
+Remember: You are analyzing HOW to draw, not WHAT is drawn.`
           },
           {
             inlineData: {

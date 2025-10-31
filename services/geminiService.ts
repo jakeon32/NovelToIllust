@@ -46,6 +46,38 @@ export const generateScenesFromText = async (novelText: string): Promise<string[
   }
 };
 
+export const generatePrompt = async (
+  sceneDescription: string,
+  characters: Character[],
+  backgrounds: Background[],
+  artStyleDescription: string | undefined,
+  shotType: string
+): Promise<string> => {
+  try {
+    const response = await fetch(`${API_BASE}/api/generate-prompt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sceneDescription,
+        characters,
+        backgrounds,
+        artStyleDescription,
+        shotType,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.prompt;
+  } catch (error) {
+    console.error("Error generating prompt:", error);
+    throw new Error("Failed to generate the prompt for the scene.");
+  }
+};
+
 export const generateIllustration = async (
   sceneDescription: string,
   characters: Character[],
