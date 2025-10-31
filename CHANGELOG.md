@@ -15,6 +15,125 @@
 
 ---
 
+## [2025-10-31 Hotfix 4] - 씬 이미지 스토리지 용량 문제 해결
+
+### Fixed - QuotaExceededError 해결 (localStorage → IndexedDB)
+
+**문제 상황**:
+```
+QuotaExceededError: Failed to execute 'setItem' on 'Storage':
+Setting the value of 'scene_image_...' exceeded the quota.
+```
+- localStorage 용량 제한: 5-10MB
+- Base64 인코딩된 이미지: 500KB-2MB/장
+- 씬이 5-10개만 생성해도 용량 초과
+
+**해결책: IndexedDB 마이그레이션**
+
+**변경 전 (localStorage)**:
+- 용량 제한: 5-10MB
+- 동기 API (느림)
+- 문자열만 저장 가능
+- 용량 초과 시 저장 실패
+
+**변경 후 (IndexedDB)**:
+- 용량 제한: 수백MB ~ 수GB
+- 비동기 API (빠름)
+- 구조화된 데이터 저장
+- 인덱스 지원 (timestamp)
+
+**마이그레이션 전략**:
+1. 앱 로드 시 자동으로 localStorage 스캔
+2. `scene_image_*` 키를 모두 찾아 IndexedDB로 이동
+3. 성공 후 localStorage 정리
+4. 사용자 개입 불필요, 데이터 손실 없음
+
+**데이터베이스 구조**:
+```
+NovelToIllustDB (v2)
+├── stories (기존)
+│   └── keyPath: 'id'
+└── sceneImages (신규)
+    ├── keyPath: 'key' (storyId_sceneId)
+    ├── fields: { key, imageUrl, timestamp }
+    └── index: 'timestamp' (향후 LRU 캐시용)
+```
+
+### Technical Details
+
+**수정 파일**:
+
+1. **`services/localSceneStorage.ts`** - 완전 재작성:
+   - `saveSceneImage()`: localStorage.setItem → IndexedDB.put (async)
+   - `getSceneImage()`: localStorage.getItem → IndexedDB.get (async)
+   - `deleteSceneImage()`: localStorage.removeItem → IndexedDB.delete (async)
+   - `deleteAllSceneImagesForStory()`: 접두사 기반 배치 삭제 (async)
+   - `migrateSceneImagesFromLocalStorage()`: 자동 마이그레이션 (신규)
+   - 모든 함수가 이제 `async` 함수로 변경
+
+2. **`App.tsx`** - 모든 호출 지점 업데이트:
+   - `loadStories()`: 마이그레이션 호출 추가
+   - `loadStories()`: `getSceneImage()` 호출을 `Promise.all`로 병렬 처리
+   - `handleDeleteStory()`: `await deleteAllSceneImagesForStory()`
+   - `generateSingleIllustration()`: `await saveSceneImage()` (2곳)
+   - 모든 로그 메시지: "local storage" → "IndexedDB"
+
+3. **`utils/storage.ts`** - DB 버전 동기화:
+   - `DB_VERSION`: 1 → 2
+   - `onupgradeneeded`: sceneImages store 생성 추가
+   - 두 모듈이 같은 DB를 열 때 호환성 보장
+
+**마이그레이션 코드**:
+```typescript
+export async function migrateSceneImagesFromLocalStorage(): Promise<void> {
+  const SCENE_IMAGE_PREFIX = 'scene_image_';
+
+  // 1. localStorage에서 scene_image_* 키 찾기
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(SCENE_IMAGE_PREFIX)) {
+      const imageUrl = localStorage.getItem(key);
+      // storyId와 sceneId 추출
+      // IndexedDB에 저장
+    }
+  }
+
+  // 2. localStorage 정리
+  // 3. 완료 로그
+}
+```
+
+### Performance Improvements
+
+**저장 성능**:
+- localStorage (동기): 메인 스레드 블로킹
+- IndexedDB (비동기): 백그라운드에서 처리
+
+**용량 비교**:
+```
+localStorage: 5-10MB (최대 10-20개 씬)
+IndexedDB: 200-500MB+ (수백 개 씬 저장 가능)
+```
+
+**향후 개선 가능**:
+- LRU 캐시 구현 (timestamp 인덱스 활용)
+- 오래된 씬 이미지 자동 정리
+- 용량 경고 시스템
+
+### User Impact
+
+**사용자 경험 개선**:
+- ✅ 씬 생성 중 오류 없음
+- ✅ 수십 개 씬 생성 가능
+- ✅ 기존 씬 이미지 자동 보존
+- ✅ 추가 조치 불필요
+
+**Breaking Changes**:
+- 없음 (자동 마이그레이션)
+- 기존 localStorage 데이터는 첫 로드 시 자동 이동
+
+---
+
 ## [2025-10-31 Hotfix 3] - 프롬프트 가시성 & 캐릭터 일관성 강화
 
 ### Added - 장면 생성 프롬프트 확인 및 편집 기능
