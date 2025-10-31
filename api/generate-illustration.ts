@@ -216,7 +216,22 @@ The character's appearance is SACRED and PERMANENT. This is NON-NEGOTIABLE.
     // NOW ADD ART STYLE REFERENCE (TECHNIQUE ONLY, NOT CHARACTER APPEARANCE)
     // ============================================================================
 
+    console.log('\n' + '='.repeat(100));
+    console.log('🎨 ART STYLE PROCESSING');
+    console.log('='.repeat(100));
+    console.log('artStyle exists?', !!artStyle);
+    console.log('artStyle type:', artStyle ? typeof artStyle : 'null/undefined');
     if (artStyle) {
+      console.log('artStyle.mimeType:', artStyle.mimeType);
+      console.log('artStyle.base64 length:', artStyle.base64?.length || 0);
+      console.log('artStyleDescription exists?', !!artStyleDescription);
+      console.log('artStyleDescription length:', artStyleDescription?.length || 0);
+    }
+    console.log('='.repeat(100) + '\n');
+
+    if (artStyle) {
+      console.log('✅ Art style will be added to parts array');
+
       // Include detailed text description if available (from AI analysis)
       const artStyleDescriptionText = artStyleDescription
         ? `\n\n📋 **DETAILED ART STYLE DESCRIPTION (EXTRACTED BY AI):**\n${artStyleDescription}\n\n⚠️ **This description provides exact details about the artistic TECHNIQUE ONLY. Follow it PRECISELY.**`
@@ -269,7 +284,16 @@ You should draw: person with BROWN HAIR and MAID OUTFIT using SMOOTH DIGITAL SHA
 - Am I copying any HAIR COLOR from this reference? ✗ (FORBIDDEN)
 - Am I copying any CLOTHING from this reference? ✗ (FORBIDDEN)
 ` });
+
+      console.log('📝 Adding art style image to parts array...');
+      console.log('   mimeType:', artStyle.mimeType);
+      console.log('   base64 length:', artStyle.base64?.length || 0);
+
       parts.push({ inlineData: { mimeType: artStyle.mimeType, data: artStyle.base64 } });
+
+      console.log('✅ Art style image added to parts array');
+    } else {
+      console.log('⚠️ No art style provided - skipping art style reference');
     }
 
     // ============================================================================
