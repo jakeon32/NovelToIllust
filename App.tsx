@@ -238,18 +238,12 @@ const App: React.FC = () => {
             console.log('✅ Character analysis complete:', description.substring(0, 100) + '...');
 
             // Update only the description (image already shown)
-            setStories(prevStories =>
-              prevStories.map(story =>
-                story.id === currentStoryId
-                  ? {
-                      ...story,
-                      characters: story.characters.map(char =>
-                        char.id === id ? { ...char, description } : char
-                      ),
-                    }
-                  : story
-              )
-            );
+            // Use handleUpdateCurrentStory to ensure it's saved to Supabase
+            handleUpdateCurrentStory(prevStory => ({
+              characters: prevStory.characters.map(char =>
+                char.id === id ? { ...char, description } : char
+              ),
+            }));
 
             // Auto-expand the description after analysis
             setExpandedDescriptions(prev => ({ ...prev, [id]: true }));
@@ -337,18 +331,12 @@ const App: React.FC = () => {
           console.log('✅ Background analysis complete:', description.substring(0, 100) + '...');
 
           // Update only the description (image already shown)
-          setStories(prevStories =>
-            prevStories.map(story =>
-              story.id === currentStoryId
-                ? {
-                    ...story,
-                    backgrounds: story.backgrounds.map(bg =>
-                      bg.id === id ? { ...bg, description } : bg
-                    ),
-                  }
-                : story
-            )
-          );
+          // Use handleUpdateCurrentStory to ensure it's saved to Supabase
+          handleUpdateCurrentStory(prevStory => ({
+            backgrounds: prevStory.backgrounds.map(bg =>
+              bg.id === id ? { ...bg, description } : bg
+            ),
+          }));
 
           // Auto-expand the description after analysis
           setExpandedDescriptions(prev => ({ ...prev, [`bg_${id}`]: true }));
@@ -418,13 +406,8 @@ const App: React.FC = () => {
           console.log('✅ Art style analysis complete:', description.substring(0, 100) + '...');
 
           // Update only the description (image already shown)
-          setStories(prevStories =>
-            prevStories.map(story =>
-              story.id === currentStoryId
-                ? { ...story, artStyleDescription: description }
-                : story
-            )
-          );
+          // Use handleUpdateCurrentStory to ensure it's saved to Supabase
+          handleUpdateCurrentStory({ artStyleDescription: description });
 
           // Auto-expand the description after analysis
           setExpandedDescriptions(prev => ({ ...prev, 'artStyle': true }));
