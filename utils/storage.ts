@@ -1,7 +1,7 @@
 import type { Story } from '../types';
 
 const DB_NAME = 'NovelToIllustDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Updated to add sceneImages store
 const STORE_NAME = 'stories';
 
 // Open IndexedDB connection
@@ -14,8 +14,17 @@ const openDB = (): Promise<IDBDatabase> => {
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+
+      // Create stories store if it doesn't exist
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+
+      // Create sceneImages store if it doesn't exist (handled by localSceneStorage)
+      // This is for compatibility when opening the DB from this module
+      if (!db.objectStoreNames.contains('sceneImages')) {
+        const sceneStore = db.createObjectStore('sceneImages', { keyPath: 'key' });
+        sceneStore.createIndex('timestamp', 'timestamp', { unique: false });
       }
     };
   });

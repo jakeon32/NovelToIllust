@@ -4,7 +4,7 @@ import { generateScenesFromText, generateIllustration, generateTitleFromText, ed
 import { loadStories, saveStories, migrateFromLocalStorage, isIndexedDBAvailable } from './utils/storage';
 import { supabase } from './services/supabaseClient';
 import { loadStoriesFromSupabase, saveStoriesToSupabase, deleteStoryFromSupabase, saveStoryToSupabase } from './services/supabaseStorage';
-import { saveSceneImage, getSceneImage, deleteAllSceneImagesForStory } from './services/localSceneStorage';
+import { saveSceneImage, getSceneImage, deleteAllSceneImagesForStory, migrateSceneImagesFromLocalStorage } from './services/localSceneStorage';
 import type { User } from '@supabase/supabase-js';
 import ReferenceImageUpload from './components/ReferenceImageUpload';
 import SceneCard from './components/SceneCard';
@@ -90,14 +90,21 @@ const App: React.FC = () => {
           }
         }
 
-        // Load scene images from local storage
-        loadedStories = loadedStories.map(story => ({
-          ...story,
-          scenes: story.scenes.map(scene => ({
-            ...scene,
-            imageUrl: getSceneImage(story.id, scene.id) || undefined,
-          })),
-        }));
+        // Migrate scene images from localStorage to IndexedDB if needed
+        await migrateSceneImagesFromLocalStorage();
+
+        // Load scene images from IndexedDB
+        loadedStories = await Promise.all(
+          loadedStories.map(async (story) => ({
+            ...story,
+            scenes: await Promise.all(
+              story.scenes.map(async (scene) => ({
+                ...scene,
+                imageUrl: (await getSceneImage(story.id, scene.id)) || undefined,
+              }))
+            ),
+          }))
+        );
 
         if (loadedStories.length > 0) {
           setStories(loadedStories);
@@ -158,9 +165,9 @@ const App: React.FC = () => {
       // Delete from Supabase
       await deleteStoryFromSupabase(storyId);
 
-      // Delete scene images from local storage
-      deleteAllSceneImagesForStory(storyId);
-      console.log('🗑️ All scene images deleted from local storage');
+      // Delete scene images from IndexedDB
+      await deleteAllSceneImagesForStory(storyId);
+      console.log('🗑️ All scene images deleted from IndexedDB');
 
       // Update local state
       const updatedStories = stories.filter(s => s.id !== storyId);
@@ -574,10 +581,10 @@ const App: React.FC = () => {
         console.warn('⚠️ WARNING: Generated image is IDENTICAL to previous image! This should not happen with AI generation.');
       }
 
-      // Save scene image to local storage
+      // Save scene image to IndexedDB
       if (currentStoryId) {
-        saveSceneImage(currentStoryId, sceneId, imageUrl);
-        console.log('💾 Scene image saved to local storage');
+        await saveSceneImage(currentStoryId, sceneId, imageUrl);
+        console.log('💾 Scene image saved to IndexedDB');
       }
 
       handleUpdateCurrentStory(prevStory => ({
@@ -652,10 +659,10 @@ const App: React.FC = () => {
     try {
         const newImageUrl = await editIllustration(originalImageFile, editPrompt);
 
-        // Save edited scene image to local storage
+        // Save edited scene image to IndexedDB
         if (currentStoryId) {
-          saveSceneImage(currentStoryId, sceneId, newImageUrl);
-          console.log('💾 Edited scene image saved to local storage');
+          await saveSceneImage(currentStoryId, sceneId, newImageUrl);
+          console.log('💾 Edited scene image saved to IndexedDB');
         }
 
         handleUpdateCurrentStory(prevStory => ({
