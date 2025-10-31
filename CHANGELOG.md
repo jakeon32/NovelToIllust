@@ -15,6 +15,181 @@
 
 ---
 
+## [2025-10-31 Hotfix 3] - 프롬프트 가시성 & 캐릭터 일관성 강화
+
+### Added - 장면 생성 프롬프트 확인 및 편집 기능
+
+**사용자 요청**: "장면을 만들때 사용되는 프롬프트도 보이게 해주고 편집 가능하게 해줘"
+
+**문제 상황**:
+- 캐릭터 레퍼런스: 마젠타 눈, 회색+핑크/블루 투톤 머리, 검은 안경
+- 생성된 이미지: 갈색 눈, 갈색 머리, 특징 없음
+- 프롬프트를 확인할 방법이 없어 디버깅 불가
+
+**구현 내용**:
+- **Scene 타입에 `customPrompt` 필드 추가**: 생성 시 사용된 프롬프트 저장
+- **SceneCard에 프롬프트 뷰어 추가**:
+  - 접기/펼치기 토글 ("생성 프롬프트 ▶/▼")
+  - 읽기 전용 뷰: monospace 폰트로 가독성 향상
+  - 편집 모드: 8줄 textarea로 프롬프트 수정 가능
+  - 저장/취소 버튼
+- **API 응답 변경**: 이미지 + 프롬프트 텍스트 함께 반환
+- **자동 저장**: 장면 생성 시 사용된 프롬프트 자동 저장
+
+**사용 시나리오**:
+1. 장면 생성 → 프롬프트 자동 저장
+2. "생성 프롬프트" 클릭 → 전체 프롬프트 확인
+3. 프롬프트 편집 → 저장
+4. 재생성 시 수정된 프롬프트 사용 가능 (향후 구현)
+
+### Changed - 캐릭터 일관성 강화를 위한 프롬프트 재구성
+
+**핵심 문제**:
+- 캐릭터 레퍼런스가 프롬프트 **맨 끝**에 위치
+- 아트 스타일 → 배경 → 캐릭터 순서로 인해 캐릭터 정보가 희석
+- AI 모델이 앞부분(아트 스타일)에 영향을 더 많이 받음
+
+**해결책: 프롬프트 순서 완전 재구성**
+
+**변경 전 순서**:
+```
+1. 전반적인 지침
+2. 아트 스타일 레퍼런스 (이미지 포함)
+3. 배경 레퍼런스 (이미지 포함)
+4. 캐릭터 레퍼런스 (이미지 포함) ← 너무 늦게 등장
+```
+
+**변경 후 순서**:
+```
+1. 우선순위 명시 (캐릭터 > 아트 스타일 > 배경)
+2. 캐릭터 레퍼런스 (이미지 포함) ← 가장 먼저!
+3. 아트 스타일 레퍼런스 (이미지 포함)
+4. 배경 레퍼런스 (이미지 포함)
+5. 최종 체크리스트
+```
+
+**강화된 캐릭터 섹션 내용**:
+```
+📍 **EYES (CRITICAL - MATCH EXACTLY)**
+   • EXACT eye color (study the reference image carefully)
+   • Eye shape and size
+   • Expression and gaze direction
+
+📍 **HAIR (CRITICAL - MATCH EXACTLY)**
+   • EXACT hair color (pay attention to unusual colors like grey, pink, blue, etc.)
+   • Hair style, cut, and length
+   • Special features (dip-dye, highlights, hair accessories) ← 투톤 강조
+   • Bangs, texture, and styling
+
+🚨 CRITICAL CHECKS BEFORE GENERATING:
+- Does my character have the EXACT SAME eye color as the reference?
+- Does my character have the EXACT SAME hair color and style as the reference?
+- Does my character have the EXACT SAME clothing and accessories as the reference?
+- If ANY answer is "no", STOP and study the reference again.
+```
+
+**추가 개선사항**:
+- **"MEMORIZE THIS FIRST"** 헤더 추가
+- **"특이한 색상(grey, pink, blue, etc.)" 명시적 언급**
+- **투톤/딥다이 같은 특수 스타일 항목 추가**
+- **최종 체크리스트**: 생성 직전 확인사항 나열
+- **아트 스타일 섹션에 "ABOVE" 언급**: "위에 제공된 캐릭터" 강조
+
+### Changed - 아트 스타일 레퍼런스 지침 개선
+
+**문제**: 아트 스타일이 캐릭터 외형을 덮어쓰는 경우 발생
+
+**해결**:
+```
+⚠️ **IMPORTANT**: This reference is ONLY for artistic style and technique!
+⚠️ **DO NOT** use this reference for character appearance!
+
+**APPLY FROM THIS REFERENCE:**
+• Line work thickness and quality
+• Coloring technique (digital, watercolor, oil painting, etc.)
+• Shading and lighting style
+• Color palette and saturation levels (EXCEPT for character-specific colors) ← 추가
+• Brush strokes and texture
+
+**COMPLETELY IGNORE FROM THIS REFERENCE:**
+• Any people, characters, or figures shown
+• Facial features, eye color, hair color, body types ← 명시적 나열
+• Character clothing or accessories
+• Character poses or expressions
+
+**YOUR TASK:**
+1. Study the CHARACTER reference(s) ABOVE - they define what to draw
+2. Study THIS art style reference - it defines HOW to draw
+3. Draw the CHARACTER from above using the TECHNIQUE from this reference
+4. Think: "Same character, different art style"
+```
+
+### Technical Details
+
+**수정 파일**:
+- `types.ts`: Scene에 `customPrompt?: string` 필드 추가
+- `components/SceneCard.tsx`:
+  - 프롬프트 확장/편집 상태 관리 추가
+  - 프롬프트 뷰어 UI 추가 (접기/펼치기, 편집 모드)
+  - `onCustomPromptChange` prop 추가
+- `services/geminiService.ts`:
+  - `generateIllustration` 반환 타입 변경: `string` → `{ image: string; prompt: string }`
+- `App.tsx`:
+  - 프롬프트 캡처 로직 추가
+  - `handleSceneCustomPromptChange` 핸들러 추가
+  - Scene 저장 시 customPrompt 포함
+- `api/generate-illustration.ts`: **대폭 재구성**
+  - 캐릭터 레퍼런스를 `parts` 배열 맨 앞으로 이동
+  - 우선순위 섹션 추가 (Priority 1: Character, Priority 2: Art Style, Priority 3: Background)
+  - 캐릭터 섹션 강화 (EYES, HAIR 별도 강조)
+  - 최종 체크리스트 추가
+  - 프롬프트 텍스트 추출 및 반환 (`textPrompt`)
+
+**프롬프트 구조 변경 요약**:
+```typescript
+// 변경 전
+parts = [
+  { text: "일반 지침" },
+  { text: "아트 스타일" }, artStyle.image,
+  { text: "배경" }, background.image,
+  { text: "캐릭터" }, character.image
+]
+
+// 변경 후
+parts = [
+  { text: "우선순위 명시" },
+  { text: "캐릭터 (강화된 지침)" }, character.image, ← 먼저!
+  { text: "아트 스타일 (캐릭터 위 참조)" }, artStyle.image,
+  { text: "배경 (캐릭터 유지 알림)" }, background.image,
+  { text: "최종 체크리스트" }
+]
+```
+
+### Expected Results
+
+**개선 예상 효과**:
+- ✅ 캐릭터 눈 색상 정확도 향상 (마젠타 → 마젠타)
+- ✅ 캐릭터 머리 색상/스타일 정확도 향상 (회색+핑크/블루 → 회색+핑크/블루)
+- ✅ 특수 헤어 스타일 (투톤, 딥다이) 반영 향상
+- ✅ 안경, 액세서리 등 소품 정확도 향상
+- ✅ 프롬프트 가시성 확보로 디버깅 가능
+- ✅ 사용자가 프롬프트 직접 수정 가능
+
+**테스트 필요**:
+- 특이한 눈 색상 (마젠타, 바이올렛, 헤테로크로미아)
+- 특수 헤어 스타일 (투톤, 옴브레, 딥다이, 하이라이트)
+- 특징적인 액세서리 (안경, 초커, 모자, 문신)
+
+### Philosophy
+
+**핵심 원칙**:
+1. **"What to draw" vs "How to draw"**: 캐릭터(what)가 아트 스타일(how)보다 우선
+2. **"First impression matters"**: AI가 먼저 보는 것이 더 강한 영향
+3. **"Redundancy for reliability"**: 중요한 지침은 여러 번 반복
+4. **"Explicit over implicit"**: 색상, 스타일을 명시적으로 나열
+
+---
+
 ## [2025-10-31 Hotfix 2] - 캐릭터 & 배경 분석 간소화
 
 ### Changed - 분석 결과 대폭 간소화
