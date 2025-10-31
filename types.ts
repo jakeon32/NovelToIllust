@@ -26,6 +26,7 @@ export interface Scene {
   isGenerating: boolean;
   shotType: string; // e.g., 'automatic', 'wide_shot', 'close_up'
   aspectRatio: string; // e.g., '1:1', '16:9', '9:16'
+  customPrompt?: string; // User can override/edit the auto-generated prompt
 }
 
 export interface Story {

@@ -541,7 +541,7 @@ const App: React.FC = () => {
 
     try {
       console.log('🚀 Calling API to generate illustration...');
-      const imageUrl = await generateIllustration(
+      const result = await generateIllustration(
         scene.description,
         latestStory.characters,
         latestStory.backgrounds,
@@ -550,6 +550,11 @@ const App: React.FC = () => {
         scene.shotType,
         scene.aspectRatio
       );
+
+      const imageUrl = result.image;
+      const usedPrompt = result.prompt;
+
+      console.log('📝 Prompt used for generation:', usedPrompt);
 
       // Compare with previous image to detect if it's actually different
       const previousImage = currentStory.scenes.find(s => s.id === sceneId)?.imageUrl;
@@ -576,7 +581,7 @@ const App: React.FC = () => {
       }
 
       handleUpdateCurrentStory(prevStory => ({
-        scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, imageUrl, isGenerating: false } : s)
+        scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, imageUrl, customPrompt: usedPrompt, isGenerating: false } : s)
       }));
 
       if (selectedSceneForModal && selectedSceneForModal.id === sceneId) {
@@ -695,6 +700,12 @@ const App: React.FC = () => {
   const handleSceneDescriptionChange = (sceneId: string, description: string) => {
     handleUpdateCurrentStory(prevStory => ({
       scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, description } : s)
+    }));
+  };
+
+  const handleSceneCustomPromptChange = (sceneId: string, customPrompt: string) => {
+    handleUpdateCurrentStory(prevStory => ({
+      scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, customPrompt } : s)
     }));
   };
 
@@ -1123,6 +1134,7 @@ const App: React.FC = () => {
                         onShotTypeChange={handleSceneShotTypeChange}
                         onAspectRatioChange={handleSceneAspectRatioChange}
                         onDescriptionChange={handleSceneDescriptionChange}
+                        onCustomPromptChange={handleSceneCustomPromptChange}
                     />
                     ))}
                 </div>

@@ -54,7 +54,7 @@ export const generateIllustration = async (
   artStyleDescription: string | undefined,
   shotType: string,
   aspectRatio: string
-): Promise<string> => {
+): Promise<{ image: string; prompt: string }> => {
   try {
     const response = await fetch(`${API_BASE}/api/generate-illustration`, {
       method: 'POST',
@@ -75,7 +75,7 @@ export const generateIllustration = async (
     }
 
     const data = await response.json();
-    return data.image;
+    return { image: data.image, prompt: data.prompt };
   } catch (error) {
     console.error("Error generating illustration:", error);
     throw new Error("Failed to generate the illustration for the scene.");

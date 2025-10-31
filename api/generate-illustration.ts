@@ -41,59 +41,102 @@ ${shotTypeInstruction}
 Scene Description: "${sceneDescription}"
 
 **━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-**🎨 ABSOLUTE CONSISTENCY REQUIREMENTS:**
+**🎨 REFERENCE PRIORITY ORDER:**
 **━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
 
-**1. ART STYLE CONSISTENCY (MANDATORY):**
-   • You WILL be provided with an art style reference image
-   • EVERY aspect must match: line work thickness, shading technique, color palette, brush strokes, texture
-   • Study the reference carefully: note the level of detail, contrast, saturation, and artistic technique
-   • This is NOT a suggestion - the art style MUST be IDENTICAL to the reference
-   • If the reference is watercolor, use watercolor. If it's digital art, use digital art style
-   • Maintain the EXACT same level of realism/stylization as shown in the reference
+**PRIORITY 1: CHARACTER APPEARANCE (MOST CRITICAL - NEVER COMPROMISE)**
+   • Character features (hair color, eye color, clothing, accessories) are SACRED
+   • Character appearance MUST be 100% IDENTICAL to the character reference
+   • Character details OVERRIDE everything else - including art style preferences
 
-**2. BACKGROUND/SETTING CONSISTENCY (MANDATORY):**
-   • You WILL be provided with background reference image(s)
-   • Identify key elements: architecture style, color scheme, lighting mood, environmental details
-   • The setting in your illustration MUST feel like it belongs in the same world as the reference
-   • Reuse architectural elements, color palettes, and atmospheric qualities from the reference
-   • If the reference shows a fantasy castle, maintain that medieval fantasy aesthetic
-   • Environmental consistency is KEY for immersion
+**PRIORITY 2: ART STYLE & TECHNIQUE (Apply to characters, don't replace them)**
+   • Use the artistic technique (line work, shading, coloring style) from art style reference
+   • BUT keep the character's exact appearance from Priority 1
 
-**3. CHARACTER CONSISTENCY (HIGHEST PRIORITY - CRITICAL):**
-   • You WILL be provided with character reference images for characters mentioned in this scene
-   • BEFORE drawing, carefully analyze EVERY visual detail of each character:
-     - Exact hair color, style, and length
-     - Precise eye color and shape
-     - Facial structure and features
-     - Body type and build
-     - Clothing style, colors, and specific garments
-     - Any distinctive marks: scars, tattoos, accessories
-   • Your illustration MUST replicate these features with 100% ACCURACY
-   • Character appearance must be IDENTICAL to the reference - this is NON-NEGOTIABLE
-   • Think of this as drawing the SAME character in a new pose/situation
-   • Only draw characters explicitly mentioned in the scene description
-   • If NO characters are mentioned, create an environment-focused illustration
-
-**4. VISUAL CONSISTENCY ACROSS SCENES:**
-   • Remember: These images will be viewed together as a sequence
-   • Use the SAME color grading and lighting style as established in references
-   • Maintain the SAME level of detail throughout
-   • Keep the SAME artistic quality and finish
-   • The viewer should immediately recognize this as part of the same story
+**PRIORITY 3: BACKGROUND/SETTING**
+   • Match the environmental style and atmosphere
+   • Maintain world consistency
 
 **━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-**⚠️ CRITICAL REMINDERS:**
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
 
-• STUDY each reference image carefully before drawing
-• When in doubt, refer back to the references
-• Consistency > Creativity - match the references precisely
-• This scene is part of a visual narrative - maintain continuity
-• Your goal: Make it look like the same artist drew all scenes using the same characters in the same world
+**CRITICAL RULE: CHARACTER REFERENCES ARE PROVIDED FIRST AND ARE MOST IMPORTANT.**
+**Study them FIRST. Memorize every detail BEFORE looking at art style or background.**
 `
       }
     );
+
+    // ============================================================================
+    // RESTRUCTURED ORDER: CHARACTER REFERENCES FIRST (HIGHEST PRIORITY)
+    // ============================================================================
+
+    relevantCharacters.forEach((char: any) => {
+      if (char.image) {
+        // Include detailed text description if available (from AI analysis)
+        const characterDescriptionText = char.description
+          ? `\n\n📋 **DETAILED CHARACTER DESCRIPTION (EXTRACTED BY AI):**\n${char.description}\n\n⚠️ **This description provides EXACT specifications. Follow EVERY detail PRECISELY.**`
+          : '';
+
+        parts.push({ text: `
+═══════════════════════════════════════
+👤 CHARACTER REFERENCE #1: "${char.name}"
+🚨 ABSOLUTE HIGHEST PRIORITY - MEMORIZE THIS FIRST
+═══════════════════════════════════════
+
+**⚠️ READ THIS CHARACTER REFERENCE BEFORE ANYTHING ELSE! ⚠️**
+
+This character's appearance is NON-NEGOTIABLE and OVERRIDES ALL other references.${characterDescriptionText}
+
+**MANDATORY: Study and memorize these specific features:**
+
+📍 **EYES (CRITICAL - MATCH EXACTLY):**
+   • EXACT eye color (study the reference image carefully)
+   • Eye shape and size
+   • Expression and gaze direction
+
+📍 **HAIR (CRITICAL - MATCH EXACTLY):**
+   • EXACT hair color (pay attention to unusual colors like grey, pink, blue, etc.)
+   • Hair style, cut, and length
+   • Special features (dip-dye, highlights, hair accessories)
+   • Bangs, texture, and styling
+
+📍 **FACE & SKIN:**
+   • Exact skin tone
+   • Face shape and structure
+   • Facial features (nose, mouth, eyebrows)
+   • Any marks, freckles, or distinctive features
+
+📍 **CLOTHING & ACCESSORIES:**
+   • Exact outfit and colors
+   • Glasses, jewelry, or other accessories
+   • Any text on clothing
+   • Distinctive items
+
+📍 **BODY & BUILD:**
+   • Body proportions and type
+   • Posture and stance
+
+**YOUR ABSOLUTE REQUIREMENTS:**
+1. **FIRST**: Study this reference image and description thoroughly
+2. **MEMORIZE**: Every specific detail (eye color, hair color, clothing, accessories)
+3. **WHEN DRAWING**: Replicate these features with 100% accuracy
+4. **IF UNCERTAIN**: Refer back to THIS reference, not the art style reference
+5. **REMEMBER**: This is the SAME character in a new situation, NOT a new character
+
+**🚨 CRITICAL CHECKS BEFORE GENERATING:**
+- Does my character have the EXACT SAME eye color as the reference?
+- Does my character have the EXACT SAME hair color and style as the reference?
+- Does my character have the EXACT SAME clothing and accessories as the reference?
+- If ANY answer is "no", STOP and study the reference again.
+
+The character's appearance is SACRED. This is NON-NEGOTIABLE.
+` });
+        parts.push({ inlineData: { mimeType: char.image.mimeType, data: char.image.base64 } });
+      }
+    });
+
+    // ============================================================================
+    // NOW ADD ART STYLE REFERENCE (TECHNIQUE ONLY, NOT CHARACTER APPEARANCE)
+    // ============================================================================
 
     if (artStyle) {
       // Include detailed text description if available (from AI analysis)
@@ -101,9 +144,43 @@ Scene Description: "${sceneDescription}"
         ? `\n\n📋 **DETAILED ART STYLE DESCRIPTION (EXTRACTED BY AI):**\n${artStyleDescription}\n\n⚠️ **This description provides exact details about the artistic technique. Follow it PRECISELY.**`
         : '';
 
-      parts.push({ text: `═══════════════════════════════════════\n🎨 ART STYLE REFERENCE (STYLE ONLY - NOT CHARACTER):\n═══════════════════════════════════════\n\n⚠️ IMPORTANT: This reference is ONLY for artistic style, NOT for character appearance!${artStyleDescriptionText}\n\n**USE FROM THIS REFERENCE:**\n• Line work thickness and quality\n• Coloring technique (digital, watercolor, oil painting, etc.)\n• Shading and lighting style\n• Color palette and saturation levels\n• Brush strokes and texture\n• Level of detail and realism\n• Overall artistic mood and atmosphere\n\n**COMPLETELY IGNORE FROM THIS REFERENCE:**\n• Any people, characters, or figures shown\n• Facial features or body types of any person\n• Clothing or character designs\n\n**Your task:** Extract ONLY the artistic technique and apply it to the characters provided separately below. Think of this as learning the artist's technique, NOT copying their subjects.` });
+      parts.push({ text: `
+═══════════════════════════════════════
+🎨 ART STYLE REFERENCE (TECHNIQUE ONLY)
+═══════════════════════════════════════
+
+⚠️ **IMPORTANT**: This reference is ONLY for artistic style and technique!
+⚠️ **DO NOT** use this reference for character appearance!${artStyleDescriptionText}
+
+**APPLY FROM THIS REFERENCE:**
+• Line work thickness and quality
+• Coloring technique (digital, watercolor, oil painting, etc.)
+• Shading and lighting style
+• Color palette and saturation levels (EXCEPT for character-specific colors)
+• Brush strokes and texture
+• Level of detail and realism
+• Overall artistic mood and atmosphere
+
+**COMPLETELY IGNORE FROM THIS REFERENCE:**
+• Any people, characters, or figures shown
+• Facial features, eye color, hair color, body types
+• Character clothing or accessories
+• Character poses or expressions
+
+**YOUR TASK:**
+1. Study the CHARACTER reference(s) ABOVE - they define what to draw
+2. Study THIS art style reference - it defines HOW to draw
+3. Draw the CHARACTER from above using the TECHNIQUE from this reference
+4. Think: "Same character, different art style"
+
+**REMINDER**: The characters provided ABOVE have the ONLY correct appearance. This art style reference is just teaching you the drawing technique.
+` });
       parts.push({ inlineData: { mimeType: artStyle.mimeType, data: artStyle.base64 } });
     }
+
+    // ============================================================================
+    // BACKGROUND REFERENCES (PRIORITY 3)
+    // ============================================================================
 
     if (relevantBackgrounds && relevantBackgrounds.length > 0) {
       relevantBackgrounds.forEach((bg: any, index: number) => {
@@ -113,24 +190,47 @@ Scene Description: "${sceneDescription}"
           : '';
 
         const label = relevantBackgrounds.length > 1
-          ? `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE ${index + 1}: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene.${backgroundDescriptionText}\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.`
-          : `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene.${backgroundDescriptionText}\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.`;
+          ? `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE ${index + 1}: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene.${backgroundDescriptionText}\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.\n\n**REMINDER**: Keep the CHARACTER appearance from the reference above unchanged!`
+          : `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene.${backgroundDescriptionText}\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.\n\n**REMINDER**: Keep the CHARACTER appearance from the reference above unchanged!`;
         parts.push({ text: label });
         parts.push({ inlineData: { mimeType: bg.image.mimeType, data: bg.image.base64 } });
       });
     }
 
-    relevantCharacters.forEach((char: any) => {
-      if (char.image) {
-        // Include detailed text description if available (from AI analysis)
-        const characterDescriptionText = char.description
-          ? `\n\n📋 **DETAILED CHARACTER DESCRIPTION (EXTRACTED BY AI):**\n${char.description}\n\n⚠️ **This description provides exact details about the character. Follow it PRECISELY.**`
-          : '';
+    // ============================================================================
+    // FINAL REMINDER: Reinforce character consistency
+    // ============================================================================
 
-        parts.push({ text: `═══════════════════════════════════════\n👤 CHARACTER REFERENCE: "${char.name}" (⚠️ ABSOLUTE HIGHEST PRIORITY - OVERRIDES EVERYTHING):\n═══════════════════════════════════════\n\n🚨 **CRITICAL INSTRUCTION - READ CAREFULLY:**\n\nThis character reference has ABSOLUTE PRIORITY over the art style reference above!\n\n**IF there were any people/characters in the art style reference, COMPLETELY IGNORE THEM.**\n**The character you draw MUST be from THIS reference ONLY, NOT from the art style image!**${characterDescriptionText}\n\n**MANDATORY CHARACTER ANALYSIS - Study EVERY detail:**\n\n📍 **FACE (HIGHEST PRIORITY):**\n   • Eye color, shape, and expression\n   • Eyebrow shape and color\n   • Nose shape and size\n   • Mouth shape and lip color\n   • Face shape and structure\n   • Skin tone (exact shade)\n   • Any facial marks, freckles, or beauty marks\n\n📍 **HAIR (CRITICAL):**\n   • Exact color (if blonde, what shade? if brown, light or dark?)\n   • Hair style and cut\n   • Hair length\n   • Hair texture (straight, wavy, curly)\n   • Bangs or no bangs\n   • Hair accessories\n\n📍 **BODY & BUILD:**\n   • Height and body proportions\n   • Body type (slim, athletic, etc.)\n   • Posture and body language\n\n📍 **CLOTHING & ACCESSORIES:**\n   • Exact outfit (every piece of clothing)\n   • Clothing colors (specific shades)\n   • Accessories (jewelry, glasses, hats, etc.)\n   • Clothing style (casual, formal, fantasy, etc.)\n\n📍 **DISTINCTIVE FEATURES:**\n   • Scars, tattoos, birthmarks\n   • Unique characteristics\n   • Special items they always carry\n\n**YOUR TASK:**\n1. Read the detailed character description above (if provided) - it contains exact specifications\n2. Study the reference image below to see the character visually\n3. Combine both sources to understand EVERY visual detail\n4. Apply the ART STYLE (colors, lines, shading) from the style reference\n5. But draw THIS EXACT CHARACTER's appearance, NOT any character from the style reference\n6. Think: "Same person, different artistic technique"\n\n**FINAL CHECK:** Does your character match BOTH the description AND the reference image in every detail? If not, REDO IT.\n\nThis is NON-NEGOTIABLE. The character's appearance is SACRED.` });
-        parts.push({ inlineData: { mimeType: char.image.mimeType, data: char.image.base64 } });
-      }
-    });
+    if (relevantCharacters.length > 0) {
+      parts.push({ text: `
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+**🚨 FINAL CHECKLIST BEFORE GENERATING:**
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+
+Before you generate the image, verify:
+
+✓ I have studied the CHARACTER reference(s) at the beginning
+✓ I have memorized the EXACT eye color from the character reference
+✓ I have memorized the EXACT hair color and style from the character reference
+✓ I have memorized the EXACT clothing and accessories from the character reference
+✓ I am applying the ART STYLE technique to the character, NOT replacing the character
+✓ I am NOT copying any people from the art style reference
+✓ The background matches the setting references provided
+
+**Remember: The character's appearance is SACRED. Eye color, hair color, and distinctive features MUST match the character reference EXACTLY.**
+` });
+    }
+
+    // Extract text parts for logging/debugging
+    const textPrompt = parts
+      .filter((p: any) => p.text)
+      .map((p: any) => p.text)
+      .join('\n\n');
+
+    console.log('📝 Full prompt being sent to Gemini:');
+    console.log('='.repeat(80));
+    console.log(textPrompt);
+    console.log('='.repeat(80));
 
     const response = await ai.models.generateContent({
       model: illustrationModel,
@@ -149,7 +249,8 @@ Scene Description: "${sceneDescription}"
       if (part.inlineData) {
         const base64ImageBytes: string = part.inlineData.data;
         return res.status(200).json({
-          image: `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`
+          image: `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`,
+          prompt: textPrompt, // Return the prompt so it can be saved
         });
       }
     }

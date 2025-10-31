@@ -14,6 +14,7 @@ interface SceneCardProps {
   onShotTypeChange: (sceneId: string, shotType: string) => void;
   onAspectRatioChange: (sceneId: string, aspectRatio: string) => void;
   onDescriptionChange: (sceneId: string, description: string) => void;
+  onCustomPromptChange: (sceneId: string, customPrompt: string) => void;
 }
 
 const shotTypes = [
@@ -36,9 +37,12 @@ const aspectRatios = [
 ];
 
 
-const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDelete, onShotTypeChange, onAspectRatioChange, onDescriptionChange }) => {
+const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDelete, onShotTypeChange, onAspectRatioChange, onDescriptionChange, onCustomPromptChange }) => {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editedDescription, setEditedDescription] = useState(scene.description);
+  const [isPromptExpanded, setIsPromptExpanded] = useState(false);
+  const [isEditingPrompt, setIsEditingPrompt] = useState(false);
+  const [editedPrompt, setEditedPrompt] = useState(scene.customPrompt || '');
 
   const handleSaveDescription = () => {
     if (editedDescription.trim() && editedDescription !== scene.description) {
@@ -50,6 +54,18 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDe
   const handleCancelEdit = () => {
     setEditedDescription(scene.description);
     setIsEditingDescription(false);
+  };
+
+  const handleSavePrompt = () => {
+    if (editedPrompt !== scene.customPrompt) {
+      onCustomPromptChange(scene.id, editedPrompt);
+    }
+    setIsEditingPrompt(false);
+  };
+
+  const handleCancelPromptEdit = () => {
+    setEditedPrompt(scene.customPrompt || '');
+    setIsEditingPrompt(false);
   };
 
   return (
@@ -118,6 +134,66 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDe
               </button>
             </div>
           )}
+
+          {/* Custom Prompt Section - only show if prompt exists or user wants to edit */}
+          {scene.customPrompt && (
+            <div className="mt-4 border-t border-gray-700 pt-4">
+              <button
+                onClick={() => setIsPromptExpanded(!isPromptExpanded)}
+                className="flex items-center justify-between w-full text-left text-xs font-medium text-gray-400 hover:text-gray-300 transition-colors"
+              >
+                <span>생성 프롬프트 {isPromptExpanded ? '▼' : '▶'}</span>
+                {!isEditingPrompt && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsEditingPrompt(true);
+                      setIsPromptExpanded(true);
+                    }}
+                    className="p-1 text-gray-500 hover:text-indigo-400 transition-colors"
+                    title="프롬프트 편집"
+                  >
+                    <PencilIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </button>
+
+              {isPromptExpanded && (
+                <div className="mt-2">
+                  {isEditingPrompt ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={editedPrompt}
+                        onChange={(e) => setEditedPrompt(e.target.value)}
+                        className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md text-gray-300 text-xs leading-relaxed focus:ring-1 focus:ring-indigo-500 resize-none font-mono"
+                        rows={8}
+                        placeholder="커스텀 프롬프트를 입력하세요..."
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSavePrompt}
+                          className="flex-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-md transition-colors"
+                        >
+                          저장
+                        </button>
+                        <button
+                          onClick={handleCancelPromptEdit}
+                          className="flex-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs rounded-md transition-colors"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <pre className="text-gray-400 text-xs leading-relaxed whitespace-pre-wrap bg-gray-900 p-3 rounded-md max-h-60 overflow-y-auto font-mono">
+                      {scene.customPrompt}
+                    </pre>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div>
               <label htmlFor={`shot-type-${scene.id}`} className="block text-xs font-medium text-gray-400 mb-1">촬영 구도</label>
