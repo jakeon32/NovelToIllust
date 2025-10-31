@@ -235,15 +235,24 @@ const App: React.FC = () => {
         // Run analysis in background (don't block UI)
         analyzeCharacter(value as ImageFile)
           .then(description => {
-            console.log('✅ Character analysis complete:', description.substring(0, 100) + '...');
+            console.log('✅ Character analysis complete for character:', id);
+            console.log('   Description preview:', description.substring(0, 150) + '...');
 
             // Update only the description (image already shown)
             // Use handleUpdateCurrentStory to ensure it's saved to Supabase
-            handleUpdateCurrentStory(prevStory => ({
-              characters: prevStory.characters.map(char =>
+            handleUpdateCurrentStory(prevStory => {
+              const updatedCharacters = prevStory.characters.map(char =>
                 char.id === id ? { ...char, description } : char
-              ),
-            }));
+              );
+
+              console.log('   Updating character:', {
+                characterId: id,
+                foundCharacter: updatedCharacters.find(c => c.id === id),
+                hasDescription: !!updatedCharacters.find(c => c.id === id)?.description
+              });
+
+              return { characters: updatedCharacters };
+            });
 
             // Auto-expand the description after analysis
             setExpandedDescriptions(prev => ({ ...prev, [id]: true }));
@@ -500,24 +509,37 @@ const App: React.FC = () => {
         setSelectedSceneForModal(prev => prev ? { ...prev, isGenerating: true } : null);
     }
 
-    // Get the absolute latest references from currentStory
-    const latestStory = stories.find(s => s.id === currentStoryId);
-    if (!latestStory) return;
+    // CRITICAL: Use currentStory directly instead of searching again
+    // currentStory is already the latest from React state
+    const latestStory = currentStory;
+
+    console.log('⚠️ CRITICAL: Checking story data before generation:', {
+      storyId: latestStory.id,
+      currentStoryId: currentStoryId,
+      areEqual: latestStory.id === currentStoryId,
+      timestamp: new Date().toISOString()
+    });
 
     console.log('🎨 Generating with latest references:', {
       sceneDescription: scene.description,
       characters: latestStory.characters.map(c => ({
         name: c.name,
         hasImage: !!c.image,
+        hasDescription: !!c.description,
+        descriptionPreview: c.description ? c.description.substring(0, 100) + '...' : 'NO DESCRIPTION',
         imagePreview: c.image ? c.image.base64.substring(0, 50) + '...' : 'NO IMAGE'
       })),
       backgrounds: latestStory.backgrounds.map(b => ({
         name: b.name,
         hasImage: !!b.image,
+        hasDescription: !!b.description,
+        descriptionPreview: b.description ? b.description.substring(0, 100) + '...' : 'NO DESCRIPTION',
         imagePreview: b.image ? b.image.base64.substring(0, 50) + '...' : 'NO IMAGE'
       })),
       artStyle: latestStory.artStyle ? {
         hasImage: true,
+        hasDescription: !!latestStory.artStyleDescription,
+        descriptionPreview: latestStory.artStyleDescription ? latestStory.artStyleDescription.substring(0, 100) + '...' : 'NO DESCRIPTION',
         imagePreview: latestStory.artStyle.base64.substring(0, 50) + '...'
       } : 'NO ART STYLE'
     });
