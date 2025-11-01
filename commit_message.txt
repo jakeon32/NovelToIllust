@@ -1,10 +1,7 @@
-fix(core): Implement smart fallback for reference filtering
+feat(scenes): Implement character continuity logic
 
-This commit introduces a more robust, two-step filtering strategy for characters and backgrounds to handle inconsistencies from the scene generation AI.
+This introduces a post-processing step after scene generation to ensure character continuity.
 
-- Reverts the `generate-scenes.ts` prompt to a less strict version to improve the chance of getting some data.
-- Implements a "smart fallback" in `generate-illustration.ts` and `generate-prompt.ts`:
-  1. First, it attempts to filter references using the accurate, structured data.
-  2. If that yields no results, it falls back to a regex search on the free-text summary.
-- This prevents both the "all references included" and "no references included" errors, creating a more resilient system.
-- Also includes the previously implemented null check for `artStyle` to prevent crashes.
+- When scenes are generated, the app now iterates through them and keeps track of which characters are present in a given location.
+- If a character appears in a scene, they are automatically carried over to subsequent scenes in the same location, even if not explicitly mentioned in that specific moment of the text.
+- This prevents characters from unnaturally disappearing and reappearing, improving the logical flow and consistency of the generated scenes.

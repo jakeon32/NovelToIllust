@@ -571,7 +571,44 @@ const App: React.FC = () => {
         }
 
       const sceneDescriptions = await generateScenesFromText(currentStory.novelText);
-      const newScenes: Scene[] = sceneDescriptions.map((structuredDesc, index) => ({
+
+      // Post-processing for character continuity
+      let currentLocation = null;
+      let charactersInLocation = new Set<string>();
+
+      const processedScenes = sceneDescriptions.map((scene: any) => {
+        const sceneLocation = scene.environment?.location?.toLowerCase().trim();
+
+        if (sceneLocation && sceneLocation !== currentLocation) {
+          currentLocation = sceneLocation;
+          charactersInLocation.clear();
+          scene.characters.forEach((c: any) => charactersInLocation.add(c.name));
+        } else {
+          const sceneCharacterNames = new Set(scene.characters.map((c: any) => c.name));
+          charactersInLocation.forEach(name => sceneCharacterNames.add(name));
+
+          const allCharactersInScene = Array.from(sceneCharacterNames);
+          const existingCharacterDetails = new Map(scene.characters.map((c: any) => [c.name, c]));
+          
+          scene.characters = allCharactersInScene.map(name => {
+            if (existingCharacterDetails.has(name)) {
+              return existingCharacterDetails.get(name);
+            }
+            return {
+              name: name, 
+              action: "present in the scene", 
+              expression: "observing",
+              posture: "as described in reference",
+              position: "background or as appropriate for the scene"
+            };
+          });
+          
+          charactersInLocation = new Set(allCharactersInScene);
+        }
+        return scene;
+      });
+
+      const newScenes: Scene[] = processedScenes.map((structuredDesc, index) => ({
         id: crypto.randomUUID(),
         description: structuredDesc.summary, // Use summary for backward compatibility
         structuredDescription: structuredDesc, // Store full structured data
