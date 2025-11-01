@@ -642,9 +642,13 @@ const App: React.FC = () => {
       }));
 
       try {
+        const sceneIndex = currentStory.scenes.findIndex(s => s.id === sceneId);
+        const previousScene = sceneIndex > 0 ? currentStory.scenes[sceneIndex - 1] : undefined;
+
         const generatedPrompt = await generatePrompt(
           scene.description,
           scene.structuredDescription,
+          previousScene?.structuredDescription,
           currentStory.characters,
           currentStory.backgrounds,
           currentStory.artStyleDescription,

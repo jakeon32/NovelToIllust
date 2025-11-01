@@ -1,9 +1,9 @@
-fix(critical): Final attempt to stabilize prompt generation
+fix(critical): Correct argument order in generatePrompt call
 
-This commit represents a complete overhaul of the `api/generate-prompt.ts` file to definitively fix a recurring server crash.
+This commit resolves the persistent 500 server error by fixing a critical argument mismatch in the `generatePrompt` function call within `App.tsx`.
 
-Instead of incremental patches, this change replaces the entire file with a version that is both fully functional and robustly defensive.
+The root cause was a missing `previousSceneDescription` argument. This caused a positional shift in all subsequent arguments, most critically sending the `artStyleDescription` (a string) in place of the `backgrounds` (an array) parameter to the API.
 
-- All access to nested properties of externally-sourced objects (like `structuredDescription` and `previousSceneDescription`) now uses optional chaining (`?.`) to prevent `TypeError` crashes from incomplete or malformed AI data.
-- The file now includes extensive, step-by-step logging of the entire process, from data input to filtering results.
-- A top-level try/catch block is in place to ensure that any unexpected error is caught and its stack trace is logged, providing clear diagnostics for any future issues.
+The API server would then crash with a `TypeError: .filter is not a function` because it received a string instead of an array.
+
+This fix corrects the argument order, ensuring the API receives the correct data types and preventing the crash. This should restore full functionality to the prompt generation feature.
