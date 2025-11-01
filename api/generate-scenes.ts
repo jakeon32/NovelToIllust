@@ -63,7 +63,7 @@ For each scene, provide a JSON object with the following structure:
   - posture: Body language and posture
   - position: Where they are in the scene
 - **environment**:
-  - location: Where the scene takes place
+  - location: Where the scene takes place. CRITICAL: This MUST be the specific noun from the source text (e.g., "diner", "forest", "castle"). DO NOT use synonyms or generic descriptions.
   - timeOfDay: Time (morning/afternoon/evening/night)
   - lighting: Description of lighting
   - weather: Weather conditions (if relevant/outdoor)
