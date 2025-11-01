@@ -19,14 +19,15 @@ export default async function handler(req: any, res: any) {
     // Find which characters are actually mentioned in this specific scene
     let relevantCharacters: any[] = [];
 
-    if (structuredDescription && structuredDescription.characters) {
-      // Use character names from structured description
+    if (structuredDescription && structuredDescription.characters && structuredDescription.characters.length > 0) {
       const sceneCharacterNames = structuredDescription.characters.map((c: any) => c.name.toLowerCase());
       relevantCharacters = (characters || []).filter((char: any) =>
         sceneCharacterNames.includes(char.name.toLowerCase())
       );
-    } else {
-      // Fallback to text matching if no structured description
+    }
+
+    // If structured filtering found nothing, try regex on the plain text description
+    if (relevantCharacters.length === 0) {
       relevantCharacters = (characters || []).filter((char: any) =>
         char.name.trim() &&
         new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)

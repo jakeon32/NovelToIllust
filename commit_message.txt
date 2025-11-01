@@ -1,5 +1,10 @@
-refactor(scenes): Strengthen prompt for character name preservation
+fix(core): Implement smart fallback for reference filtering
 
-This change addresses the root cause of character inconsistency by adding a critical, explicit directive to the `generate-scenes` prompt.
+This commit introduces a more robust, two-step filtering strategy for characters and backgrounds to handle inconsistencies from the scene generation AI.
 
-The new prompt mandates that the AI must preserve the exact proper nouns of characters and locations from the source text, preventing them from being summarized into generic descriptions like "a girl" or "a hall". This ensures that the downstream filtering logic in `generate-illustration` can correctly identify and use the appropriate character and background references.
+- Reverts the `generate-scenes.ts` prompt to a less strict version to improve the chance of getting some data.
+- Implements a "smart fallback" in `generate-illustration.ts` and `generate-prompt.ts`:
+  1. First, it attempts to filter references using the accurate, structured data.
+  2. If that yields no results, it falls back to a regex search on the free-text summary.
+- This prevents both the "all references included" and "no references included" errors, creating a more resilient system.
+- Also includes the previously implemented null check for `artStyle` to prevent crashes.

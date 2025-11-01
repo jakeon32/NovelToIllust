@@ -16,8 +16,6 @@ export default async function handler(req: any, res: any) {
 
   const prompt = `You are an expert illustration director for novels. Your task is to select the MOST VISUALLY IMPACTFUL and NARRATIVELY SIGNIFICANT moments from the following novel excerpt to be turned into illustrations.
 
-**CRITICAL DIRECTIVE: Your most important task is to accurately identify and preserve the proper nouns of characters and locations from the novel text. Do not summarize them away. If a character named "에린" is in the text, the output JSON must contain "에린". If a location is called "블랙우드 저택", the output must use that exact name.**
-
 IMPORTANT GUIDELINES FOR SCENE SELECTION:
 
 1. **Prioritize Visual Action over Dialogue**
@@ -59,13 +57,13 @@ For each scene, provide a JSON object with the following structure:
 - **summary**: One sentence describing the overall scene
 - **sourceExcerpt**: The exact excerpt from the original novel text that this scene is based on (1-3 sentences from the source)
 - **characters**: Array of characters in the scene, each with:
-  - name: Character's name. **CRITICAL RULE: You MUST use the EXACT character names found in the novel text. Do not replace names with general descriptions like "a girl" or "the man". If the text says "에린", the name MUST be "에린". This is the most important rule.**
+  - name: Character's name
   - action: What they are physically doing
   - expression: Their facial expression
   - posture: Body language and posture
   - position: Where they are in the scene
 - **environment**:
-  - location: Where the scene takes place. **CRITICAL RULE: This MUST be the specific proper noun from the source text (e.g., "diner", "forest", "Blackwood Manor"). DO NOT use synonyms or generic descriptions.**
+  - location: Where the scene takes place. CRITICAL: This MUST be the specific noun from the source text (e.g., "diner", "forest", "castle"). DO NOT use synonyms or generic descriptions.
   - timeOfDay: Time (morning/afternoon/evening/night)
   - lighting: Description of lighting
   - weather: Weather conditions (if relevant/outdoor)

@@ -300,17 +300,18 @@ export default async function handler(req: any, res: any) {
     // Find which characters are actually mentioned in this specific scene
     let relevantCharacters: any[] = [];
 
-    if (structuredDescription && structuredDescription.characters) {
-      // Use character names from structured description
+    if (structuredDescription && structuredDescription.characters && structuredDescription.characters.length > 0) {
       const sceneCharacterNames = structuredDescription.characters.map((c: any) => c.name.toLowerCase());
       relevantCharacters = (characters || []).filter((char: any) =>
         sceneCharacterNames.includes(char.name.toLowerCase())
       );
-    } else {
-      // Fallback to text matching if no structured description
+    }
+
+    // If structured filtering found nothing, try regex on the plain text description
+    if (relevantCharacters.length === 0) {
       relevantCharacters = (characters || []).filter((char: any) =>
         char.name.trim() &&
-        new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
+        new RegExp(`\\b${char.name.replace(/[-\\//^$*+?.()|[\\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
       );
     }
 
@@ -328,7 +329,7 @@ export default async function handler(req: any, res: any) {
     if (relevantBackgrounds.length === 0) {
         relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
           bg.name.trim() &&
-          new RegExp(`\\b${bg.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
+          new RegExp(`\\b${bg.name.replace(/[-\\//^$*+?.()|[\\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
         );
     }
 
@@ -364,58 +365,12 @@ export default async function handler(req: any, res: any) {
       : `Scene Description: "${sceneDescription}"`;
 
     parts.push(
-      { text: `Your task is to create a single, cohesive illustration for the following scene description. You MUST use the provided reference images to maintain PERFECT CONSISTENCY across all generated scenes.
-
-${shotTypeInstruction}
-
-${scenePrompt}
-
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-**🎨 REFERENCE PRIORITY ORDER:**
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-
-**PRIORITY 1: CHARACTER APPEARANCE (MOST CRITICAL - NEVER COMPROMISE)**
-   • Character features (hair color, eye color, clothing, accessories) are SACRED
-   • Character appearance MUST be 100% IDENTICAL to the character reference
-   • Character details OVERRIDE everything else - including art style preferences
-
-**PRIORITY 2: ART STYLE & TECHNIQUE (Apply to characters, don't replace them)**
-   • Use the artistic technique (line work, shading, coloring style) from art style reference
-   • BUT keep the character's exact appearance from Priority 1
-
-**PRIORITY 3: BACKGROUND/SETTING**
-   • Match the environmental style and atmosphere
-   • Maintain world consistency
-
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-
-CRITICAL RULE: CHARACTER REFERENCES ARE PROVIDED FIRST AND ARE MOST IMPORTANT.
-**Study them FIRST. Memorize every detail BEFORE looking at art style or background.**
-
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-**🚫 NEGATIVE PROMPT (WHAT TO AVOID) 🚫**
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-- DO NOT blend character features from the art style reference into the character's appearance.
-- DO NOT change the hair color, eye color, or clothing specified in the character references.
-- AVOID generic anime styles if a specific art style reference is provided.
-- The final image should not look like a mix of different styles; it should be a cohesive whole, applying the TECHNIQUE of the art style to the APPEARANCE of the characters.
-- AVOID any elements that contradict the provided character or background descriptions.
-
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-**🚫 WATERMARKS & NON-DIEGETIC TEXT (CRITICAL TO IGNORE) 🚫**
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-- Reference images may contain elements layered on top of the image, such as artist signatures, watermarks, website URLs, or timestamps. These are "non-diegetic" elements.
-- You MUST identify and COMPLETELY IGNORE these non-diegetic elements. DO NOT reproduce them.
-- **HOWEVER, text or symbols that are part of a character's clothing design (e.g., a logo on a t-shirt, text on a jacket) are "diegetic" and MUST be preserved as part of the outfit.**
-- **Rule of thumb:** If the text is part of the world (on clothing, a sign, a book), keep it. If it's layered on top of the image (like a signature), ignore it.
-- The detailed character outfit description is the source of truth for what text/symbols MUST be included.
-`
-      }
+      { text: `Your task is to create a single, cohesive illustration for the following scene description. You MUST use the provided reference images to maintain PERFECT CONSISTENCY across all generated scenes.\n\n${shotTypeInstruction}\n\n${scenePrompt}\n\n**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**\n**🎨 REFERENCE PRIORITY ORDER:**\n**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**\n\n**PRIORITY 1: CHARACTER APPEARANCE (MOST CRITICAL - NEVER COMPROMISE)**\n   • Character features (hair color, eye color, clothing, accessories) are SACRED\n   • Character appearance MUST be 100% IDENTICAL to the character reference\n   • Character details OVERRIDE everything else - including art style preferences\n\n**PRIORITY 2: ART STYLE & TECHNIQUE (Apply to characters, don't replace them)**\n   • Use the artistic technique (line work, shading, coloring style) from art style reference\n   • BUT keep the character's exact appearance from Priority 1\n\n**PRIORITY 3: BACKGROUND/SETTING**\n   • Match the environmental style and atmosphere\n   • Maintain world consistency\n\n**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**\n\nCRITICAL RULE: CHARACTER REFERENCES ARE PROVIDED FIRST AND ARE MOST IMPORTANT.\n**Study them FIRST. Memorize every detail BEFORE looking at art style or background.**\n\n**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**\n**🚫 NEGATIVE PROMPT (WHAT TO AVOID) 🚫**\n**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**\n- DO NOT blend character features from the art style reference into the character's appearance.\n- DO NOT change the hair color, eye color, or clothing specified in the character references.\n- AVOID generic anime styles if a specific art style reference is provided.\n- The final image should not look like a mix of different styles; it should be a cohesive whole, applying the TECHNIQUE of the art style to the APPEARANCE of the characters.\n- AVOID any elements that contradict the provided character or background descriptions.\n\n**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**\n**🚫 WATERMARKS & NON-DIEGETIC TEXT (CRITICAL TO IGNORE) 🚫**\n**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**\n- Reference images may contain elements layered on top of the image, such as artist signatures, watermarks, website URLs, or timestamps. These are \"non-diegetic\" elements.\n- You MUST identify and COMPLETELY IGNORE these non-diegetic elements. DO NOT reproduce them.\n- **HOWEVER, text or symbols that are part of a character's clothing design (e.g., a logo on a t-shirt, text on a jacket) are \"diegetic\" and MUST be preserved as part of the outfit.**\n- **Rule of thumb:** If the text is part of the world (on clothing, a sign, a book), keep it. If it's layered on top of the image (like a signature), ignore it.\n- The detailed character outfit description is the source of truth for what text/symbols MUST be included.\n`
     );
 
-    // ============================================================================ 
+    // ============================================================================
     // RESTRUCTURED ORDER: CHARACTER REFERENCES FIRST (HIGHEST PRIORITY)
-    // ============================================================================ 
+    // ============================================================================
 
     relevantCharacters.forEach((char: any) => {
       if (char.image) {
@@ -496,10 +451,9 @@ The character's appearance is SACRED and PERMANENT. This is NON-NEGOTIABLE.
       }
     });
 
-    // ============================================================================ 
+    // ============================================================================
     // NOW ADD ART STYLE REFERENCE (TECHNIQUE ONLY, NOT CHARACTER APPEARANCE)
-    // ============================================================================ 
-
+    // ============================================================================
     console.log('\n' + '='.repeat(100));
     console.log('🎨 ART STYLE PROCESSING');
     console.log('='.repeat(100));
@@ -580,10 +534,9 @@ You should draw: person with BROWN HAIR and MAID OUTFIT using SMOOTH DIGITAL SHA
       console.log('⚠️ No art style provided - skipping art style reference');
     }
 
-    // ============================================================================ 
+    // ============================================================================
     // BACKGROUND REFERENCES (PRIORITY 3)
-    // ============================================================================ 
-
+    // ============================================================================
     if (relevantBackgrounds && relevantBackgrounds.length > 0) {
       relevantBackgrounds.forEach((bg: any, index: number) => {
         // Use BOTH structuredAnalysis (JSON) and legacy description for maximum consistency
@@ -603,10 +556,9 @@ You should draw: person with BROWN HAIR and MAID OUTFIT using SMOOTH DIGITAL SHA
       });
     }
 
-    // ============================================================================ 
+    // ============================================================================
     // FINAL REMINDER: Reinforce character consistency
-    // ============================================================================ 
-
+    // ============================================================================
     if (relevantCharacters.length > 0) {
       parts.push({ text: `
 **━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
@@ -632,4 +584,64 @@ Before you generate the image, MANDATORY verification:
 ❌ Did I accidentally copy clothing from art style image? → STOP and fix!
 ❌ Did I accidentally copy accessories from art style image? → STOP and fix!
 
-**CORRECT MENTAL MODEL:**
+**CORRECT MENTAL MODEL:**` });
+    }
+
+    // Extract text parts for logging/debugging
+    const textPrompt = parts
+      .filter((p: any) => p.text)
+      .map((p: any) => p.text)
+      .join('\n\n');
+
+    console.log('\n' + '='.repeat(100));
+    console.log('📦 PARTS ARRAY STRUCTURE');
+    console.log('='.repeat(100));
+    console.log('Total parts:', parts.length);
+    parts.forEach((part, idx) => {
+      if (part.text) {
+        console.log(`Part ${idx + 1}: TEXT (${part.text.length} chars)`);
+        console.log('   Preview:', part.text.substring(0, 150).replace(/\n/g, ' ') + '...');
+      } else if (part.inlineData) {
+        console.log(`Part ${idx + 1}: IMAGE`);
+        console.log('   MimeType:', part.inlineData.mimeType);
+        console.log('   Data size:', part.inlineData.data?.length || 0, 'chars');
+      }
+    });
+    console.log('='.repeat(100) + '\n');
+
+    console.log('\n' + '='.repeat(100));
+    console.log('📝 FULL TEXT PROMPT being sent to Gemini:');
+    console.log('='.repeat(100));
+    console.log(textPrompt);
+    console.log('='.repeat(100) + '\n');
+
+    const response = await ai.models.generateContent({
+      model: illustrationModel,
+      contents: { parts },
+      config: {
+        responseModalities: [Modality.IMAGE],
+        ...(aspectRatio && {
+          imageConfig: {
+            aspectRatio: aspectRatio,
+          }
+        }),
+      },
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        const base64ImageBytes: string = part.inlineData.data;
+        return res.status(200).json({
+          image: `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`,
+          prompt: textPrompt, // Return the prompt so it can be saved
+        });
+      }
+    }
+
+    throw new Error("No image was generated by the API.");
+
+  } catch (error: any) {
+    console.error("Error generating illustration:", error);
+    return res.status(500).json({ error: error.message || 'Failed to generate illustration' });
+  }
+}
