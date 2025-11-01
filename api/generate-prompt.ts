@@ -20,13 +20,13 @@ export default async function handler(req: any, res: any) {
     let relevantCharacters: any[] = [];
     let sceneCharacterNames = new Set<string>();
 
-    // 1. Get characters from the current scene
-    if (structuredDescription && structuredDescription.characters && structuredDescription.characters.length > 0) {
+    // 1. Get characters from the current scene (Safely)
+    if (structuredDescription?.characters?.length > 0) {
       structuredDescription.characters.forEach((c: any) => sceneCharacterNames.add(c.name.toLowerCase()));
     }
 
-    // 2. Get characters from the previous scene for continuity, if locations match
-    if (previousSceneDescription && previousSceneDescription.characters && previousSceneDescription.characters.length > 0) {
+    // 2. Get characters from the previous scene for continuity (Safely)
+    if (previousSceneDescription?.characters?.length > 0) {
       const prevLocation = previousSceneDescription.environment?.location?.toLowerCase().trim();
       const currentLocation = structuredDescription?.environment?.location?.toLowerCase().trim();
       if (prevLocation && currentLocation && prevLocation === currentLocation) {
@@ -42,26 +42,28 @@ export default async function handler(req: any, res: any) {
         });
     }
 
-    // 4. If still no characters, fallback to regex on the simple description
+    // 4. If still no characters, fallback to regex on the simple description (Safely)
     if (relevantCharacters.length === 0 && typeof sceneDescription === 'string') {
       relevantCharacters = (characters || []).filter((char: any) =>
         char.name.trim() &&
-        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
       );
     }
 
-    // --- Background Filtering Logic ---
+    // --- Background Filtering Logic (Safely) ---
     let relevantBackgrounds: any[] = [];
-    if (structuredDescription && structuredDescription.environment && structuredDescription.environment.location) {
-      const sceneLocationName = structuredDescription.environment.location.toLowerCase();
+    const sceneLocationName = structuredDescription?.environment?.location?.toLowerCase();
+    if (sceneLocationName) {
       relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
         bg.name.trim() && sceneLocationName.includes(bg.name.toLowerCase())
       );
     }
+
+    // Fallback to regex on sceneDescription if no background found yet (Safely)
     if (relevantBackgrounds.length === 0 && typeof sceneDescription === 'string') {
         relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
           bg.name.trim() &&
-          new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+          new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
         );
     }
 

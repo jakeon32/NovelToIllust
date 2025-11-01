@@ -1,6 +1,9 @@
-fix(critical): Revert frontend changes and fix API crash
+fix(critical): Prevent API crash with safe navigation
 
-This commit reverts the incorrect frontend changes from the previous commit and fixes the actual root cause of the 500 error, which was a server-side crash.
+This commit definitively fixes the recurring 500 Internal Server Error on the `generate-prompt` API.
 
-- Reverted the `useEffect` dependency change in `App.tsx`. The original logic was correct, and the change was based on a misinterpretation of the error log.
-- Fixed a `TypeError` in `api/generate-prompt.ts`. The code did not safely handle cases where `sceneDescription` could be null, causing the regex `.test()` method to crash the API. Added a `typeof sceneDescription === 'string'` check to prevent this.
+The root cause was identified as multiple instances of unsafe access to nested properties on potentially undefined objects returned by the AI scene analysis (e.g., `structuredDescription.environment.location`).
+
+This was causing a `TypeError` and crashing the server whenever the AI-generated data structure was incomplete.
+
+The fix involves rewriting all data access within `api/generate-prompt.ts` to use optional chaining (`?.`). This makes the code resilient to malformed or incomplete AI data, preventing server crashes by gracefully handling null or undefined values in the data chain.
