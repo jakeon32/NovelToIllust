@@ -9,7 +9,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { sceneDescription, characters, backgrounds, artStyleDescription, shotType } = req.body;
+  const { sceneDescription, structuredDescription, characters, backgrounds, artStyleDescription, shotType } = req.body;
 
   if (!sceneDescription) {
     return res.status(400).json({ error: 'Scene description is required' });
@@ -17,10 +17,21 @@ export default async function handler(req: any, res: any) {
 
   try {
     // Find which characters are actually mentioned in this specific scene
-    let relevantCharacters = (characters || []).filter((char: any) =>
-      char.name.trim() &&
-      new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
-    );
+    let relevantCharacters: any[] = [];
+
+    if (structuredDescription && structuredDescription.characters) {
+      // Use character names from structured description
+      const sceneCharacterNames = structuredDescription.characters.map((c: any) => c.name.toLowerCase());
+      relevantCharacters = (characters || []).filter((char: any) =>
+        sceneCharacterNames.includes(char.name.toLowerCase())
+      );
+    } else {
+      // Fallback to text matching if no structured description
+      relevantCharacters = (characters || []).filter((char: any) =>
+        char.name.trim() &&
+        new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
+      );
+    }
 
     // FALLBACK: If no characters matched but we have characters, use all of them
     if (relevantCharacters.length === 0 && characters && characters.length > 0) {
