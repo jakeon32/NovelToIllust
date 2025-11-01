@@ -9,33 +9,49 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { sceneDescription, structuredDescription, characters, backgrounds, artStyleDescription, shotType } = req.body;
+  const { sceneDescription, structuredDescription, previousSceneDescription, characters, backgrounds, artStyleDescription, shotType } = req.body;
 
-  if (!sceneDescription) {
+  if (!sceneDescription && !structuredDescription) {
     return res.status(400).json({ error: 'Scene description is required' });
   }
 
   try {
-    // Find which characters are actually mentioned in this specific scene
+    // --- Character Filtering Logic ---
     let relevantCharacters: any[] = [];
+    let sceneCharacterNames = new Set<string>();
 
+    // 1. Get characters from the current scene
     if (structuredDescription && structuredDescription.characters && structuredDescription.characters.length > 0) {
-      const sceneCharacterNames = structuredDescription.characters.map((c: any) => c.name.toLowerCase());
-      relevantCharacters = (characters || []).filter((char: any) => {
-        const charNameLower = char.name.toLowerCase();
-        return sceneCharacterNames.some(sceneCharName => sceneCharName.startsWith(charNameLower));
-      });
+      structuredDescription.characters.forEach((c: any) => sceneCharacterNames.add(c.name.toLowerCase()));
     }
 
-    // If structured filtering found nothing, try regex on the plain text description
-    if (relevantCharacters.length === 0) {
-      relevantCharacters = (characters || []).filter((char: any) =>
-        char.name.trim() &&
-        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+    // 2. Get characters from the previous scene for continuity, if locations match
+    if (previousSceneDescription && previousSceneDescription.characters && previousSceneDescription.characters.length > 0) {
+      const prevLocation = previousSceneDescription.environment?.location?.toLowerCase().trim();
+      const currentLocation = structuredDescription?.environment?.location?.toLowerCase().trim();
+      if (prevLocation && currentLocation && prevLocation === currentLocation) {
+        previousSceneDescription.characters.forEach((c: any) => sceneCharacterNames.add(c.name.toLowerCase()));
+      }
+    }
+
+    // 3. Filter the master character list against the combined set of names
+    if (sceneCharacterNames.size > 0) {
+        relevantCharacters = (characters || []).filter((char: any) => {
+            const charNameLower = char.name.toLowerCase();
+            return Array.from(sceneCharacterNames).some(sceneCharName => sceneCharName.startsWith(charNameLower));
+        });
+    }
+
+    // 4. If still no characters, fallback to regex on the simple description
+    if (relevantCharacters.length === 0 && sceneDescription) {
+      relevantCharacters = (characters || []).filter((char: any)
+        => 
+          char.name.trim() &&
+        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
       );
     }
 
-    // Find which backgrounds are actually mentioned in this specific scene
+    // --- Background Filtering Logic ---
     let relevantBackgrounds: any[] = [];
     if (structuredDescription && structuredDescription.environment && structuredDescription.environment.location) {
       const sceneLocationName = structuredDescription.environment.location.toLowerCase();
@@ -43,17 +59,19 @@ export default async function handler(req: any, res: any) {
         bg.name.trim() && sceneLocationName.includes(bg.name.toLowerCase())
       );
     }
-
-    // If no match with structured data, fallback to regex on sceneDescription as a last resort.
-    if (relevantBackgrounds.length === 0) {
+    if (relevantBackgrounds.length === 0 && sceneDescription) {
         relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
           bg.name.trim() &&
-          new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+          new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
         );
     }
 
     // Build the comprehensive prompt
     let prompt = `Scene Description: ${sceneDescription}\n\n`;
+
+    if (previousSceneDescription) {
+        prompt += `Previous Scene Context: ${previousSceneDescription.summary}\n\n`;
+    }
 
     // Add shot type instruction
     if (shotType && shotType !== 'automatic') {

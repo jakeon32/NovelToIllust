@@ -162,7 +162,7 @@ const App: React.FC = () => {
       }
     };
 
-    initializeStorage();
+    if(user) initializeStorage();
   }, [user]);
 
   useEffect(() => {
@@ -189,10 +189,10 @@ const App: React.FC = () => {
     // Debounce saves to avoid too many writes
     const timeoutId = setTimeout(() => {
       saveStoriesAsync();
-    }, 500);
+    }, 1000); // Increased debounce time
 
     return () => clearTimeout(timeoutId);
-  }, [stories, user]);
+  }, [stories]);
 
   const currentStory = stories.find(s => s.id === currentStoryId);
 

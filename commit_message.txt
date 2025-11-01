@@ -1,10 +1,7 @@
-feat(continuity): Implement context-aware scene generation
+fix(critical): Resolve infinite loop and fix prompt generation
 
-This commit introduces a major improvement to address character continuity issues between scenes.
+This commit addresses two critical bugs:
 
-- The `generateIllustration` API now accepts a `previousSceneDescription` parameter to provide context from the immediately preceding scene.
-- A new "CONTEXT FROM PREVIOUS SCENE" section is added to the main prompt, explicitly showing the AI what just happened.
-- A `CONTINUITY RULE` has been added to the prompt, instructing the AI to keep characters present if the location has not changed.
-- The character filtering logic has been updated to automatically include characters from the previous scene if the location is the same, ensuring they are not forgotten.
+1.  **Infinite Loop:** The main data loading `useEffect` in `App.tsx` was incorrectly re-triggering on state changes, causing a save/load infinite loop. The dependency array has been corrected to ensure it runs only once on mount, resolving the stability issue.
 
-This creates a much more robust system that understands the narrative flow and prevents characters from unnaturally disappearing between related moments.
+2.  **Prompt Generation Failure:** The context-aware logic (passing `previousSceneDescription`) was missing from the `generatePrompt` call chain. This caused prompts to be generated without character continuity, failing to include references. The logic has been added to `App.tsx`, `geminiService.ts`, and `api/generate-prompt.ts`, mirroring the `generateIllustration` implementation and ensuring consistent, correct prompt generation.
