@@ -1,5 +1,3 @@
-fix(prompt): Remove fallback logic and improve reference filtering
+fix(api): Add null check for art style in illustration generation
 
-- Removes the fallback logic in `generate-illustration.ts` and `generate-prompt.ts` that caused all characters and backgrounds to be included in the prompt if no specific match was found.
-- Improves the background filtering to prioritize the structured `location` field over a simple text search, increasing accuracy.
-- Adds an `age` check to the final prompt checklist to improve character consistency.
+This prevents a TypeError that occurs when attempting to generate an image without providing an art style reference. The code was trying to access a property on a null object, causing a 500 internal server error.

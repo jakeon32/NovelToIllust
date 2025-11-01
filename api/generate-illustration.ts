@@ -513,7 +513,7 @@ The character's appearance is SACRED and PERMANENT. This is NON-NEGOTIABLE.
     }
     console.log('='.repeat(100) + '\n');
 
-      if (artStyle.hasDescription) {
+      if (artStyle && artStyle.hasDescription) {
         console.log("Found art style description. Using it.");
         // Use BOTH structuredAnalysis (JSON) and legacy description for maximum consistency
         const structuredText = artStyle.structuredAnalysis
