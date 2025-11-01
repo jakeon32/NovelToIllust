@@ -287,16 +287,70 @@ export default async function handler(req: any, res: any) {
 
     // --- Prompt Assembly ---
     const parts: any[] = [];
+    let promptText = `Your task is to create a single, cohesive illustration. You MUST use the provided reference images to maintain PERFECT CONSISTENCY.\n\n`;
+
+    // 1. Art Style Reference (if provided)
+    if (artStyle && artStyleDescription) {
+      promptText += `--- ART STYLE REFERENCE ---\n`;
+      promptText += `This is the master art style. All characters and scenes must strictly adhere to this style.\n`;
+      promptText += `Art Style Description: ${artStyleDescription}\n`;
+      promptText += formatStructuredArtStyleAnalysis(req.body.artStyleStructuredAnalysis);
+      promptText += `--- END ART STYLE ---\n\n`;
+      parts.push({ inlineData: { mimeType: artStyle.mimeType, data: artStyle.base64 } });
+    }
+
+    // 2. Background References (if relevant)
+    if (relevantBackgrounds.length > 0) {
+      promptText += `--- BACKGROUND REFERENCES ---\n`;
+      promptText += `Use these images and descriptions for the scene's environment. Prioritize the background that best matches the scene's location.\n\n`;
+      relevantBackgrounds.forEach((bg, index) => {
+        promptText += `**Background Reference ${index + 1}: ${bg.name}**\n`;
+        if (bg.description) {
+          promptText += `Description: ${bg.description}\n`;
+        }
+        promptText += formatStructuredBackgroundAnalysis(bg.structuredAnalysis);
+        promptText += `\n`;
+        if (bg.image) {
+          parts.push({ inlineData: { mimeType: bg.image.mimeType, data: bg.image.base64 } });
+        }
+      });
+      promptText += `--- END BACKGROUNDS ---\n\n`;
+    }
+
+    // 3. Character References (if relevant)
+    if (relevantCharacters.length > 0) {
+      promptText += `--- CHARACTER REFERENCES (CRITICAL) ---\n`;
+      promptText += `The following characters appear in this scene. You MUST adhere to their specified appearance, clothing, and features from their reference images and structured analysis. NO DEVIATIONS ALLOWED.\n\n`;
+      relevantCharacters.forEach((char, index) => {
+        promptText += `**Character Reference ${index + 1}: ${char.name}**\n`;
+        if (char.description) {
+          promptText += `Appearance Description: ${char.description}\n`;
+        }
+        // Append structured analysis for the character
+        promptText += formatStructuredCharacterAnalysis(char.structuredAnalysis);
+        promptText += `\n`;
+        if (char.image) {
+          parts.push({ inlineData: { mimeType: char.image.mimeType, data: char.image.base64 } });
+        }
+      });
+      promptText += `--- END CHARACTERS ---\n\n`;
+    }
+
+    // 4. Scene Composition
     const shotTypeInstruction = shotType && shotType !== 'automatic' ? `Composition: Use a **${shotType.replace(/_/g, ' ')}** for this scene.` : '';
-    
     const previousScenePrompt = previousSceneDescription ? createDetailedScenePrompt(previousSceneDescription, true) : '';
     const scenePrompt = structuredDescription ? createDetailedScenePrompt(structuredDescription) : `Scene Description: "${sceneDescription}"`;
 
-    parts.push(
-      { text: `Your task is to create a single, cohesive illustration. You MUST use the provided reference images to maintain PERFECT CONSISTENCY.\n\n${previousScenePrompt}${scenePrompt}\n${shotTypeInstruction}\n\n**CONTINUITY RULE: If the previous scene context and the current scene are in the same location, characters from the previous scene should still be present, perhaps in the background, unless they have explicitly left.**\n\n...`}
-    );
+    promptText += `--- SCENE TO ILLUSTRATE ---\n`;
+    promptText += `Now, using all the references provided above, create an illustration for the following scene.\n`;
+    promptText += `${previousScenePrompt}`;
+    promptText += `${scenePrompt}`;
+    promptText += `${shotTypeInstruction}\n`;
+    promptText += `**CONTINUITY RULE: If the previous scene context and the current scene are in the same location, characters from the previous scene should still be present, perhaps in the background, unless they have explicitly left.**\n`;
+    promptText += `--- END SCENE ---`;
 
-    // ... (rest of prompt assembly)
+    // Add the consolidated prompt text as the first part
+    parts.unshift({ text: promptText });
 
     const response = await ai.models.generateContent({
       model: illustrationModel,
