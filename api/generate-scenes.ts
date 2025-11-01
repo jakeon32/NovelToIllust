@@ -50,6 +50,12 @@ IMPORTANT GUIDELINES FOR SCENE SELECTION:
    - Example: "Butler formally reporting to lady at breakfast, morning light streaming through windows, she looks up with interest"
    - Dialogue-heavy moments often reveal character relationships and emotions - don't skip them!
 
+7. **Preserve Key Nouns from Source Text**
+   - When describing the scene, especially the `environment.location` and `importantObjects`, you MUST use the specific nouns found in the original text.
+   - DO NOT replace specific nouns with synonyms or more generic terms.
+   - Example: If the text says "diner", the location is "diner", not "restaurant" or "cafe". If the text says "ancient sword", the object is "ancient sword", not "old blade".
+   - This is critical for maintaining fidelity to the author's original vision.
+
 **STRUCTURED OUTPUT FORMAT:**
 
 For each scene, provide a JSON object with the following structure:
