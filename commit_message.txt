@@ -1,7 +1,7 @@
-fix(prompt): Pass structuredDescription to generatePrompt API
+fix(filtering): Make character name matching more robust
 
-This commit fixes a bug where the 'Generate Image' button for a single scene would produce a prompt without character/background references.
+This commit fixes a subtle bug where character references were not being included in prompts.
 
-The `generatePrompt` API call was missing the `structuredDescription` parameter, causing the server-side filtering logic to fail and fall back to a less reliable method.
+The root cause was that the scene generation AI would sometimes add parenthetical translations to character names (e.g., "에린 (Erin)"). The filtering logic was performing a strict equality check against the character name ("에린"), which would fail.
 
-This change ensures that the detailed structured data is always passed, aligning the behavior of the single-scene prompt generation with the main illustration generation and resolving the inconsistency.
+The matching logic in both `generate-illustration.ts` and `generate-prompt.ts` has been changed from `includes()` to `startsWith()`. This makes the matching more resilient to these kinds of minor variations from the AI, ensuring that the correct character references are found and included.

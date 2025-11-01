@@ -21,16 +21,17 @@ export default async function handler(req: any, res: any) {
 
     if (structuredDescription && structuredDescription.characters && structuredDescription.characters.length > 0) {
       const sceneCharacterNames = structuredDescription.characters.map((c: any) => c.name.toLowerCase());
-      relevantCharacters = (characters || []).filter((char: any) =>
-        sceneCharacterNames.includes(char.name.toLowerCase())
-      );
+      relevantCharacters = (characters || []).filter((char: any) => {
+        const charNameLower = char.name.toLowerCase();
+        return sceneCharacterNames.some(sceneCharName => sceneCharName.startsWith(charNameLower));
+      });
     }
 
     // If structured filtering found nothing, try regex on the plain text description
     if (relevantCharacters.length === 0) {
       relevantCharacters = (characters || []).filter((char: any) =>
         char.name.trim() &&
-        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
       );
     }
 
@@ -47,7 +48,7 @@ export default async function handler(req: any, res: any) {
     if (relevantBackgrounds.length === 0) {
         relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
           bg.name.trim() &&
-          new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+          new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
         );
     }
 
