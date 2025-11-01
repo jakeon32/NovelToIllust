@@ -401,6 +401,15 @@ CRITICAL RULE: CHARACTER REFERENCES ARE PROVIDED FIRST AND ARE MOST IMPORTANT.
 - AVOID generic anime styles if a specific art style reference is provided.
 - The final image should not look like a mix of different styles; it should be a cohesive whole, applying the TECHNIQUE of the art style to the APPEARANCE of the characters.
 - AVOID any elements that contradict the provided character or background descriptions.
+
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+**🚫 WATERMARKS & NON-DIEGETIC TEXT (CRITICAL TO IGNORE) 🚫**
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+- Reference images may contain elements layered on top of the image, such as artist signatures, watermarks, website URLs, or timestamps. These are "non-diegetic" elements.
+- You MUST identify and COMPLETELY IGNORE these non-diegetic elements. DO NOT reproduce them.
+- **HOWEVER, text or symbols that are part of a character's clothing design (e.g., a logo on a t-shirt, text on a jacket) are "diegetic" and MUST be preserved as part of the outfit.**
+- **Rule of thumb:** If the text is part of the world (on clothing, a sign, a book), keep it. If it's layered on top of the image (like a signature), ignore it.
+- The detailed character outfit description is the source of truth for what text/symbols MUST be included.
 `
       }
     );
