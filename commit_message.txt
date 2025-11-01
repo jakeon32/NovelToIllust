@@ -1,7 +1,0 @@
-chore(debug): Add hyper-detailed comparison logging
-
-This is a diagnostic commit to find the root cause of the character filtering failure.
-
-Previous attempts to fix the logic have failed. This version adds detailed logging to the character filter loop, printing the exact two strings being compared in every `startsWith` check.
-
-This will provide the ground-truth data needed to finally understand why the filtering is failing.

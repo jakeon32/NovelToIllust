@@ -83,14 +83,10 @@ export const generatePrompt = async (
 };
 
 export const generateIllustration = async (
-  sceneDescription: string,
-  structuredDescription: StructuredSceneDescription | undefined,
-  previousSceneDescription: StructuredSceneDescription | undefined,
+  customPrompt: string, // The fully-formed prompt from the generate-prompt step
   characters: Character[],
   backgrounds: Background[],
   artStyle: ImageFile | null,
-  artStyleDescription: string | undefined,
-  shotType: string,
   aspectRatio: string
 ): Promise<{ image: string; prompt: string }> => {
   try {
@@ -98,14 +94,10 @@ export const generateIllustration = async (
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sceneDescription,
-        structuredDescription,
-        previousSceneDescription,
+        customPrompt,
         characters,
         backgrounds,
         artStyle,
-        artStyleDescription,
-        shotType,
         aspectRatio,
       }),
     });
