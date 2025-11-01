@@ -5,18 +5,83 @@ export interface ImageFile {
   name: string;
 }
 
+// Structured character analysis
+export interface StructuredCharacterAnalysis {
+  face: {
+    shape: string;
+    skinTone: string;
+    eyes: {
+      color: string;
+      shape: string;
+      size: string;
+    };
+    nose: string;
+    mouth: string;
+    distinctiveMarks?: string[];
+  };
+  hair: {
+    color: string;
+    length: string;
+    style: string;
+    parting: string;
+    texture: string;
+    accessories?: string[];
+  };
+  body: {
+    build: string;
+    height: string;
+    posture: string;
+  };
+  outfit: {
+    upperBody: string;
+    lowerBody: string;
+    accessories: string[];
+    colors: string[];
+    style: string;
+  };
+  overallVibe: string;
+}
+
 export interface Character {
   id: string;
   name: string;
   image: ImageFile | null;
-  description?: string; // AI-generated detailed description of character appearance
+  description?: string; // Legacy: Natural language description
+  structuredAnalysis?: StructuredCharacterAnalysis; // New structured format
+}
+
+// Structured background analysis
+export interface StructuredBackgroundAnalysis {
+  location: {
+    type: string;
+    setting: string;
+    architecture: string;
+  };
+  lighting: {
+    source: string[];
+    quality: string;
+    timeOfDay: string;
+    mood: string;
+  };
+  colors: {
+    dominant: string[];
+    accents: string[];
+    palette: string;
+  };
+  objects: Array<{
+    item: string;
+    description: string;
+    prominence: string;
+  }>;
+  atmosphere: string;
 }
 
 export interface Background {
   id: string;
   name: string;
   image: ImageFile;
-  description?: string; // AI-generated detailed description of background/setting
+  description?: string; // Legacy: Natural language description
+  structuredAnalysis?: StructuredBackgroundAnalysis; // New structured format
 }
 
 // Structured scene description for better AI consistency
@@ -75,6 +140,29 @@ export interface Scene {
   customPrompt?: string; // User can override/edit the auto-generated prompt
 }
 
+// Structured art style analysis
+export interface StructuredArtStyleAnalysis {
+  medium: string;
+  technique: {
+    rendering: string;
+    lineWork: string;
+    edgeQuality: string;
+  };
+  colorApplication: {
+    style: string;
+    saturation: string;
+    blending: string;
+  };
+  shadingAndLighting: {
+    shadingStyle: string;
+    contrast: string;
+    lightingType: string;
+  };
+  styleGenre: string;
+  mood: string;
+  distinctiveFeatures: string[];
+}
+
 export interface Story {
   id: string;
   title: string;
@@ -82,6 +170,7 @@ export interface Story {
   characters: Character[];
   backgrounds: Background[];
   artStyle: ImageFile | null;
-  artStyleDescription?: string; // AI-generated detailed description of art style
+  artStyleDescription?: string; // Legacy: Natural language description
+  artStyleStructuredAnalysis?: StructuredArtStyleAnalysis; // New structured format
   scenes: Scene[];
 }

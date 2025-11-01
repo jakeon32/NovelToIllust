@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 const visionModel = "gemini-2.5-flash";
@@ -20,35 +20,51 @@ export default async function handler(req: any, res: any) {
       contents: {
         parts: [
           {
-            text: `Analyze this character image and provide a CONCISE description focusing on key visual characteristics needed for consistent recreation. Keep it practical and scannable.
+            text: `Analyze this character image and provide a STRUCTURED JSON description focusing on key visual characteristics needed for consistent recreation.
 
-**FORMAT YOUR RESPONSE (Keep each section brief, 1-2 sentences max):**
+**OUTPUT A JSON OBJECT with the following structure:**
 
-**FACE & EYES:**
-[Eye color (specific shade), skin tone, face shape. Note any distinctive facial features like marks or scars.]
+{
+  "face": {
+    "shape": "Face shape (oval/round/square/heart/etc.)",
+    "skinTone": "Specific skin tone description",
+    "eyes": {
+      "color": "Specific eye color with shade",
+      "shape": "Eye shape (almond/round/narrow/etc.)",
+      "size": "Relative size (large/medium/small)"
+    },
+    "nose": "Nose description (small/refined/prominent/etc.)",
+    "mouth": "Mouth description (full lips/thin lips/etc.)",
+    "distinctiveMarks": ["array", "of", "marks", "scars", "freckles"] // optional, omit if none
+  },
+  "hair": {
+    "color": "Specific hair color with shade and variations",
+    "length": "Hair length (very short/short/shoulder-length/long/very long)",
+    "style": "Hair style (straight/wavy/curly/etc.)",
+    "parting": "Hair parting (center/side/no parting/etc.)",
+    "texture": "Hair texture",
+    "accessories": ["array", "of", "hair", "accessories"] // optional, omit if none
+  },
+  "body": {
+    "build": "Body build (slender/athletic/muscular/curvy/etc.)",
+    "height": "Relative height (tall/average/short)",
+    "posture": "Posture description (upright/relaxed/slouched/etc.)"
+  },
+  "outfit": {
+    "upperBody": "Upper body clothing description",
+    "lowerBody": "Lower body clothing description",
+    "accessories": ["array", "of", "clothing", "accessories"],
+    "colors": ["dominant", "outfit", "colors"],
+    "style": "Overall outfit style (casual/formal/school uniform/maid outfit/etc.)"
+  },
+  "overallVibe": "Overall personality impression and vibe in one sentence"
+}
 
-**HAIR:**
-[Color (specific shade), style, length. Include any unique color variations or accessories.]
-
-**BODY & BUILD:**
-[Overall build (slim/athletic/etc.), approximate height, posture if distinctive.]
-
-**MAIN OUTFIT:**
-[Top and bottom - colors and key style. Keep to essentials only.]
-
-**DISTINCTIVE ACCESSORIES:**
-[Only the most noticeable items: glasses, jewelry, bags. Skip if none.]
-
-**UNIQUE IDENTIFIERS:**
-[1-2 characteristics that make this character instantly recognizable. This is the most important section.]
-
-**OVERALL VIBE:**
-[One sentence: personality impression and typical expression.]
-
-**EXAMPLE OUTPUT:**
-"Bright sapphire blue eyes, fair skin, heart-shaped face. Shoulder-length golden blonde hair with honey highlights, straight with side-swept bangs. Slim build, average height. White button-up shirt, dark blue jeans. Black-rimmed round glasses, silver necklace. Instantly recognizable by: vibrant hair color and distinctive glasses. Professional yet approachable vibe, usually smiling warmly."
-
-**IMPORTANT:** Be specific with colors and key features, but avoid over-describing minor details. Focus on what an artist needs to maintain consistency across multiple scenes.`
+**IMPORTANT:**
+- Be SPECIFIC with colors (use shades: "warm amber-brown" not just "brown")
+- Focus on what an artist needs for consistency
+- Omit optional arrays if they're empty (distinctiveMarks, hair.accessories)
+- Keep descriptions concise but precise`
           },
           {
             inlineData: {
@@ -57,12 +73,98 @@ export default async function handler(req: any, res: any) {
             }
           }
         ]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            face: {
+              type: Type.OBJECT,
+              properties: {
+                shape: { type: Type.STRING },
+                skinTone: { type: Type.STRING },
+                eyes: {
+                  type: Type.OBJECT,
+                  properties: {
+                    color: { type: Type.STRING },
+                    shape: { type: Type.STRING },
+                    size: { type: Type.STRING }
+                  },
+                  required: ["color", "shape", "size"]
+                },
+                nose: { type: Type.STRING },
+                mouth: { type: Type.STRING },
+                distinctiveMarks: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+                }
+              },
+              required: ["shape", "skinTone", "eyes", "nose", "mouth"]
+            },
+            hair: {
+              type: Type.OBJECT,
+              properties: {
+                color: { type: Type.STRING },
+                length: { type: Type.STRING },
+                style: { type: Type.STRING },
+                parting: { type: Type.STRING },
+                texture: { type: Type.STRING },
+                accessories: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+                }
+              },
+              required: ["color", "length", "style", "parting", "texture"]
+            },
+            body: {
+              type: Type.OBJECT,
+              properties: {
+                build: { type: Type.STRING },
+                height: { type: Type.STRING },
+                posture: { type: Type.STRING }
+              },
+              required: ["build", "height", "posture"]
+            },
+            outfit: {
+              type: Type.OBJECT,
+              properties: {
+                upperBody: { type: Type.STRING },
+                lowerBody: { type: Type.STRING },
+                accessories: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+                },
+                colors: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+                },
+                style: { type: Type.STRING }
+              },
+              required: ["upperBody", "lowerBody", "accessories", "colors", "style"]
+            },
+            overallVibe: { type: Type.STRING }
+          },
+          required: ["face", "hair", "body", "outfit", "overallVibe"]
+        }
       }
     });
 
-    const characterDescription = response.candidates[0].content.parts[0].text;
+    const jsonString = response.text;
+    const structuredAnalysis = JSON.parse(jsonString);
 
-    return res.status(200).json({ description: characterDescription });
+    // Also generate a legacy text description for backward compatibility
+    const legacyDescription = `**FACE & EYES:** ${structuredAnalysis.face.eyes.color} eyes, ${structuredAnalysis.face.skinTone} skin, ${structuredAnalysis.face.shape} face shape.
+**HAIR:** ${structuredAnalysis.hair.color} hair, ${structuredAnalysis.hair.length} and ${structuredAnalysis.hair.style}, parted in the ${structuredAnalysis.hair.parting}.
+**BODY & BUILD:** ${structuredAnalysis.body.build} build, appears of ${structuredAnalysis.body.height} height with a ${structuredAnalysis.body.posture} posture.
+**MAIN OUTFIT:** ${structuredAnalysis.outfit.upperBody} and ${structuredAnalysis.outfit.lowerBody}.
+**DISTINCTIVE ACCESSORIES:** ${structuredAnalysis.outfit.accessories.join(', ')}.
+**OVERALL VIBE:** ${structuredAnalysis.overallVibe}`;
+
+    return res.status(200).json({
+      description: legacyDescription,
+      structuredAnalysis: structuredAnalysis
+    });
 
   } catch (error: any) {
     console.error("Error analyzing character:", error);

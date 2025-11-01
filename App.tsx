@@ -282,15 +282,16 @@ const App: React.FC = () => {
 
         // Run analysis in background (don't block UI)
         analyzeCharacter(value as ImageFile)
-          .then(description => {
+          .then(result => {
             console.log('✅ Character analysis complete for character:', id);
-            console.log('   Description preview:', description.substring(0, 150) + '...');
+            console.log('   Description preview:', result.description.substring(0, 150) + '...');
+            console.log('   Structured analysis:', result.structuredAnalysis);
 
-            // Update only the description (image already shown)
+            // Update description and structured analysis
             // Use handleUpdateCurrentStory to ensure it's saved to Supabase
             handleUpdateCurrentStory(prevStory => {
               const updatedCharacters = prevStory.characters.map(char =>
-                char.id === id ? { ...char, description } : char
+                char.id === id ? { ...char, description: result.description, structuredAnalysis: result.structuredAnalysis } : char
               );
 
               console.log('   Updating character:', {
@@ -328,11 +329,11 @@ const App: React.FC = () => {
     setAnalyzingCharacters(prev => ({ ...prev, [id]: true }));
 
     try {
-      const description = await analyzeCharacter(character.image);
-      console.log('✅ Re-analysis complete:', description.substring(0, 100) + '...');
+      const result = await analyzeCharacter(character.image);
+      console.log('✅ Re-analysis complete:', result.description.substring(0, 100) + '...');
 
       const updatedCharacters = currentStory.characters.map((char) =>
-        char.id === id ? { ...char, description } : char
+        char.id === id ? { ...char, description: result.description, structuredAnalysis: result.structuredAnalysis } : char
       );
 
       handleUpdateCurrentStory({ characters: updatedCharacters });
@@ -394,14 +395,14 @@ const App: React.FC = () => {
 
       // Run analysis in background (don't block UI)
       analyzeBackground(value as ImageFile)
-        .then(description => {
-          console.log('✅ Background analysis complete:', description.substring(0, 100) + '...');
+        .then(result => {
+          console.log('✅ Background analysis complete:', result.description.substring(0, 100) + '...');
 
-          // Update only the description (image already shown)
+          // Update description and structured analysis
           // Use handleUpdateCurrentStory to ensure it's saved to Supabase
           handleUpdateCurrentStory(prevStory => ({
             backgrounds: prevStory.backgrounds.map(bg =>
-              bg.id === id ? { ...bg, description } : bg
+              bg.id === id ? { ...bg, description: result.description, structuredAnalysis: result.structuredAnalysis } : bg
             ),
           }));
 
@@ -431,11 +432,11 @@ const App: React.FC = () => {
     setAnalyzingBackgrounds(prev => ({ ...prev, [id]: true }));
 
     try {
-      const description = await analyzeBackground(background.image);
-      console.log('✅ Re-analysis complete:', description.substring(0, 100) + '...');
+      const result = await analyzeBackground(background.image);
+      console.log('✅ Re-analysis complete:', result.description.substring(0, 100) + '...');
 
       const updatedBackgrounds = currentStory.backgrounds.map((bg) =>
-        bg.id === id ? { ...bg, description } : bg
+        bg.id === id ? { ...bg, description: result.description, structuredAnalysis: result.structuredAnalysis } : bg
       );
 
       handleUpdateCurrentStory({ backgrounds: updatedBackgrounds });
@@ -490,12 +491,12 @@ const App: React.FC = () => {
 
       // Run analysis in background (don't block UI)
       analyzeArtStyle(artStyle)
-        .then(description => {
-          console.log('✅ Art style analysis complete:', description.substring(0, 100) + '...');
+        .then(result => {
+          console.log('✅ Art style analysis complete:', result.description.substring(0, 100) + '...');
 
-          // Update only the description (image already shown)
+          // Update description and structured analysis
           // Use handleUpdateCurrentStory to ensure it's saved to Supabase
-          handleUpdateCurrentStory({ artStyleDescription: description });
+          handleUpdateCurrentStory({ artStyleDescription: result.description, artStyleStructuredAnalysis: result.structuredAnalysis });
 
           // Auto-expand the description after analysis
           setExpandedDescriptions(prev => ({ ...prev, 'artStyle': true }));
@@ -529,10 +530,10 @@ const App: React.FC = () => {
     setAnalyzingArtStyle(true);
 
     try {
-      const description = await analyzeArtStyle(currentStory.artStyle);
-      console.log('✅ Re-analysis complete:', description.substring(0, 100) + '...');
+      const result = await analyzeArtStyle(currentStory.artStyle);
+      console.log('✅ Re-analysis complete:', result.description.substring(0, 100) + '...');
 
-      handleUpdateCurrentStory({ artStyleDescription: description });
+      handleUpdateCurrentStory({ artStyleDescription: result.description, artStyleStructuredAnalysis: result.structuredAnalysis });
     } catch (error) {
       console.error('Failed to re-analyze art style:', error);
       setError('아트 스타일 재분석에 실패했습니다.');

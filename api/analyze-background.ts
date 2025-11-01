@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 const visionModel = "gemini-2.5-flash";
@@ -20,35 +20,42 @@ export default async function handler(req: any, res: any) {
       contents: {
         parts: [
           {
-            text: `Analyze this background/setting image and provide a CONCISE description focusing on key environmental elements needed to recreate similar scenes. Keep it practical and scannable.
+            text: `Analyze this background/setting image and provide a STRUCTURED JSON description focusing on key environmental elements needed to recreate similar scenes.
 
-**FORMAT YOUR RESPONSE (Keep each section brief, 1-2 sentences max):**
+**OUTPUT A JSON OBJECT with the following structure:**
 
-**LOCATION TYPE & STYLE:**
-[Setting type (castle/forest/room/etc.) and architectural/natural style. Be specific but concise.]
+{
+  "location": {
+    "type": "indoor/outdoor/mixed",
+    "setting": "Specific setting description (e.g., 'antique study room', 'misty forest', 'modern cafe')",
+    "architecture": "Architectural style or natural features"
+  },
+  "lighting": {
+    "source": ["array", "of", "light", "sources"],
+    "quality": "Light quality description (warm/cool/harsh/soft/etc.)",
+    "timeOfDay": "morning/afternoon/evening/night/unclear",
+    "mood": "Lighting mood (cozy/dramatic/mysterious/bright/etc.)"
+  },
+  "colors": {
+    "dominant": ["dominant", "colors"],
+    "accents": ["accent", "colors"],
+    "palette": "Overall color palette description (e.g., 'warm earth tones', 'cool blues and greys')"
+  },
+  "objects": [
+    {
+      "item": "Object name",
+      "description": "Brief description",
+      "prominence": "foreground/midground/background"
+    }
+  ],
+  "atmosphere": "Overall atmosphere and mood in one sentence"
+}
 
-**KEY STRUCTURES & MATERIALS:**
-[Main architectural elements or natural features. Materials if distinctive (stone/wood/etc.).]
-
-**COLOR & LIGHTING:**
-[Dominant colors (2-3), time of day, light sources, overall mood (warm/cool/etc.).]
-
-**ATMOSPHERE & WEATHER:**
-[Weather conditions, shadows (soft/harsh), mood (peaceful/ominous/etc.).]
-
-**NOTABLE ELEMENTS:**
-[Key furniture, decorations, or environmental details that define the space. Only the most important ones.]
-
-**ERA & CULTURAL STYLE:**
-[Time period, cultural influence, genre (fantasy/modern/historical/etc.).]
-
-**UNIQUE IDENTIFIERS:**
-[1-2 characteristics that make this setting instantly recognizable and distinctive.]
-
-**EXAMPLE OUTPUT:**
-"Grand Gothic library with stone walls and vaulted ceilings. Arched windows, dark wooden bookshelves, ornate fireplace. Warm golden afternoon light, amber and brown tones with cool grey stone. Clear weather, soft shadows, scholarly and peaceful mood. Floor-to-ceiling books, red velvet armchairs, crystal specimens on desk. Medieval-Renaissance European style, fantasy-academic genre. Instantly recognizable by: dramatic Gothic windows and extensive ancient book collection."
-
-**IMPORTANT:** Focus on elements that would help an artist recreate the setting's atmosphere and style across multiple scenes. Avoid over-describing every detail - capture the essence.`
+**IMPORTANT:**
+- Be SPECIFIC with colors
+- Focus on what an artist needs for consistency
+- List 3-5 most important objects
+- Keep descriptions concise but precise`
           },
           {
             inlineData: {
@@ -57,12 +64,82 @@ export default async function handler(req: any, res: any) {
             }
           }
         ]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            location: {
+              type: Type.OBJECT,
+              properties: {
+                type: { type: Type.STRING },
+                setting: { type: Type.STRING },
+                architecture: { type: Type.STRING }
+              },
+              required: ["type", "setting", "architecture"]
+            },
+            lighting: {
+              type: Type.OBJECT,
+              properties: {
+                source: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+                },
+                quality: { type: Type.STRING },
+                timeOfDay: { type: Type.STRING },
+                mood: { type: Type.STRING }
+              },
+              required: ["source", "quality", "timeOfDay", "mood"]
+            },
+            colors: {
+              type: Type.OBJECT,
+              properties: {
+                dominant: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+                },
+                accents: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+                },
+                palette: { type: Type.STRING }
+              },
+              required: ["dominant", "accents", "palette"]
+            },
+            objects: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  item: { type: Type.STRING },
+                  description: { type: Type.STRING },
+                  prominence: { type: Type.STRING }
+                },
+                required: ["item", "description", "prominence"]
+              }
+            },
+            atmosphere: { type: Type.STRING }
+          },
+          required: ["location", "lighting", "colors", "objects", "atmosphere"]
+        }
       }
     });
 
-    const backgroundDescription = response.candidates[0].content.parts[0].text;
+    const jsonString = response.text;
+    const structuredAnalysis = JSON.parse(jsonString);
 
-    return res.status(200).json({ description: backgroundDescription });
+    // Generate legacy text description for backward compatibility
+    const legacyDescription = `**LOCATION:** ${structuredAnalysis.location.setting} (${structuredAnalysis.location.type}), ${structuredAnalysis.location.architecture}.
+**LIGHTING:** ${structuredAnalysis.lighting.source.join(', ')} with ${structuredAnalysis.lighting.quality} quality during ${structuredAnalysis.lighting.timeOfDay}. Mood: ${structuredAnalysis.lighting.mood}.
+**COLORS:** ${structuredAnalysis.colors.dominant.join(', ')} with ${structuredAnalysis.colors.accents.join(', ')} accents. Overall palette: ${structuredAnalysis.colors.palette}.
+**KEY OBJECTS:** ${structuredAnalysis.objects.map((obj: any) => `${obj.item} (${obj.prominence})`).join(', ')}.
+**ATMOSPHERE:** ${structuredAnalysis.atmosphere}`;
+
+    return res.status(200).json({
+      description: legacyDescription,
+      structuredAnalysis: structuredAnalysis
+    });
 
   } catch (error: any) {
     console.error("Error analyzing background:", error);

@@ -1,4 +1,4 @@
-import type { ImageFile, Character, Background, StructuredSceneDescription } from '../types';
+import type { ImageFile, Character, Background, StructuredSceneDescription, StructuredCharacterAnalysis, StructuredBackgroundAnalysis, StructuredArtStyleAnalysis } from '../types';
 
 // API base URL - works both in development and production
 // Empty string = same-origin requests
@@ -162,7 +162,7 @@ export const generateReferenceImage = async (prompt: string, artStyle: ImageFile
   }
 };
 
-export const analyzeCharacter = async (image: ImageFile): Promise<string> => {
+export const analyzeCharacter = async (image: ImageFile): Promise<{ description: string; structuredAnalysis: StructuredCharacterAnalysis }> => {
   try {
     const response = await fetch(`${API_BASE}/api/analyze-character`, {
       method: 'POST',
@@ -175,14 +175,17 @@ export const analyzeCharacter = async (image: ImageFile): Promise<string> => {
     }
 
     const data = await response.json();
-    return data.description;
+    return {
+      description: data.description,
+      structuredAnalysis: data.structuredAnalysis
+    };
   } catch (error) {
     console.error("Error analyzing character:", error);
     throw new Error("Failed to analyze character appearance.");
   }
 };
 
-export const analyzeBackground = async (image: ImageFile): Promise<string> => {
+export const analyzeBackground = async (image: ImageFile): Promise<{ description: string; structuredAnalysis: StructuredBackgroundAnalysis }> => {
   try {
     const response = await fetch(`${API_BASE}/api/analyze-background`, {
       method: 'POST',
@@ -195,14 +198,17 @@ export const analyzeBackground = async (image: ImageFile): Promise<string> => {
     }
 
     const data = await response.json();
-    return data.description;
+    return {
+      description: data.description,
+      structuredAnalysis: data.structuredAnalysis
+    };
   } catch (error) {
     console.error("Error analyzing background:", error);
     throw new Error("Failed to analyze background setting.");
   }
 };
 
-export const analyzeArtStyle = async (image: ImageFile): Promise<string> => {
+export const analyzeArtStyle = async (image: ImageFile): Promise<{ description: string; structuredAnalysis: StructuredArtStyleAnalysis }> => {
   try {
     const response = await fetch(`${API_BASE}/api/analyze-art-style`, {
       method: 'POST',
@@ -215,7 +221,10 @@ export const analyzeArtStyle = async (image: ImageFile): Promise<string> => {
     }
 
     const data = await response.json();
-    return data.description;
+    return {
+      description: data.description,
+      structuredAnalysis: data.structuredAnalysis
+    };
   } catch (error) {
     console.error("Error analyzing art style:", error);
     throw new Error("Failed to analyze art style.");
