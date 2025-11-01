@@ -1,3 +1,5 @@
-fix(api): Add null check for art style in illustration generation
+refactor(scenes): Strengthen prompt for character name preservation
 
-This prevents a TypeError that occurs when attempting to generate an image without providing an art style reference. The code was trying to access a property on a null object, causing a 500 internal server error.
+This change addresses the root cause of character inconsistency by adding a critical, explicit directive to the `generate-scenes` prompt.
+
+The new prompt mandates that the AI must preserve the exact proper nouns of characters and locations from the source text, preventing them from being summarized into generic descriptions like "a girl" or "a hall". This ensures that the downstream filtering logic in `generate-illustration` can correctly identify and use the appropriate character and background references.
