@@ -26,6 +26,9 @@ function formatStructuredCharacterAnalysis(structuredAnalysis: any): string {
   // Face & Eyes
   if (structuredAnalysis.face) {
     text += `📍 **FACE & EYES (🔒 ABSOLUTE PRIORITY):**\n`;
+    if (structuredAnalysis.face.age) {
+      text += `   • Apparent Age: ${structuredAnalysis.face.age} (NEVER CHANGE)\n`;
+    }
     text += `   • Face Shape: ${structuredAnalysis.face.shape}\n`;
     text += `   • Skin Tone: ${structuredAnalysis.face.skinTone}\n`;
     if (structuredAnalysis.face.eyes) {

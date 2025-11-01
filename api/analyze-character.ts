@@ -26,6 +26,7 @@ export default async function handler(req: any, res: any) {
 
 {
   "face": {
+    "age": "Apparent age in years (e.g., 'late teens', '25-30 years old', 'early 40s')",
     "shape": "Face shape (oval/round/square/heart/etc.)",
     "skinTone": "Specific skin tone description",
     "eyes": {
@@ -83,6 +84,7 @@ export default async function handler(req: any, res: any) {
               type: Type.OBJECT,
               properties: {
                 shape: { type: Type.STRING },
+                age: { type: Type.STRING },
                 skinTone: { type: Type.STRING },
                 eyes: {
                   type: Type.OBJECT,
@@ -100,7 +102,7 @@ export default async function handler(req: any, res: any) {
                   items: { type: Type.STRING }
                 }
               },
-              required: ["shape", "skinTone", "eyes", "nose", "mouth"]
+              required: ["shape", "age", "skinTone", "eyes", "nose", "mouth"]
             },
             hair: {
               type: Type.OBJECT,
@@ -154,7 +156,8 @@ export default async function handler(req: any, res: any) {
     const structuredAnalysis = JSON.parse(jsonString);
 
     // Also generate a legacy text description for backward compatibility
-    const legacyDescription = `**FACE & EYES:** ${structuredAnalysis.face.eyes.color} eyes, ${structuredAnalysis.face.skinTone} skin, ${structuredAnalysis.face.shape} face shape.
+    const legacyDescription = `**AGE:** ${structuredAnalysis.face.age}.
+**FACE & EYES:** ${structuredAnalysis.face.eyes.color} eyes, ${structuredAnalysis.face.skinTone} skin, ${structuredAnalysis.face.shape} face shape.
 **HAIR:** ${structuredAnalysis.hair.color} hair, ${structuredAnalysis.hair.length} and ${structuredAnalysis.hair.style}, parted in the ${structuredAnalysis.hair.parting}.
 **BODY & BUILD:** ${structuredAnalysis.body.build} build, appears of ${structuredAnalysis.body.height} height with a ${structuredAnalysis.body.posture} posture.
 **MAIN OUTFIT:** ${structuredAnalysis.outfit.upperBody} and ${structuredAnalysis.outfit.lowerBody}.
