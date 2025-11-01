@@ -1025,13 +1025,34 @@ const App: React.FC = () => {
                           AI 분석 결과 {currentStory.artStyleDescription ? '✓' : '(분석 대기 중)'}
                         </button>
                         {currentStory.artStyleDescription && (
-                          <button
-                            onClick={handleReanalyzeArtStyle}
-                            disabled={analyzingArtStyle}
-                            className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {analyzingArtStyle ? '분석 중...' : '재분석'}
-                          </button>
+                          <>
+                            <button
+                              onClick={handleReanalyzeArtStyle}
+                              disabled={analyzingArtStyle}
+                              className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {analyzingArtStyle ? '분석 중...' : '재분석'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                console.log('='.repeat(80));
+                                console.log('🎨 Art Style');
+                                console.log('='.repeat(80));
+                                console.log('📄 Description (legacy text):', currentStory.artStyleDescription);
+                                console.log('📊 Structured Analysis (JSON):', currentStory.artStyleStructuredAnalysis);
+                                console.log('='.repeat(80));
+                                if (currentStory.artStyleStructuredAnalysis) {
+                                  console.log('✅ Structured analysis exists!');
+                                } else {
+                                  console.log('⚠️ No structured analysis - needs re-analysis');
+                                }
+                                alert('콘솔에 아트 스타일 JSON 데이터를 출력했습니다. F12를 눌러 Console 탭을 확인하세요.');
+                              }}
+                              className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors"
+                            >
+                              JSON 보기
+                            </button>
+                          </>
                         )}
                       </div>
 
@@ -1109,13 +1130,34 @@ const App: React.FC = () => {
                                 AI 분석 결과 {bg.description ? '✓' : '(분석 대기 중)'}
                               </button>
                               {bg.description && (
-                                <button
-                                  onClick={() => handleReanalyzeBackground(bg.id)}
-                                  disabled={analyzingBackgrounds[bg.id]}
-                                  className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  {analyzingBackgrounds[bg.id] ? '분석 중...' : '재분석'}
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => handleReanalyzeBackground(bg.id)}
+                                    disabled={analyzingBackgrounds[bg.id]}
+                                    className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {analyzingBackgrounds[bg.id] ? '분석 중...' : '재분석'}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      console.log('='.repeat(80));
+                                      console.log(`🏞️ Background: ${bg.name} (ID: ${bg.id})`);
+                                      console.log('='.repeat(80));
+                                      console.log('📄 Description (legacy text):', bg.description);
+                                      console.log('📊 Structured Analysis (JSON):', bg.structuredAnalysis);
+                                      console.log('='.repeat(80));
+                                      if (bg.structuredAnalysis) {
+                                        console.log('✅ Structured analysis exists!');
+                                      } else {
+                                        console.log('⚠️ No structured analysis - needs re-analysis');
+                                      }
+                                      alert(`콘솔에 ${bg.name}의 JSON 데이터를 출력했습니다. F12를 눌러 Console 탭을 확인하세요.`);
+                                    }}
+                                    className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors"
+                                  >
+                                    JSON 보기
+                                  </button>
+                                </>
                               )}
                             </div>
 
@@ -1203,13 +1245,34 @@ const App: React.FC = () => {
                                 AI 분석 결과 {char.description ? '✓' : '(분석 대기 중)'}
                               </button>
                               {char.description && (
-                                <button
-                                  onClick={() => handleReanalyzeCharacter(char.id)}
-                                  disabled={analyzingCharacters[char.id]}
-                                  className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  {analyzingCharacters[char.id] ? '분석 중...' : '재분석'}
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => handleReanalyzeCharacter(char.id)}
+                                    disabled={analyzingCharacters[char.id]}
+                                    className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {analyzingCharacters[char.id] ? '분석 중...' : '재분석'}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      console.log('='.repeat(80));
+                                      console.log(`📋 Character: ${char.name} (ID: ${char.id})`);
+                                      console.log('='.repeat(80));
+                                      console.log('📄 Description (legacy text):', char.description);
+                                      console.log('📊 Structured Analysis (JSON):', char.structuredAnalysis);
+                                      console.log('='.repeat(80));
+                                      if (char.structuredAnalysis) {
+                                        console.log('✅ Structured analysis exists!');
+                                      } else {
+                                        console.log('⚠️ No structured analysis - needs re-analysis');
+                                      }
+                                      alert(`콘솔에 ${char.name}의 JSON 데이터를 출력했습니다. F12를 눌러 Console 탭을 확인하세요.`);
+                                    }}
+                                    className="text-xs px-2 py-1 text-gray-400 hover:text-indigo-400 border border-gray-600 hover:border-indigo-500 rounded transition-colors"
+                                  >
+                                    JSON 보기
+                                  </button>
+                                </>
                               )}
                             </div>
 

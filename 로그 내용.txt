@@ -1,0 +1,357 @@
+로그 내용
+
+(index):64 cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation
+(anonymous) @ (index):64
+(anonymous) @ (index):64
+index-CfNGHp8J.js:88 📚 Restoring scenes from IndexedDB...
+index-CfNGHp8J.js:88 ✅ Restored 1 scenes for story: Rooftop, Erin Lost in Thought.
+index-CfNGHp8J.js:88 ✅ Restored 2 scenes for story: **Rooftop Views, Deep Thoughts**
+index-CfNGHp8J.js:88 No scene images to migrate from localStorage
+index-CfNGHp8J.js:88 ℹ️ No saved story ID found, using first story
+index-CfNGHp8J.js:88 💾 Current story ID saved: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 📚 Restoring scenes from IndexedDB...
+index-CfNGHp8J.js:88 ✅ Restored 1 scenes for story: Rooftop, Erin Lost in Thought.
+index-CfNGHp8J.js:88 ✅ Restored 2 scenes for story: **Rooftop Views, Deep Thoughts**
+index-CfNGHp8J.js:88 No scene images to migrate from localStorage
+index-CfNGHp8J.js:88 ✅ Restored current story ID from localStorage: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 📚 Restoring scenes from IndexedDB...
+index-CfNGHp8J.js:88 ✅ Restored 1 scenes for story: Rooftop, Erin Lost in Thought.
+index-CfNGHp8J.js:88 ✅ Restored 2 scenes for story: **Rooftop Views, Deep Thoughts**
+index-CfNGHp8J.js:88 No scene images to migrate from localStorage
+index-CfNGHp8J.js:88 ✅ Restored current story ID from localStorage: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:88 💾 Current story ID saved: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 📝 No custom prompt found, generating prompt first...
+index-CfNGHp8J.js:88 ✅ Prompt generated and saved: Scene Description: Hours later, the study is now dim, lit only by the soft glow emanating from the open magic book and a few flickering candles. Erin is hunched over the arcane text, her brow deeply f...
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:88 ✅ Using existing custom prompt for image generation
+index-CfNGHp8J.js:88 ⚠️ CRITICAL: Checking story data before generation: {storyId: 'cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff', currentStoryId: 'cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff', areEqual: true, timestamp: '2025-10-31T12:57:18.391Z'}
+index-CfNGHp8J.js:88 
+====================================================================================================
+index-CfNGHp8J.js:89 🎨 FRONTEND: Preparing data for API call
+index-CfNGHp8J.js:89 ====================================================================================================
+index-CfNGHp8J.js:89 📝 Scene Description: Hours later, the study is now dim, lit only by the soft glow emanating from the open magic book and a few flickering candles. Erin is hunched over the arcane text, her brow deeply furrowed, eyes narrowed in frustration and mental strain. She runs a hand through her disheveled hair, the complex, swirling symbols on the book seemingly causing her great distress.
+index-CfNGHp8J.js:89 📐 Shot Type: automatic
+index-CfNGHp8J.js:89 📐 Aspect Ratio: 1:1
+index-CfNGHp8J.js:89 
+👥 Characters to send: 1
+index-CfNGHp8J.js:90    Character 1: {name: '에린', hasImage: true, imageType: 'image/jpeg', imageSize: 123060, hasDescription: true, …}
+index-CfNGHp8J.js:90 
+🏞️  Backgrounds to send: 1
+index-CfNGHp8J.js:91    Background 1: {name: '서재', hasImage: true, imageType: 'image/jpeg', imageSize: 90140, hasDescription: true, …}
+index-CfNGHp8J.js:91 
+🎨 Art Style to send: {hasImage: true, imageType: 'image/jpeg', imageSize: 63368, hasDescription: true, descriptionLength: 1488, …}descriptionLength: 1488descriptionPreview: "**MEDIUM & TECHNIQUE:**\nDigital painting, utilizing smooth, airbrushed rendering for focal areas con..."hasDescription: truehasImage: trueimageSize: 63368imageType: "image/jpeg"[[Prototype]]: Object
+index-CfNGHp8J.js:92 ====================================================================================================
+
+index-CfNGHp8J.js:93 📊 Current story state check: {storyId: 'cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff', totalCharacters: 1, totalBackgrounds: 1, timestamp: '2025-10-31T12:57:18.392Z'}
+index-CfNGHp8J.js:93 🚀 Calling API to generate illustration...
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:93 📝 Prompt used for generation: Your task is to create a single, cohesive illustration for the following scene description. You MUST use the provided reference images to maintain PERFECT CONSISTENCY across all generated scenes.
+
+
+
+Scene Description: "Hours later, the study is now dim, lit only by the soft glow emanating from the open magic book and a few flickering candles. Erin is hunched over the arcane text, her brow deeply furrowed, eyes narrowed in frustration and mental strain. She runs a hand through her disheveled hair, the complex, swirling symbols on the book seemingly causing her great distress."
+
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+**🎨 REFERENCE PRIORITY ORDER:**
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+
+**PRIORITY 1: CHARACTER APPEARANCE (MOST CRITICAL - NEVER COMPROMISE)**
+   • Character features (hair color, eye color, clothing, accessories) are SACRED
+   • Character appearance MUST be 100% IDENTICAL to the character reference
+   • Character details OVERRIDE everything else - including art style preferences
+
+**PRIORITY 2: ART STYLE & TECHNIQUE (Apply to characters, don't replace them)**
+   • Use the artistic technique (line work, shading, coloring style) from art style reference
+   • BUT keep the character's exact appearance from Priority 1
+
+**PRIORITY 3: BACKGROUND/SETTING**
+   • Match the environmental style and atmosphere
+   • Maintain world consistency
+
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+
+**CRITICAL RULE: CHARACTER REFERENCES ARE PROVIDED FIRST AND ARE MOST IMPORTANT.**
+**Study them FIRST. Memorize every detail BEFORE looking at art style or background.**
+
+
+
+═══════════════════════════════════════
+👤 CHARACTER REFERENCE #1: "에린"
+🚨 ABSOLUTE HIGHEST PRIORITY - MEMORIZE THIS FIRST
+═══════════════════════════════════════
+
+**⚠️ READ THIS CHARACTER REFERENCE BEFORE ANYTHING ELSE! ⚠️**
+
+This character's appearance is NON-NEGOTIABLE and OVERRIDES ALL other references.
+🔒 THIS CHARACTER'S FEATURES ARE LOCKED AND CANNOT BE CHANGED 🔒
+
+
+📋 **DETAILED CHARACTER DESCRIPTION (EXTRACTED BY AI):**
+**FACE & EYES:** Warm amber-brown eyes, fair skin, soft oval face shape.
+**HAIR:** Medium warm brown hair, very long and straight, parted in the middle.
+**BODY & BUILD:** Slender yet curvaceous build, appears of average height with a graceful, slightly posed posture.
+**MAIN OUTFIT:** Black sweetheart neckline top with white ruffled trim and puffed sleeves, paired with a short ruffled black skirt and a white frilly apron.
+**DISTINCTIVE ACCESSORIES:** White ruffled maid headband, black bow choker, black garter straps, and sheer dark thigh-high stockings.
+**UNIQUE IDENTIFIERS:** Instantly recognizable by her classic black and white frilly maid outfit, complete with the distinctive headband and thigh-highs.
+**OVERALL VIBE:** Elegant and inviting, projecting a gentle and attentive personality.
+
+⚠️ **This description provides EXACT specifications. Follow EVERY detail PRECISELY.**
+
+**MANDATORY: Study and memorize these UNCHANGEABLE features:**
+
+📍 **HAIR (🔒 LOCKED - NEVER CHANGE):**
+   • EXACT hair color from THIS image (NOT from any art style reference)
+   • Hair style, cut, and length
+   • Special features (dip-dye, highlights, hair accessories)
+   • Bangs, texture, and styling
+   🚨 **This hair color is PERMANENT for this character across ALL scenes**
+
+📍 **EYES (🔒 LOCKED - NEVER CHANGE):**
+   • EXACT eye color from THIS image (NOT from any art style reference)
+   • Eye shape and size
+   • Expression and gaze direction
+   🚨 **This eye color is PERMANENT for this character across ALL scenes**
+
+📍 **CLOTHING & ACCESSORIES (🔒 LOCKED - NEVER CHANGE):**
+   • EXACT outfit and colors from THIS image
+   • Glasses, jewelry, or other accessories
+   • Any text on clothing
+   • Distinctive items
+   🚨 **This outfit is PERMANENT for this character across ALL scenes**
+
+📍 **FACE & SKIN:**
+   • Exact skin tone
+   • Face shape and structure
+   • Facial features (nose, mouth, eyebrows)
+   • Any marks, freckles, or distinctive features
+
+📍 **BODY & BUILD:**
+   • Body proportions and type
+   • Posture and stance
+
+**YOUR ABSOLUTE REQUIREMENTS:**
+1. **FIRST**: Study this reference image and description thoroughly
+2. **MEMORIZE**: Every specific detail - ESPECIALLY hair color, eye color, and outfit
+3. **WHEN DRAWING**: Replicate these features with 100% accuracy
+4. **IF UNCERTAIN**: Refer back to THIS reference, NEVER to the art style reference
+5. **REMEMBER**: This is the SAME character appearing in different scenes
+
+**🚨 CRITICAL CHECKS BEFORE GENERATING:**
+- Does my character have the EXACT SAME hair color as THIS reference? (NOT art style)
+- Does my character have the EXACT SAME eye color as THIS reference? (NOT art style)
+- Does my character have the EXACT SAME outfit as THIS reference? (NOT art style)
+- If ANY answer is "no", STOP and study THIS reference again.
+
+**WARNING:** If you see an "art style reference" image later with different hair/clothes:
+→ IGNORE that character's appearance completely!
+→ ONLY use that image's drawing technique!
+→ THIS
+index-CfNGHp8J.js:93 ✅ API returned image: {imageUrlLength: 2803442, imagePreview: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAA…CAIAAADwf7zUAAAgAElEQVR42oy9h1YjWZY1XI8wXQVSeB...', imageHash: 'dUldNI4ONFDTYEM4nV+v4fbL5HKgEaBxEAAAAASUVORK5CYII=', previousImageHash: 'none', isDifferent: true, …}
+index-CfNGHp8J.js:93 💾 Scene image saved to IndexedDB
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 📚 Restoring scenes from IndexedDB...
+index-CfNGHp8J.js:88 ✅ Restored 2 scenes for story: **Rooftop Views, Deep Thoughts**
+index-CfNGHp8J.js:88 ✅ Restored 1 scenes for story: Rooftop, Erin Lost in Thought.
+index-CfNGHp8J.js:88 No scene images to migrate from localStorage
+index-CfNGHp8J.js:88 ✅ Restored current story ID from localStorage: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:88 📚 Restoring scenes from IndexedDB...
+index-CfNGHp8J.js:88 ✅ Restored 1 scenes for story: Rooftop, Erin Lost in Thought.
+index-CfNGHp8J.js:88 ✅ Restored 2 scenes for story: **Rooftop Views, Deep Thoughts**
+index-CfNGHp8J.js:88 No scene images to migrate from localStorage
+index-CfNGHp8J.js:88 ✅ Restored current story ID from localStorage: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:88 📚 Restoring scenes from IndexedDB...
+index-CfNGHp8J.js:88 ✅ Restored 2 scenes for story: **Rooftop Views, Deep Thoughts**
+index-CfNGHp8J.js:88 ✅ Restored 1 scenes for story: Rooftop, Erin Lost in Thought.
+index-CfNGHp8J.js:88 No scene images to migrate from localStorage
+index-CfNGHp8J.js:88 ✅ Restored current story ID from localStorage: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 📚 Restoring scenes from IndexedDB...
+index-CfNGHp8J.js:88 ✅ Restored 1 scenes for story: Rooftop, Erin Lost in Thought.
+index-CfNGHp8J.js:88 ✅ Restored 2 scenes for story: **Rooftop Views, Deep Thoughts**
+index-CfNGHp8J.js:88 No scene images to migrate from localStorage
+index-CfNGHp8J.js:88 ✅ Restored current story ID from localStorage: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+content.js:1 Uncaught (in promise) The message port closed before a response was received.
+(anonymous) @ content.js:1
+index-CfNGHp8J.js:88 📚 Restoring scenes from IndexedDB...
+index-CfNGHp8J.js:88 ✅ Restored 2 scenes for story: **Rooftop Views, Deep Thoughts**
+index-CfNGHp8J.js:88 ✅ Restored 1 scenes for story: Rooftop, Erin Lost in Thought.
+index-CfNGHp8J.js:88 No scene images to migrate from localStorage
+index-CfNGHp8J.js:88 ✅ Restored current story ID from localStorage: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:88 ✅ Using existing custom prompt for image generation
+index-CfNGHp8J.js:88 ⚠️ CRITICAL: Checking story data before generation: {storyId: 'cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff', currentStoryId: 'cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff', areEqual: true, timestamp: '2025-10-31T13:08:31.192Z'}
+index-CfNGHp8J.js:88 
+====================================================================================================
+index-CfNGHp8J.js:89 🎨 FRONTEND: Preparing data for API call
+index-CfNGHp8J.js:89 ====================================================================================================
+index-CfNGHp8J.js:89 📝 Scene Description: Erin sits in a richly appointed, antique study, surrounded by towering bookshelves filled with old tomes. Golden afternoon light filters through a large window, highlighting the dust motes in the air as she carefully opens a large, intricately bound magic book on her wooden desk, a look of focused intent on her face.
+index-CfNGHp8J.js:89 📐 Shot Type: automatic
+index-CfNGHp8J.js:89 📐 Aspect Ratio: 1:1
+index-CfNGHp8J.js:89 
+👥 Characters to send: 1
+index-CfNGHp8J.js:90    Character 1: {name: '에린', hasImage: true, imageType: 'image/jpeg', imageSize: 123060, hasDescription: true, …}
+index-CfNGHp8J.js:90 
+🏞️  Backgrounds to send: 1
+index-CfNGHp8J.js:91    Background 1: {name: '서재', hasImage: true, imageType: 'image/jpeg', imageSize: 90140, hasDescription: true, …}
+index-CfNGHp8J.js:91 
+🎨 Art Style to send: {hasImage: true, imageType: 'image/jpeg', imageSize: 63368, hasDescription: true, descriptionLength: 1488, …}descriptionLength: 1488descriptionPreview: "**MEDIUM & TECHNIQUE:**\nDigital painting, utilizing smooth, airbrushed rendering for focal areas con..."hasDescription: truehasImage: trueimageSize: 63368imageType: "image/jpeg"[[Prototype]]: Object
+index-CfNGHp8J.js:92 ====================================================================================================
+
+index-CfNGHp8J.js:93 📊 Current story state check: {storyId: 'cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff', totalCharacters: 1, totalBackgrounds: 1, timestamp: '2025-10-31T13:08:31.193Z'}
+index-CfNGHp8J.js:93 🚀 Calling API to generate illustration...
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)
+index-CfNGHp8J.js:93 📝 Prompt used for generation: Your task is to create a single, cohesive illustration for the following scene description. You MUST use the provided reference images to maintain PERFECT CONSISTENCY across all generated scenes.
+
+
+
+Scene Description: "Erin sits in a richly appointed, antique study, surrounded by towering bookshelves filled with old tomes. Golden afternoon light filters through a large window, highlighting the dust motes in the air as she carefully opens a large, intricately bound magic book on her wooden desk, a look of focused intent on her face."
+
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+**🎨 REFERENCE PRIORITY ORDER:**
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+
+**PRIORITY 1: CHARACTER APPEARANCE (MOST CRITICAL - NEVER COMPROMISE)**
+   • Character features (hair color, eye color, clothing, accessories) are SACRED
+   • Character appearance MUST be 100% IDENTICAL to the character reference
+   • Character details OVERRIDE everything else - including art style preferences
+
+**PRIORITY 2: ART STYLE & TECHNIQUE (Apply to characters, don't replace them)**
+   • Use the artistic technique (line work, shading, coloring style) from art style reference
+   • BUT keep the character's exact appearance from Priority 1
+
+**PRIORITY 3: BACKGROUND/SETTING**
+   • Match the environmental style and atmosphere
+   • Maintain world consistency
+
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+
+**CRITICAL RULE: CHARACTER REFERENCES ARE PROVIDED FIRST AND ARE MOST IMPORTANT.**
+**Study them FIRST. Memorize every detail BEFORE looking at art style or background.**
+
+
+
+═══════════════════════════════════════
+👤 CHARACTER REFERENCE #1: "에린"
+🚨 ABSOLUTE HIGHEST PRIORITY - MEMORIZE THIS FIRST
+═══════════════════════════════════════
+
+**⚠️ READ THIS CHARACTER REFERENCE BEFORE ANYTHING ELSE! ⚠️**
+
+This character's appearance is NON-NEGOTIABLE and OVERRIDES ALL other references.
+🔒 THIS CHARACTER'S FEATURES ARE LOCKED AND CANNOT BE CHANGED 🔒
+
+
+📋 **DETAILED CHARACTER DESCRIPTION (EXTRACTED BY AI):**
+**FACE & EYES:** Warm amber-brown eyes, fair skin, soft oval face shape.
+**HAIR:** Medium warm brown hair, very long and straight, parted in the middle.
+**BODY & BUILD:** Slender yet curvaceous build, appears of average height with a graceful, slightly posed posture.
+**MAIN OUTFIT:** Black sweetheart neckline top with white ruffled trim and puffed sleeves, paired with a short ruffled black skirt and a white frilly apron.
+**DISTINCTIVE ACCESSORIES:** White ruffled maid headband, black bow choker, black garter straps, and sheer dark thigh-high stockings.
+**UNIQUE IDENTIFIERS:** Instantly recognizable by her classic black and white frilly maid outfit, complete with the distinctive headband and thigh-highs.
+**OVERALL VIBE:** Elegant and inviting, projecting a gentle and attentive personality.
+
+⚠️ **This description provides EXACT specifications. Follow EVERY detail PRECISELY.**
+
+**MANDATORY: Study and memorize these UNCHANGEABLE features:**
+
+📍 **HAIR (🔒 LOCKED - NEVER CHANGE):**
+   • EXACT hair color from THIS image (NOT from any art style reference)
+   • Hair style, cut, and length
+   • Special features (dip-dye, highlights, hair accessories)
+   • Bangs, texture, and styling
+   🚨 **This hair color is PERMANENT for this character across ALL scenes**
+
+📍 **EYES (🔒 LOCKED - NEVER CHANGE):**
+   • EXACT eye color from THIS image (NOT from any art style reference)
+   • Eye shape and size
+   • Expression and gaze direction
+   🚨 **This eye color is PERMANENT for this character across ALL scenes**
+
+📍 **CLOTHING & ACCESSORIES (🔒 LOCKED - NEVER CHANGE):**
+   • EXACT outfit and colors from THIS image
+   • Glasses, jewelry, or other accessories
+   • Any text on clothing
+   • Distinctive items
+   🚨 **This outfit is PERMANENT for this character across ALL scenes**
+
+📍 **FACE & SKIN:**
+   • Exact skin tone
+   • Face shape and structure
+   • Facial features (nose, mouth, eyebrows)
+   • Any marks, freckles, or distinctive features
+
+📍 **BODY & BUILD:**
+   • Body proportions and type
+   • Posture and stance
+
+**YOUR ABSOLUTE REQUIREMENTS:**
+1. **FIRST**: Study this reference image and description thoroughly
+2. **MEMORIZE**: Every specific detail - ESPECIALLY hair color, eye color, and outfit
+3. **WHEN DRAWING**: Replicate these features with 100% accuracy
+4. **IF UNCERTAIN**: Refer back to THIS reference, NEVER to the art style reference
+5. **REMEMBER**: This is the SAME character appearing in different scenes
+
+**🚨 CRITICAL CHECKS BEFORE GENERATING:**
+- Does my character have the EXACT SAME hair color as THIS reference? (NOT art style)
+- Does my character have the EXACT SAME eye color as THIS reference? (NOT art style)
+- Does my character have the EXACT SAME outfit as THIS reference? (NOT art style)
+- If ANY answer is "no", STOP and study THIS reference again.
+
+**WARNING:** If you see an "art style reference" image later with different hair/clothes:
+→ IGNORE that character's appearance completely!
+→ ONLY use that image's drawing technique!
+→ THIS character's appearance NEVER changes!
+
+The 
+index-CfNGHp8J.js:93 ✅ API returned image: {imageUrlLength: 3144250, imagePreview: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAA…CAIAAADwf7zUAAAgAElEQVR42lS9ZXcbabMF+v6EMzMBk9...', imageHash: '+bTyXCTXeS6QoVOPakiP//AQ8nL4LvcfGrAAAAAElFTkSuQmCC', previousImageHash: '51hX5a2gI/64iIIdD5/wN7BALWwrvb6QAAAABJRU5ErkJggg==', isDifferent: true, …}
+index-CfNGHp8J.js:93 💾 Scene image saved to IndexedDB
+index-CfNGHp8J.js:88 💾 Stories saved to IndexedDB (including scenes)
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cbd9bdf2-ffb0-418d-99db-fd19a3ee2dff
+index-CfNGHp8J.js:88 Story saved to Supabase successfully: cb73922b-7888-4fbf-9c58-5230755f73f9
+index-CfNGHp8J.js:88 ☁️ Stories saved to Supabase (excluding scenes)

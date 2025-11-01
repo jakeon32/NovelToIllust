@@ -3,6 +3,184 @@ import { GoogleGenAI, Modality } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 const illustrationModel = "gemini-2.5-flash-image";
 
+// Helper function to format structured character analysis into prompt text
+function formatStructuredCharacterAnalysis(structuredAnalysis: any): string {
+  if (!structuredAnalysis) return '';
+
+  let text = '\n\n🔒 **STRUCTURED CHARACTER ANALYSIS (CRITICAL - NEVER CHANGE):**\n\n';
+
+  // Hair (MOST CRITICAL)
+  if (structuredAnalysis.hair) {
+    text += `📍 **HAIR (🔒 ABSOLUTE PRIORITY):**\n`;
+    text += `   • Color: ${structuredAnalysis.hair.color}\n`;
+    text += `   • Length: ${structuredAnalysis.hair.length}\n`;
+    text += `   • Style: ${structuredAnalysis.hair.style}\n`;
+    text += `   • Parting: ${structuredAnalysis.hair.parting}\n`;
+    text += `   • Texture: ${structuredAnalysis.hair.texture}\n`;
+    if (structuredAnalysis.hair.accessories && structuredAnalysis.hair.accessories.length > 0) {
+      text += `   • Accessories: ${structuredAnalysis.hair.accessories.join(', ')}\n`;
+    }
+    text += '\n';
+  }
+
+  // Face & Eyes
+  if (structuredAnalysis.face) {
+    text += `📍 **FACE & EYES (🔒 ABSOLUTE PRIORITY):**\n`;
+    text += `   • Face Shape: ${structuredAnalysis.face.shape}\n`;
+    text += `   • Skin Tone: ${structuredAnalysis.face.skinTone}\n`;
+    if (structuredAnalysis.face.eyes) {
+      text += `   • Eye Color: ${structuredAnalysis.face.eyes.color} (NEVER CHANGE)\n`;
+      text += `   • Eye Shape: ${structuredAnalysis.face.eyes.shape}\n`;
+      text += `   • Eye Size: ${structuredAnalysis.face.eyes.size}\n`;
+    }
+    text += `   • Nose: ${structuredAnalysis.face.nose}\n`;
+    text += `   • Mouth: ${structuredAnalysis.face.mouth}\n`;
+    if (structuredAnalysis.face.distinctiveMarks && structuredAnalysis.face.distinctiveMarks.length > 0) {
+      text += `   • Distinctive Marks: ${structuredAnalysis.face.distinctiveMarks.join(', ')}\n`;
+    }
+    text += '\n';
+  }
+
+  // Body & Build
+  if (structuredAnalysis.body) {
+    text += `📍 **BODY & BUILD:**\n`;
+    text += `   • Build: ${structuredAnalysis.body.build}\n`;
+    text += `   • Height: ${structuredAnalysis.body.height}\n`;
+    text += `   • Posture: ${structuredAnalysis.body.posture}\n\n`;
+  }
+
+  // Outfit & Accessories (CRITICAL)
+  if (structuredAnalysis.outfit) {
+    text += `📍 **OUTFIT & ACCESSORIES (🔒 ABSOLUTE PRIORITY):**\n`;
+    text += `   • Upper Body: ${structuredAnalysis.outfit.upperBody}\n`;
+    text += `   • Lower Body: ${structuredAnalysis.outfit.lowerBody}\n`;
+    text += `   • Style: ${structuredAnalysis.outfit.style}\n`;
+    text += `   • Colors: ${structuredAnalysis.outfit.colors.join(', ')}\n`;
+    if (structuredAnalysis.outfit.accessories && structuredAnalysis.outfit.accessories.length > 0) {
+      text += `   • Accessories: ${structuredAnalysis.outfit.accessories.join(', ')} (MUST INCLUDE!)\n`;
+    }
+    text += '\n';
+  }
+
+  // Overall Vibe
+  if (structuredAnalysis.overallVibe) {
+    text += `📍 **OVERALL VIBE:** ${structuredAnalysis.overallVibe}\n\n`;
+  }
+
+  text += `🚨 **CRITICAL REMINDER:** These specifications are PERMANENT and UNCHANGEABLE!\n`;
+  text += `   • Hair color, eye color, accessories MUST match EXACTLY\n`;
+  text += `   • If any feature differs, the image is INCORRECT and must be regenerated\n`;
+
+  return text;
+}
+
+// Helper function to format structured background analysis
+function formatStructuredBackgroundAnalysis(structuredAnalysis: any): string {
+  if (!structuredAnalysis) return '';
+
+  let text = '\n\n🏞️ **STRUCTURED BACKGROUND ANALYSIS:**\n\n';
+
+  // Location
+  if (structuredAnalysis.location) {
+    text += `📍 **LOCATION:**\n`;
+    text += `   • Type: ${structuredAnalysis.location.type}\n`;
+    text += `   • Setting: ${structuredAnalysis.location.setting}\n`;
+    text += `   • Architecture: ${structuredAnalysis.location.architecture}\n\n`;
+  }
+
+  // Lighting
+  if (structuredAnalysis.lighting) {
+    text += `💡 **LIGHTING:**\n`;
+    text += `   • Source: ${structuredAnalysis.lighting.source.join(', ')}\n`;
+    text += `   • Quality: ${structuredAnalysis.lighting.quality}\n`;
+    text += `   • Time of Day: ${structuredAnalysis.lighting.timeOfDay}\n`;
+    text += `   • Mood: ${structuredAnalysis.lighting.mood}\n\n`;
+  }
+
+  // Colors
+  if (structuredAnalysis.colors) {
+    text += `🎨 **COLOR PALETTE:**\n`;
+    text += `   • Dominant Colors: ${structuredAnalysis.colors.dominant.join(', ')}\n`;
+    text += `   • Accent Colors: ${structuredAnalysis.colors.accents.join(', ')}\n`;
+    text += `   • Palette: ${structuredAnalysis.colors.palette}\n\n`;
+  }
+
+  // Objects
+  if (structuredAnalysis.objects && structuredAnalysis.objects.length > 0) {
+    text += `🪑 **KEY OBJECTS:**\n`;
+    structuredAnalysis.objects.forEach((obj: any, idx: number) => {
+      text += `   ${idx + 1}. ${obj.item}: ${obj.description} (${obj.prominence})\n`;
+    });
+    text += '\n';
+  }
+
+  // Atmosphere
+  if (structuredAnalysis.atmosphere) {
+    text += `🌟 **ATMOSPHERE:** ${structuredAnalysis.atmosphere}\n`;
+  }
+
+  return text;
+}
+
+// Helper function to format structured art style analysis
+function formatStructuredArtStyleAnalysis(structuredAnalysis: any): string {
+  if (!structuredAnalysis) return '';
+
+  let text = '\n\n🎨 **STRUCTURED ART STYLE ANALYSIS (TECHNIQUE ONLY):**\n\n';
+
+  // Medium
+  if (structuredAnalysis.medium) {
+    text += `📍 **MEDIUM:** ${structuredAnalysis.medium}\n\n`;
+  }
+
+  // Technique
+  if (structuredAnalysis.technique) {
+    text += `🖌️ **TECHNIQUE:**\n`;
+    text += `   • Rendering: ${structuredAnalysis.technique.rendering}\n`;
+    text += `   • Line Work: ${structuredAnalysis.technique.lineWork}\n`;
+    text += `   • Edge Quality: ${structuredAnalysis.technique.edgeQuality}\n\n`;
+  }
+
+  // Color Application
+  if (structuredAnalysis.colorApplication) {
+    text += `🎨 **COLOR APPLICATION:**\n`;
+    text += `   • Style: ${structuredAnalysis.colorApplication.style}\n`;
+    text += `   • Saturation: ${structuredAnalysis.colorApplication.saturation}\n`;
+    text += `   • Blending: ${structuredAnalysis.colorApplication.blending}\n\n`;
+  }
+
+  // Shading & Lighting
+  if (structuredAnalysis.shadingAndLighting) {
+    text += `💡 **SHADING & LIGHTING:**\n`;
+    text += `   • Shading Style: ${structuredAnalysis.shadingAndLighting.shadingStyle}\n`;
+    text += `   • Contrast: ${structuredAnalysis.shadingAndLighting.contrast}\n`;
+    text += `   • Lighting Type: ${structuredAnalysis.shadingAndLighting.lightingType}\n\n`;
+  }
+
+  // Style Genre
+  if (structuredAnalysis.styleGenre) {
+    text += `📍 **STYLE GENRE:** ${structuredAnalysis.styleGenre}\n\n`;
+  }
+
+  // Mood
+  if (structuredAnalysis.mood) {
+    text += `🌟 **MOOD:** ${structuredAnalysis.mood}\n\n`;
+  }
+
+  // Distinctive Features
+  if (structuredAnalysis.distinctiveFeatures && structuredAnalysis.distinctiveFeatures.length > 0) {
+    text += `✨ **DISTINCTIVE FEATURES:**\n`;
+    structuredAnalysis.distinctiveFeatures.forEach((feature: string, idx: number) => {
+      text += `   ${idx + 1}. ${feature}\n`;
+    });
+    text += '\n';
+  }
+
+  text += `⚠️ **REMEMBER:** Apply these techniques to characters, but NEVER change character features!\n`;
+
+  return text;
+}
+
 // Helper function to create detailed prompt from structured scene description
 function createDetailedScenePrompt(structured: any): string {
   if (!structured) return '';
@@ -221,9 +399,13 @@ ${scenePrompt}
 
     relevantCharacters.forEach((char: any) => {
       if (char.image) {
-        // Include detailed text description if available (from AI analysis)
-        const characterDescriptionText = char.description
-          ? `\n\n📋 **DETAILED CHARACTER DESCRIPTION (EXTRACTED BY AI):**\n${char.description}\n\n⚠️ **This description provides EXACT specifications. Follow EVERY detail PRECISELY.**`
+        // Use BOTH structuredAnalysis (JSON) and legacy description for maximum consistency
+        const structuredText = char.structuredAnalysis
+          ? formatStructuredCharacterAnalysis(char.structuredAnalysis)
+          : '';
+
+        const legacyText = char.description
+          ? `\n\n📋 **ADDITIONAL DESCRIPTION (LEGACY):**\n${char.description}\n`
           : '';
 
         parts.push({ text: `
@@ -236,7 +418,7 @@ ${scenePrompt}
 
 This character's appearance is NON-NEGOTIABLE and OVERRIDES ALL other references.
 🔒 THIS CHARACTER'S FEATURES ARE LOCKED AND CANNOT BE CHANGED 🔒
-${characterDescriptionText}
+${structuredText}${legacyText}
 
 **MANDATORY: Study and memorize these UNCHANGEABLE features:**
 
@@ -314,9 +496,13 @@ The character's appearance is SACRED and PERMANENT. This is NON-NEGOTIABLE.
     if (artStyle) {
       console.log('✅ Art style will be added to parts array');
 
-      // Include detailed text description if available (from AI analysis)
-      const artStyleDescriptionText = artStyleDescription
-        ? `\n\n📋 **DETAILED ART STYLE DESCRIPTION (EXTRACTED BY AI):**\n${artStyleDescription}\n\n⚠️ **This description provides exact details about the artistic TECHNIQUE ONLY. Follow it PRECISELY.**`
+      // Use BOTH structuredAnalysis (JSON) and legacy description for maximum consistency
+      const structuredText = artStyleStructuredAnalysis
+        ? formatStructuredArtStyleAnalysis(artStyleStructuredAnalysis)
+        : '';
+
+      const legacyText = artStyleDescription
+        ? `\n\n📋 **ADDITIONAL DESCRIPTION (LEGACY):**\n${artStyleDescription}\n`
         : '';
 
       parts.push({ text: `
@@ -331,7 +517,7 @@ IF there are people/characters in this art style reference image:
 • **IGNORE their clothing completely** - Use ONLY the character reference clothing
 • **IGNORE their accessories completely** - Use ONLY the character reference accessories
 • **IGNORE their eye color completely** - Use ONLY the character reference eye color
-${artStyleDescriptionText}
+${structuredText}${legacyText}
 
 **WHAT TO COPY FROM THIS REFERENCE (TECHNIQUE ONLY):**
 ✅ Line work style (thin/thick, clean/sketchy)
@@ -384,14 +570,18 @@ You should draw: person with BROWN HAIR and MAID OUTFIT using SMOOTH DIGITAL SHA
 
     if (relevantBackgrounds && relevantBackgrounds.length > 0) {
       relevantBackgrounds.forEach((bg: any, index: number) => {
-        // Include detailed text description if available (from AI analysis)
-        const backgroundDescriptionText = bg.description
-          ? `\n\n📋 **DETAILED BACKGROUND DESCRIPTION (EXTRACTED BY AI):**\n${bg.description}\n\n⚠️ **This description provides exact details about the setting. Follow it PRECISELY.**`
+        // Use BOTH structuredAnalysis (JSON) and legacy description for maximum consistency
+        const structuredText = bg.structuredAnalysis
+          ? formatStructuredBackgroundAnalysis(bg.structuredAnalysis)
+          : '';
+
+        const legacyText = bg.description
+          ? `\n\n📋 **ADDITIONAL DESCRIPTION (LEGACY):**\n${bg.description}\n`
           : '';
 
         const label = relevantBackgrounds.length > 1
-          ? `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE ${index + 1}: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene.${backgroundDescriptionText}\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.\n\n**REMINDER**: Keep the CHARACTER appearance from the reference above unchanged!`
-          : `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene.${backgroundDescriptionText}\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.\n\n**REMINDER**: Keep the CHARACTER appearance from the reference above unchanged!`;
+          ? `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE ${index + 1}: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene.${structuredText}${legacyText}\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.\n\n**REMINDER**: Keep the CHARACTER appearance from the reference above unchanged!`
+          : `═══════════════════════════════════════\n🏞️ BACKGROUND REFERENCE: "${bg.name}" (MANDATORY TO FOLLOW):\n═══════════════════════════════════════\n\nThis is the reference for "${bg.name}" mentioned in the scene.${structuredText}${legacyText}\n\nAnalyze this background reference carefully. Note the architectural style, color palette, lighting mood, and environmental details. Your scene's setting MUST feel like it exists in this same world. Maintain consistency in style, atmosphere, and design language.\n\n**REMINDER**: Keep the CHARACTER appearance from the reference above unchanged!`;
         parts.push({ text: label });
         parts.push({ inlineData: { mimeType: bg.image.mimeType, data: bg.image.base64 } });
       });

@@ -95,17 +95,20 @@ export async function loadStoriesFromSupabase(): Promise<Story[]> {
         novelText: storyData.novel_text,
         artStyle: storyData.art_style_url ? dataUrlToImageFile(storyData.art_style_url) : null,
         artStyleDescription: storyData.art_style_description || undefined,
+        artStyleStructuredAnalysis: storyData.art_style_structured_analysis || undefined,
         characters: (charactersData || []).map(c => ({
           id: c.id,
           name: c.name,
           image: c.image_url ? dataUrlToImageFile(c.image_url, c.name) : null,
           description: c.description || undefined,
+          structuredAnalysis: c.structured_analysis || undefined,
         })),
         backgrounds: (backgroundsData || []).map(b => ({
           id: b.id,
           name: b.name,
           image: dataUrlToImageFile(b.image_url, b.name)!,
           description: b.description || undefined,
+          structuredAnalysis: b.structured_analysis || undefined,
         })),
         scenes: [], // Scenes are NOT stored in Supabase - they are generated fresh from novel text
       };
@@ -143,6 +146,7 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
         novel_text: story.novelText,
         art_style_url: story.artStyle ? imageFileToDataUrl(story.artStyle) : null,
         art_style_description: story.artStyleDescription || null,
+        art_style_structured_analysis: story.artStyleStructuredAnalysis || null,
         updated_at: new Date().toISOString(),
       });
 
@@ -176,6 +180,7 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
             name: character.name,
             image_url: character.image ? imageFileToDataUrl(character.image) : null,
             description: character.description || null,
+            structured_analysis: character.structuredAnalysis || null,
             order_index: index,
           })),
           { onConflict: 'id' }
@@ -212,6 +217,7 @@ export async function saveStoryToSupabase(story: Story): Promise<void> {
             name: background.name,
             image_url: imageFileToDataUrl(background.image),
             description: background.description || null,
+            structured_analysis: background.structuredAnalysis || null,
             order_index: index,
           })),
           { onConflict: 'id' }

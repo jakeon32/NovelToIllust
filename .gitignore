@@ -37,3 +37,6 @@ client_secret_*.json
 # Environment variables
 .env.local
 .env
+
+# Ignore results folder
+results/
