@@ -43,10 +43,12 @@ IMPORTANT GUIDELINES FOR SCENE SELECTION:
    - Capture moments of connection, conflict, or tension between characters
    - Physical proximity and body language reveal dynamics
 
-6. **Avoid Pure Dialogue Scenes**
-   - Don't select scenes that are only conversation
-   - If dialogue is crucial, describe what characters are doing WHILE speaking
-   - Include their expressions, gestures, and the surrounding context
+6. **Include Important Dialogue Scenes (With Visual Context)**
+   - Important conversations CAN and SHOULD be illustrated
+   - Describe what characters are doing WHILE speaking
+   - Include their expressions, gestures, body language, and setting
+   - Example: "Butler formally reporting to lady at breakfast, morning light streaming through windows, she looks up with interest"
+   - Dialogue-heavy moments often reveal character relationships and emotions - don't skip them!
 
 **STRUCTURED OUTPUT FORMAT:**
 
@@ -79,7 +81,13 @@ For each scene, provide a JSON object with the following structure:
   - description: How they are interacting
   - physicalDistance: How close/far they are
 
-Based on the novel's length, select 3-8 scenes that work together as a cohesive visual narrative.
+**IMPORTANT: NUMBER OF SCENES**
+- **Short text (1-3 paragraphs)**: Generate at least 4-5 scenes
+- **Medium text (4-10 paragraphs)**: Generate 6-8 scenes
+- **Long text (11+ paragraphs)**: Generate 8-12 scenes
+- **NEVER generate fewer than 4 scenes**, even for very short texts
+- Break down moments finely - every character introduction, emotional shift, or setting change should be its own scene
+- It's better to have MORE detailed scenes than too few generic ones
 
 Novel Text:
 \`\`\`
