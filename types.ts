@@ -122,6 +122,7 @@ export interface SceneInteraction {
 
 export interface StructuredSceneDescription {
   summary: string;
+  sourceExcerpt: string; // The excerpt from the original novel text that this scene is based on
   characters: SceneCharacter[];
   environment: SceneEnvironment;
   importantObjects: SceneObject[];

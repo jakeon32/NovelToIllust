@@ -12,6 +12,7 @@ import Loader from './components/Loader';
 import StorySidebar from './components/StorySidebar';
 import ImageModal from './components/ImageModal';
 import Auth from './components/Auth';
+import WebNovelExporter from './components/WebNovelExporter';
 import PlusIcon from './components/icons/PlusIcon';
 import TrashIcon from './components/icons/TrashIcon';
 import SparklesIcon from './components/icons/SparklesIcon';
@@ -54,6 +55,7 @@ const App: React.FC = () => {
   const [analyzingBackgrounds, setAnalyzingBackgrounds] = useState<Record<string, boolean>>({});
   const [analyzingArtStyle, setAnalyzingArtStyle] = useState(false);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
+  const [showWebNovelExporter, setShowWebNovelExporter] = useState(false);
 
   // Authentication state management
   useEffect(() => {
@@ -1284,6 +1286,27 @@ const App: React.FC = () => {
                 </section>
             )}
 
+            {/* Web Novel Page Export */}
+            {currentStory.scenes.some(s => s.imageUrl) && (
+                <section className="bg-gray-800/50 p-6 rounded-xl shadow-2xl border border-gray-700 mt-12">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xl font-bold text-purple-300">웹소설 페이지 생성</h3>
+                            <p className="text-gray-400 mt-1">입력한 소설 텍스트와 생성된 일러스트를 결합하여 아름다운 웹소설 페이지를 만드세요.</p>
+                        </div>
+                        <button
+                            onClick={() => setShowWebNovelExporter(true)}
+                            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-purple-500"
+                        >
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                            웹소설 페이지 생성
+                        </button>
+                    </div>
+                </section>
+            )}
+
             {/* Video Feature Suggestion */}
             {currentStory.scenes.some(s => s.imageUrl) && (
                 <section className="bg-gray-800/50 p-6 rounded-xl shadow-2xl border border-gray-700 flex items-center gap-6 mt-12">
@@ -1307,6 +1330,13 @@ const App: React.FC = () => {
             onRegenerate={generateSingleIllustration}
             onDownload={handleDownloadImage}
             onEdit={handleEditIllustration}
+        />
+      )}
+
+      {showWebNovelExporter && (
+        <WebNovelExporter
+            story={currentStory}
+            onClose={() => setShowWebNovelExporter(false)}
         />
       )}
     </div>

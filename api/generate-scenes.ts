@@ -55,6 +55,7 @@ IMPORTANT GUIDELINES FOR SCENE SELECTION:
 For each scene, provide a JSON object with the following structure:
 
 - **summary**: One sentence describing the overall scene
+- **sourceExcerpt**: The exact excerpt from the original novel text that this scene is based on (1-3 sentences from the source)
 - **characters**: Array of characters in the scene, each with:
   - name: Character's name
   - action: What they are physically doing
@@ -110,6 +111,7 @@ ${novelText}
                 type: Type.OBJECT,
                 properties: {
                   summary: { type: Type.STRING },
+                  sourceExcerpt: { type: Type.STRING },
                   characters: {
                     type: Type.ARRAY,
                     items: {
@@ -173,7 +175,7 @@ ${novelText}
                     }
                   }
                 },
-                required: ["summary", "characters", "environment", "importantObjects", "mood"]
+                required: ["summary", "sourceExcerpt", "characters", "environment", "importantObjects", "mood"]
               }
             }
           },
