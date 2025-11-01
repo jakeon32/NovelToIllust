@@ -387,8 +387,17 @@ ${scenePrompt}
 
 **━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
 
-**CRITICAL RULE: CHARACTER REFERENCES ARE PROVIDED FIRST AND ARE MOST IMPORTANT.**
+CRITICAL RULE: CHARACTER REFERENCES ARE PROVIDED FIRST AND ARE MOST IMPORTANT.
 **Study them FIRST. Memorize every detail BEFORE looking at art style or background.**
+
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+**🚫 NEGATIVE PROMPT (WHAT TO AVOID) 🚫**
+**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
+- DO NOT blend character features from the art style reference into the character's appearance.
+- DO NOT change the hair color, eye color, or clothing specified in the character references.
+- AVOID generic anime styles if a specific art style reference is provided.
+- The final image should not look like a mix of different styles; it should be a cohesive whole, applying the TECHNIQUE of the art style to the APPEARANCE of the characters.
+- AVOID any elements that contradict the provided character or background descriptions.
 `
       }
     );
