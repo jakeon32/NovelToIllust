@@ -493,17 +493,13 @@ The character's appearance is SACRED and PERMANENT. This is NON-NEGOTIABLE.
     }
     console.log('='.repeat(100) + '\n');
 
-    if (artStyle) {
-      console.log('✅ Art style will be added to parts array');
-
-      // Use BOTH structuredAnalysis (JSON) and legacy description for maximum consistency
-      const structuredText = artStyleStructuredAnalysis
-        ? formatStructuredArtStyleAnalysis(artStyleStructuredAnalysis)
-        : '';
-
-      const legacyText = artStyleDescription
-        ? `\n\n📋 **ADDITIONAL DESCRIPTION (LEGACY):**\n${artStyleDescription}\n`
-        : '';
+      if (artStyle.hasDescription) {
+        console.log("Found art style description. Using it.");
+        // Use BOTH structuredAnalysis (JSON) and legacy description for maximum consistency
+        const structuredText = artStyle.structuredAnalysis
+          ? formatStructuredArtStyleAnalysis(artStyle.structuredAnalysis)
+          : '';
+        const legacyText = artStyle.description || '';
 
       parts.push({ text: `
 ═══════════════════════════════════════
