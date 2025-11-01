@@ -567,7 +567,7 @@ const App: React.FC = () => {
         imageUrl: null,
         isGenerating: false,
         shotType: 'automatic',
-        aspectRatio: '1:1',
+        aspectRatio: '16:9',
       }));
       handleUpdateCurrentStory({ scenes: newScenes, title });
     } catch (err) {
@@ -782,12 +782,32 @@ const App: React.FC = () => {
       }
     }
 
-    setIsGeneratingAll(false);
-    setGenerationProgress({ current: 0, total: 0 });
-  };
-
-  const handleEditIllustration = async (sceneId: string, editPrompt: string) => {
-    const sceneToEdit = currentStory?.scenes.find(s => s.id === sceneId);
+        setIsGeneratingAll(false);
+        setGenerationProgress({ current: 0, total: 0 });
+      };
+    
+      const handleDownloadAllImages = async () => {
+        if (!currentStory) return;
+    
+        const imagesToDownload = currentStory.scenes.filter(scene => scene.imageUrl);
+    
+        if (imagesToDownload.length === 0) {
+          setError('다운로드할 이미지가 없습니다.');
+          return;
+        }
+    
+        // For simplicity, trigger individual downloads. For a large number of images, a ZIP file would be better.
+        for (const scene of imagesToDownload) {
+          if (scene.imageUrl) {
+            handleDownloadImage(scene.imageUrl, `${currentStory.title}_${scene.id}.png`);
+            // Add a small delay to prevent browser from blocking multiple downloads
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        }
+        alert('모든 이미지를 다운로드했습니다.');
+      };
+    
+      const handleEditIllustration = async (sceneId: string, editPrompt: string) => {    const sceneToEdit = currentStory?.scenes.find(s => s.id === sceneId);
     if (!currentStory || !sceneToEdit || !sceneToEdit.imageUrl) return;
 
     const originalImageFile = dataUrlToImageFile(sceneToEdit.imageUrl);
@@ -1351,6 +1371,14 @@ const App: React.FC = () => {
                     >
                       <SparklesIcon className="w-5 h-5 mr-2" />
                       {isGeneratingAll ? '생성 중...' : '모든 장면 생성'}
+                    </button>
+                    <button
+                      onClick={handleDownloadAllImages}
+                      disabled={currentStory.scenes.every(s => !s.imageUrl)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:bg-green-900/50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-green-500"
+                    >
+                      <FilmIcon className="w-5 h-5 mr-2" />
+                      모든 이미지 다운로드
                     </button>
                   </div>
                 </div>
