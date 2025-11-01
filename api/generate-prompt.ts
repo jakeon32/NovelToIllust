@@ -29,26 +29,25 @@ export default async function handler(req: any, res: any) {
       // Fallback to text matching if no structured description
       relevantCharacters = (characters || []).filter((char: any) =>
         char.name.trim() &&
-        new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
+        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
       );
     }
 
-    // FALLBACK: If no characters matched but we have characters, use all of them
-    if (relevantCharacters.length === 0 && characters && characters.length > 0) {
-      console.warn('⚠️ [generate-prompt] No characters matched by name. Using ALL characters as fallback.');
-      relevantCharacters = characters;
+    // Find which backgrounds are actually mentioned in this specific scene
+    let relevantBackgrounds: any[] = [];
+    if (structuredDescription && structuredDescription.environment && structuredDescription.environment.location) {
+      const sceneLocationName = structuredDescription.environment.location.toLowerCase();
+      relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
+        bg.name.trim() && sceneLocationName.includes(bg.name.toLowerCase())
+      );
     }
 
-    // Find which backgrounds are actually mentioned in this specific scene
-    let relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
-      bg.name.trim() &&
-      new RegExp(`\\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
-    );
-
-    // FALLBACK: If no backgrounds matched but we have backgrounds, use all of them
-    if (relevantBackgrounds.length === 0 && backgrounds && backgrounds.length > 0) {
-      console.warn('⚠️ [generate-prompt] No backgrounds matched by name. Using ALL backgrounds as fallback.');
-      relevantBackgrounds = backgrounds;
+    // If no match with structured data, fallback to regex on sceneDescription as a last resort.
+    if (relevantBackgrounds.length === 0) {
+        relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
+          bg.name.trim() &&
+          new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+        );
     }
 
     // Build the comprehensive prompt

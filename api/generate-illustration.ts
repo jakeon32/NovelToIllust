@@ -310,18 +310,27 @@ export default async function handler(req: any, res: any) {
       // Fallback to text matching if no structured description
       relevantCharacters = (characters || []).filter((char: any) =>
         char.name.trim() &&
-        new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
+        new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
       );
     }
 
     
     // Find which backgrounds are actually mentioned in this specific scene
-    let relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
-      bg.name.trim() &&
-      new RegExp(`\\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
-    );
+    let relevantBackgrounds: any[] = [];
+    if (structuredDescription && structuredDescription.environment && structuredDescription.environment.location) {
+      const sceneLocationName = structuredDescription.environment.location.toLowerCase();
+      relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
+        bg.name.trim() && sceneLocationName.includes(bg.name.toLowerCase())
+      );
+    }
 
-
+    // If no match with structured data, fallback to regex on sceneDescription as a last resort.
+    if (relevantBackgrounds.length === 0) {
+        relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
+          bg.name.trim() &&
+          new RegExp(`\\b${bg.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
+        );
+    }
 
     console.log('\n' + '='.repeat(100));
     console.log('🎯 FINAL REFERENCE SELECTION');
@@ -404,9 +413,9 @@ CRITICAL RULE: CHARACTER REFERENCES ARE PROVIDED FIRST AND ARE MOST IMPORTANT.
       }
     );
 
-    // ============================================================================
+    // ============================================================================ 
     // RESTRUCTURED ORDER: CHARACTER REFERENCES FIRST (HIGHEST PRIORITY)
-    // ============================================================================
+    // ============================================================================ 
 
     relevantCharacters.forEach((char: any) => {
       if (char.image) {
@@ -487,9 +496,9 @@ The character's appearance is SACRED and PERMANENT. This is NON-NEGOTIABLE.
       }
     });
 
-    // ============================================================================
+    // ============================================================================ 
     // NOW ADD ART STYLE REFERENCE (TECHNIQUE ONLY, NOT CHARACTER APPEARANCE)
-    // ============================================================================
+    // ============================================================================ 
 
     console.log('\n' + '='.repeat(100));
     console.log('🎨 ART STYLE PROCESSING');
@@ -571,9 +580,9 @@ You should draw: person with BROWN HAIR and MAID OUTFIT using SMOOTH DIGITAL SHA
       console.log('⚠️ No art style provided - skipping art style reference');
     }
 
-    // ============================================================================
+    // ============================================================================ 
     // BACKGROUND REFERENCES (PRIORITY 3)
-    // ============================================================================
+    // ============================================================================ 
 
     if (relevantBackgrounds && relevantBackgrounds.length > 0) {
       relevantBackgrounds.forEach((bg: any, index: number) => {
@@ -594,9 +603,9 @@ You should draw: person with BROWN HAIR and MAID OUTFIT using SMOOTH DIGITAL SHA
       });
     }
 
-    // ============================================================================
+    // ============================================================================ 
     // FINAL REMINDER: Reinforce character consistency
-    // ============================================================================
+    // ============================================================================ 
 
     if (relevantCharacters.length > 0) {
       parts.push({ text: `
@@ -624,70 +633,3 @@ Before you generate the image, MANDATORY verification:
 ❌ Did I accidentally copy accessories from art style image? → STOP and fix!
 
 **CORRECT MENTAL MODEL:**
-"I am drawing the CHARACTER from the character reference,
-using the DRAWING TECHNIQUE from the art style reference.
-The character's appearance stays the same, only the drawing technique changes."
-
-**Remember: The character's APPEARANCE (hair, eyes, clothes) comes from CHARACTER reference.
-The drawing TECHNIQUE (lines, shading, rendering) comes from ART STYLE reference.**
-` });
-    }
-
-    // Extract text parts for logging/debugging
-    const textPrompt = parts
-      .filter((p: any) => p.text)
-      .map((p: any) => p.text)
-      .join('\n\n');
-
-    console.log('\n' + '='.repeat(100));
-    console.log('📦 PARTS ARRAY STRUCTURE');
-    console.log('='.repeat(100));
-    console.log('Total parts:', parts.length);
-    parts.forEach((part, idx) => {
-      if (part.text) {
-        console.log(`Part ${idx + 1}: TEXT (${part.text.length} chars)`);
-        console.log('   Preview:', part.text.substring(0, 150).replace(/\n/g, ' ') + '...');
-      } else if (part.inlineData) {
-        console.log(`Part ${idx + 1}: IMAGE`);
-        console.log('   MimeType:', part.inlineData.mimeType);
-        console.log('   Data size:', part.inlineData.data?.length || 0, 'chars');
-      }
-    });
-    console.log('='.repeat(100) + '\n');
-
-    console.log('\n' + '='.repeat(100));
-    console.log('📝 FULL TEXT PROMPT being sent to Gemini:');
-    console.log('='.repeat(100));
-    console.log(textPrompt);
-    console.log('='.repeat(100) + '\n');
-
-    const response = await ai.models.generateContent({
-      model: illustrationModel,
-      contents: { parts },
-      config: {
-        responseModalities: [Modality.IMAGE],
-        ...(aspectRatio && {
-          imageConfig: {
-            aspectRatio: aspectRatio,
-          }
-        }),
-      },
-    });
-
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        const base64ImageBytes: string = part.inlineData.data;
-        return res.status(200).json({
-          image: `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`,
-          prompt: textPrompt, // Return the prompt so it can be saved
-        });
-      }
-    }
-
-    throw new Error("No image was generated by the API.");
-
-  } catch (error: any) {
-    console.error("Error generating illustration:", error);
-    return res.status(500).json({ error: error.message || 'Failed to generate illustration' });
-  }
-}
