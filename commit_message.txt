@@ -1,7 +1,6 @@
-fix(critical): Resolve infinite loop and fix prompt generation
+fix(critical): Revert frontend changes and fix API crash
 
-This commit addresses two critical bugs:
+This commit reverts the incorrect frontend changes from the previous commit and fixes the actual root cause of the 500 error, which was a server-side crash.
 
-1.  **Infinite Loop:** The main data loading `useEffect` in `App.tsx` was incorrectly re-triggering on state changes, causing a save/load infinite loop. The dependency array has been corrected to ensure it runs only once on mount, resolving the stability issue.
-
-2.  **Prompt Generation Failure:** The context-aware logic (passing `previousSceneDescription`) was missing from the `generatePrompt` call chain. This caused prompts to be generated without character continuity, failing to include references. The logic has been added to `App.tsx`, `geminiService.ts`, and `api/generate-prompt.ts`, mirroring the `generateIllustration` implementation and ensuring consistent, correct prompt generation.
+- Reverted the `useEffect` dependency change in `App.tsx`. The original logic was correct, and the change was based on a misinterpretation of the error log.
+- Fixed a `TypeError` in `api/generate-prompt.ts`. The code did not safely handle cases where `sceneDescription` could be null, causing the regex `.test()` method to crash the API. Added a `typeof sceneDescription === 'string'` check to prevent this.

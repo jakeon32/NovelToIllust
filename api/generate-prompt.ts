@@ -43,11 +43,10 @@ export default async function handler(req: any, res: any) {
     }
 
     // 4. If still no characters, fallback to regex on the simple description
-    if (relevantCharacters.length === 0 && sceneDescription) {
-      relevantCharacters = (characters || []).filter((char: any)
-        => 
-          char.name.trim() &&
-        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+    if (relevantCharacters.length === 0 && typeof sceneDescription === 'string') {
+      relevantCharacters = (characters || []).filter((char: any) =>
+        char.name.trim() &&
+        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
       );
     }
 
@@ -59,15 +58,15 @@ export default async function handler(req: any, res: any) {
         bg.name.trim() && sceneLocationName.includes(bg.name.toLowerCase())
       );
     }
-    if (relevantBackgrounds.length === 0 && sceneDescription) {
+    if (relevantBackgrounds.length === 0 && typeof sceneDescription === 'string') {
         relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
           bg.name.trim() &&
-          new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+          new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
         );
     }
 
     // Build the comprehensive prompt
-    let prompt = `Scene Description: ${sceneDescription}\n\n`;
+    let prompt = `Scene Description: ${sceneDescription || structuredDescription?.summary || ''}\n\n`;
 
     if (previousSceneDescription) {
         prompt += `Previous Scene Context: ${previousSceneDescription.summary}\n\n`;
