@@ -744,9 +744,13 @@ const App: React.FC = () => {
 
     try {
       console.log('🚀 Calling API to generate illustration...');
+      const sceneIndex = latestStory.scenes.findIndex(s => s.id === sceneId);
+      const previousScene = sceneIndex > 0 ? latestStory.scenes[sceneIndex - 1] : undefined;
+
       const result = await generateIllustration(
         scene.description,
         scene.structuredDescription,
+        previousScene?.structuredDescription,
         latestStory.characters,
         latestStory.backgrounds,
         latestStory.artStyle,

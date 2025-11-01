@@ -1,7 +1,10 @@
-fix(filtering): Make character name matching more robust
+feat(continuity): Implement context-aware scene generation
 
-This commit fixes a subtle bug where character references were not being included in prompts.
+This commit introduces a major improvement to address character continuity issues between scenes.
 
-The root cause was that the scene generation AI would sometimes add parenthetical translations to character names (e.g., "에린 (Erin)"). The filtering logic was performing a strict equality check against the character name ("에린"), which would fail.
+- The `generateIllustration` API now accepts a `previousSceneDescription` parameter to provide context from the immediately preceding scene.
+- A new "CONTEXT FROM PREVIOUS SCENE" section is added to the main prompt, explicitly showing the AI what just happened.
+- A `CONTINUITY RULE` has been added to the prompt, instructing the AI to keep characters present if the location has not changed.
+- The character filtering logic has been updated to automatically include characters from the previous scene if the location is the same, ensuring they are not forgotten.
 
-The matching logic in both `generate-illustration.ts` and `generate-prompt.ts` has been changed from `includes()` to `startsWith()`. This makes the matching more resilient to these kinds of minor variations from the AI, ensuring that the correct character references are found and included.
+This creates a much more robust system that understands the narrative flow and prevents characters from unnaturally disappearing between related moments.
