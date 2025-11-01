@@ -18,6 +18,7 @@ import TrashIcon from './components/icons/TrashIcon';
 import SparklesIcon from './components/icons/SparklesIcon';
 import FilmIcon from './components/icons/FilmIcon';
 import Bars3Icon from './components/icons/Bars3Icon';
+import CharacterAnalysisEditor from './components/CharacterAnalysisEditor';
 
 const dataUrlToImageFile = (dataUrl: string, name: string = 'image.png'): ImageFile | null => {
     const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
@@ -360,6 +361,16 @@ const App: React.FC = () => {
     }
 
     const updatedCharacters = currentStory.characters.filter((char) => char.id !== id);
+    handleUpdateCurrentStory({ characters: updatedCharacters });
+  };
+
+  const handleCharacterAnalysisChange = (characterId: string, updatedAnalysis: Character['structuredAnalysis']) => {
+    if (!currentStory) return;
+
+    const updatedCharacters = currentStory.characters.map((char) =>
+      char.id === characterId ? { ...char, structuredAnalysis: updatedAnalysis } : char
+    );
+
     handleUpdateCurrentStory({ characters: updatedCharacters });
   };
   
@@ -1304,18 +1315,10 @@ const App: React.FC = () => {
                             )}
 
                             {expandedDescriptions[char.id] && (
-                              <div className="space-y-2">
-                                <p className="text-xs text-gray-500">
-                                  일러스트 생성 시 이 설명을 참고합니다. 잘못된 부분이 있다면 직접 수정하세요.
-                                </p>
-                                <textarea
-                                  value={char.description || '이미지를 업로드하면 자동으로 분석됩니다.'}
-                                  onChange={(e) => handleCharacterChange(char.id, 'description', e.target.value)}
-                                  disabled={!char.description}
-                                  className="w-full h-64 p-3 bg-gray-800 border border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-mono text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                  placeholder="AI 분석 결과가 여기에 표시됩니다..."
-                                />
-                              </div>
+                              <CharacterAnalysisEditor 
+                                character={char}
+                                onAnalysisChange={handleCharacterAnalysisChange}
+                              />
                             )}
                           </div>
                         )}
