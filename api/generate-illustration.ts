@@ -314,24 +314,14 @@ export default async function handler(req: any, res: any) {
       );
     }
 
-    // FALLBACK: If no characters matched but we have characters, use all of them
-    // This ensures character consistency even when names aren't explicitly mentioned
-    if (relevantCharacters.length === 0 && characters && characters.length > 0) {
-      console.warn('⚠️ No characters matched by name filtering. Using ALL characters as fallback.');
-      relevantCharacters = characters;
-    }
-
+    
     // Find which backgrounds are actually mentioned in this specific scene
     let relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
       bg.name.trim() &&
       new RegExp(`\\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
     );
 
-    // FALLBACK: If no backgrounds matched but we have backgrounds, use all of them
-    if (relevantBackgrounds.length === 0 && backgrounds && backgrounds.length > 0) {
-      console.warn('⚠️ No backgrounds matched by name filtering. Using ALL backgrounds as fallback.');
-      relevantBackgrounds = backgrounds;
-    }
+
 
     console.log('\n' + '='.repeat(100));
     console.log('🎯 FINAL REFERENCE SELECTION');
@@ -621,6 +611,7 @@ Before you generate the image, MANDATORY verification:
 ✓ I have the EXACT eye color from the CHARACTER reference (NOT art style)
 ✓ I have the EXACT outfit from the CHARACTER reference (NOT art style)
 ✓ I have the EXACT accessories from the CHARACTER reference (NOT art style)
+✓ I have matched the APPARENT AGE from the CHARACTER reference (e.g., 'late teens', '40s')
 
 **TECHNIQUE APPLICATION (from ART STYLE reference):**
 ✓ I am using the DRAWING TECHNIQUE from art style reference
