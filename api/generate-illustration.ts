@@ -220,60 +220,69 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { sceneDescription, structuredDescription, previousSceneDescription, characters, backgrounds, artStyle, artStyleDescription, shotType, aspectRatio } = req.body;
-
-  if (!sceneDescription && !structuredDescription) {
-    return res.status(400).json({ error: 'Scene description is required' });
-  }
-
   try {
+    const { sceneDescription, structuredDescription, previousSceneDescription, characters, backgrounds, artStyle, artStyleDescription, shotType, aspectRatio } = req.body;
+
+    if (!sceneDescription && !structuredDescription) {
+      return res.status(400).json({ error: 'Scene description is required' });
+    }
+
     // --- Character Filtering Logic ---
     let relevantCharacters: any[] = [];
     let sceneCharacterNames = new Set<string>();
 
-    // 1. Get characters from the current scene
-    if (structuredDescription && structuredDescription.characters && structuredDescription.characters.length > 0) {
-      structuredDescription.characters.forEach((c: any) => sceneCharacterNames.add(c.name.toLowerCase()));
+    if (structuredDescription?.characters?.length > 0) {
+      structuredDescription.characters.forEach((c: any) => {
+        if (c?.name) {
+          sceneCharacterNames.add(c.name.toLowerCase().trim());
+        }
+      });
     }
 
-    // 2. Get characters from the previous scene for continuity, if locations match
-    if (previousSceneDescription && previousSceneDescription.characters && previousSceneDescription.characters.length > 0) {
+    if (previousSceneDescription?.characters?.length > 0) {
       const prevLocation = previousSceneDescription.environment?.location?.toLowerCase().trim();
       const currentLocation = structuredDescription?.environment?.location?.toLowerCase().trim();
       if (prevLocation && currentLocation && prevLocation === currentLocation) {
-        previousSceneDescription.characters.forEach((c: any) => sceneCharacterNames.add(c.name.toLowerCase()));
+        previousSceneDescription.characters.forEach((c: any) => {
+          if (c?.name) {
+            sceneCharacterNames.add(c.name.toLowerCase().trim());
+          }
+        });
       }
     }
 
-    // 3. Filter the master character list against the combined set of names
     if (sceneCharacterNames.size > 0) {
-        relevantCharacters = (characters || []).filter((char: any) => {
-            const charNameLower = char.name.toLowerCase();
-            return Array.from(sceneCharacterNames).some(sceneCharName => sceneCharName.startsWith(charNameLower));
+      relevantCharacters = (characters || []).filter((char: any) => {
+        const charNameLower = char?.name?.toLowerCase().trim();
+        if (!charNameLower) return false;
+
+        return Array.from(sceneCharacterNames).some(sceneNameLower => {
+          return sceneNameLower.startsWith(charNameLower) || charNameLower.startsWith(sceneNameLower);
         });
+      });
     }
 
-    // 4. If still no characters, fallback to regex on the simple description
-    if (relevantCharacters.length === 0) {
+    if (relevantCharacters.length === 0 && typeof sceneDescription === 'string') {
       relevantCharacters = (characters || []).filter((char: any) =>
-        char.name.trim() &&
-        new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
+        char.name?.trim() &&
+        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
       );
     }
 
     // --- Background Filtering Logic ---
     let relevantBackgrounds: any[] = [];
-    if (structuredDescription && structuredDescription.environment && structuredDescription.environment.location) {
-      const sceneLocationName = structuredDescription.environment.location.toLowerCase();
+    const sceneLocationName = structuredDescription?.environment?.location?.toLowerCase().trim();
+    if (sceneLocationName) {
       relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
-        bg.name.trim() && sceneLocationName.includes(bg.name.toLowerCase())
+        bg.name?.trim() && sceneLocationName.includes(bg.name.toLowerCase().trim())
       );
     }
-    if (relevantBackgrounds.length === 0) {
-        relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
-          bg.name.trim() &&
-          new RegExp(`\\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
-        );
+
+    if (relevantBackgrounds.length === 0 && typeof sceneDescription === 'string') {
+      relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
+        bg.name?.trim() &&
+        new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+      );
     }
 
     // --- Prompt Assembly ---
@@ -284,10 +293,35 @@ export default async function handler(req: any, res: any) {
     const scenePrompt = structuredDescription ? createDetailedScenePrompt(structuredDescription) : `Scene Description: "${sceneDescription}"`;
 
     parts.push(
-      { text: `Your task is to create a single, cohesive illustration. You MUST use the provided reference images to maintain PERFECT CONSISTENCY.\n\n${previousScenePrompt}${scenePrompt}\n${shotTypeInstruction}\n\n**CONTINUITY RULE: If the previous scene context and the current scene are in the same location, characters from the previous scene should still be present, perhaps in the background, unless they have explicitly left.**\n\n**REFERENCE PRIORITY ORDER:**\n...`}
+      { text: `Your task is to create a single, cohesive illustration. You MUST use the provided reference images to maintain PERFECT CONSISTENCY.\n\n${previousScenePrompt}${scenePrompt}\n${shotTypeInstruction}\n\n**CONTINUITY RULE: If the previous scene context and the current scene are in the same location, characters from the previous scene should still be present, perhaps in the background, unless they have explicitly left.**\n\n...`}
     );
 
-    // ... (The rest of the prompt generation logic remains the same)
+    // ... (rest of prompt assembly)
+
+    const response = await ai.models.generateContent({
+      model: illustrationModel,
+      contents: { parts },
+      config: {
+        responseModalities: [Modality.IMAGE],
+        ...(aspectRatio && {
+          imageConfig: {
+            aspectRatio: aspectRatio,
+          }
+        }),
+      },
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        const base64ImageBytes: string = part.inlineData.data;
+        return res.status(200).json({
+          image: `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`,
+          prompt: parts.filter(p => p.text).map(p => p.text).join('\n')
+        });
+      }
+    }
+
+    throw new Error("No image was generated by the API.");
 
   } catch (error: any) {
     console.error("Error generating illustration:", error);
