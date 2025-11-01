@@ -48,6 +48,7 @@ export const generateScenesFromText = async (novelText: string): Promise<Structu
 
 export const generatePrompt = async (
   sceneDescription: string,
+  structuredDescription: StructuredSceneDescription | undefined,
   characters: Character[],
   backgrounds: Background[],
   artStyleDescription: string | undefined,
@@ -59,6 +60,7 @@ export const generatePrompt = async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sceneDescription,
+        structuredDescription,
         characters,
         backgrounds,
         artStyleDescription,

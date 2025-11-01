@@ -644,6 +644,7 @@ const App: React.FC = () => {
       try {
         const generatedPrompt = await generatePrompt(
           scene.description,
+          scene.structuredDescription,
           currentStory.characters,
           currentStory.backgrounds,
           currentStory.artStyleDescription,

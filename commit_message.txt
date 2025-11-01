@@ -1,7 +1,7 @@
-feat(scenes): Implement character continuity logic
+fix(prompt): Pass structuredDescription to generatePrompt API
 
-This introduces a post-processing step after scene generation to ensure character continuity.
+This commit fixes a bug where the 'Generate Image' button for a single scene would produce a prompt without character/background references.
 
-- When scenes are generated, the app now iterates through them and keeps track of which characters are present in a given location.
-- If a character appears in a scene, they are automatically carried over to subsequent scenes in the same location, even if not explicitly mentioned in that specific moment of the text.
-- This prevents characters from unnaturally disappearing and reappearing, improving the logical flow and consistency of the generated scenes.
+The `generatePrompt` API call was missing the `structuredDescription` parameter, causing the server-side filtering logic to fail and fall back to a less reliable method.
+
+This change ensures that the detailed structured data is always passed, aligning the behavior of the single-scene prompt generation with the main illustration generation and resolving the inconsistency.
