@@ -1,9 +1,9 @@
-fix(critical): Prevent API crash with safe navigation
+fix(critical): Final attempt to stabilize prompt generation
 
-This commit definitively fixes the recurring 500 Internal Server Error on the `generate-prompt` API.
+This commit represents a complete overhaul of the `api/generate-prompt.ts` file to definitively fix a recurring server crash.
 
-The root cause was identified as multiple instances of unsafe access to nested properties on potentially undefined objects returned by the AI scene analysis (e.g., `structuredDescription.environment.location`).
+Instead of incremental patches, this change replaces the entire file with a version that is both fully functional and robustly defensive.
 
-This was causing a `TypeError` and crashing the server whenever the AI-generated data structure was incomplete.
-
-The fix involves rewriting all data access within `api/generate-prompt.ts` to use optional chaining (`?.`). This makes the code resilient to malformed or incomplete AI data, preventing server crashes by gracefully handling null or undefined values in the data chain.
+- All access to nested properties of externally-sourced objects (like `structuredDescription` and `previousSceneDescription`) now uses optional chaining (`?.`) to prevent `TypeError` crashes from incomplete or malformed AI data.
+- The file now includes extensive, step-by-step logging of the entire process, from data input to filtering results.
+- A top-level try/catch block is in place to ensure that any unexpected error is caught and its stack trace is logged, providing clear diagnostics for any future issues.

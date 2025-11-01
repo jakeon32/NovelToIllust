@@ -1,85 +1,118 @@
-/**
- * Generate a text prompt for scene illustration
- * This combines scene description with reference analysis (character, background, art style)
- * The generated prompt can be reviewed/edited before actual image generation
- */
+import type { NextApiRequest, NextApiResponse } from 'next';
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log("\n\n--- [generate-prompt] API CALLED ---");
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+
   if (req.method !== 'POST') {
+    console.error(`[generate-prompt] ERROR: Method Not Allowed - Received ${req.method}`);
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { sceneDescription, structuredDescription, previousSceneDescription, characters, backgrounds, artStyleDescription, shotType } = req.body;
-
-  if (!sceneDescription && !structuredDescription) {
-    return res.status(400).json({ error: 'Scene description is required' });
-  }
-
   try {
+    console.log("[generate-prompt] Deconstructing request body...");
+    const { sceneDescription, structuredDescription, previousSceneDescription, characters, backgrounds, artStyleDescription, shotType } = req.body;
+
+    console.log("[generate-prompt] Logging received body contents:");
+    console.log(`  - sceneDescription exists: ${!!sceneDescription}`);
+    console.log(`  - structuredDescription exists: ${!!structuredDescription}`);
+    console.log(`  - previousSceneDescription exists: ${!!previousSceneDescription}`);
+    console.log(`  - characters count: ${characters?.length || 0}`);
+    console.log(`  - backgrounds count: ${backgrounds?.length || 0}`);
+    console.log(`  - artStyleDescription exists: ${!!artStyleDescription}`);
+    console.log(`  - shotType: ${shotType}`);
+
+    if (!sceneDescription && !structuredDescription) {
+      console.error("[generate-prompt] ERROR: Scene description is required but both are missing.");
+      return res.status(400).json({ error: 'Scene description is required' });
+    }
+
     // --- Character Filtering Logic ---
+    console.log("\n[generate-prompt] Starting character filtering...");
     let relevantCharacters: any[] = [];
     let sceneCharacterNames = new Set<string>();
 
-    // 1. Get characters from the current scene (Safely)
+    console.log("[generate-prompt] Step 1: Parsing characters from current scene.");
     if (structuredDescription?.characters?.length > 0) {
-      structuredDescription.characters.forEach((c: any) => sceneCharacterNames.add(c.name.toLowerCase()));
+      structuredDescription.characters.forEach((c: any) => {
+        if (c?.name) {
+          sceneCharacterNames.add(c.name.toLowerCase());
+        }
+      });
     }
+    console.log(`[generate-prompt]   - Names from current scene: ${JSON.stringify(Array.from(sceneCharacterNames))}`);
 
-    // 2. Get characters from the previous scene for continuity (Safely)
+    console.log("[generate-prompt] Step 2: Parsing characters from previous scene for continuity.");
     if (previousSceneDescription?.characters?.length > 0) {
       const prevLocation = previousSceneDescription.environment?.location?.toLowerCase().trim();
       const currentLocation = structuredDescription?.environment?.location?.toLowerCase().trim();
+      console.log(`[generate-prompt]   - Previous Location: ${prevLocation}`);
+      console.log(`[generate-prompt]   - Current Location: ${currentLocation}`);
       if (prevLocation && currentLocation && prevLocation === currentLocation) {
-        previousSceneDescription.characters.forEach((c: any) => sceneCharacterNames.add(c.name.toLowerCase()));
+        console.log("[generate-prompt]   - Locations match. Adding previous scene characters.");
+        previousSceneDescription.characters.forEach((c: any) => {
+          if (c?.name) {
+            sceneCharacterNames.add(c.name.toLowerCase());
+          }
+        });
       }
     }
+    console.log(`[generate-prompt]   - Combined names for filtering: ${JSON.stringify(Array.from(sceneCharacterNames))}`);
 
-    // 3. Filter the master character list against the combined set of names
+    console.log("[generate-prompt] Step 3: Filtering master character list.");
     if (sceneCharacterNames.size > 0) {
         relevantCharacters = (characters || []).filter((char: any) => {
-            const charNameLower = char.name.toLowerCase();
+            const charNameLower = char?.name?.toLowerCase();
+            if (!charNameLower) return false;
             return Array.from(sceneCharacterNames).some(sceneCharName => sceneCharName.startsWith(charNameLower));
         });
     }
+    console.log(`[generate-prompt]   - Found ${relevantCharacters.length} characters after structured filtering.`);
 
-    // 4. If still no characters, fallback to regex on the simple description (Safely)
+    console.log("[generate-prompt] Step 4: Checking for regex fallback for characters.");
     if (relevantCharacters.length === 0 && typeof sceneDescription === 'string') {
+      console.log("[generate-prompt]   - No characters found, performing regex fallback...");
       relevantCharacters = (characters || []).filter((char: any) =>
-        char.name.trim() &&
-        new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
+        char.name?.trim() &&
+        new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
       );
+      console.log(`[generate-prompt]   - Found ${relevantCharacters.length} characters after regex fallback.`);
     }
 
-    // --- Background Filtering Logic (Safely) ---
+    // --- Background Filtering Logic ---
+    console.log("\n[generate-prompt] Starting background filtering...");
     let relevantBackgrounds: any[] = [];
     const sceneLocationName = structuredDescription?.environment?.location?.toLowerCase();
+    console.log(`[generate-prompt]   - Location from structured description: ${sceneLocationName}`);
     if (sceneLocationName) {
       relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
-        bg.name.trim() && sceneLocationName.includes(bg.name.toLowerCase())
+        bg.name?.trim() && sceneLocationName.includes(bg.name.toLowerCase())
       );
     }
+    console.log(`[generate-prompt]   - Found ${relevantBackgrounds.length} backgrounds after structured filtering.`);
 
-    // Fallback to regex on sceneDescription if no background found yet (Safely)
+    console.log("[generate-prompt]   - Checking for regex fallback for backgrounds.");
     if (relevantBackgrounds.length === 0 && typeof sceneDescription === 'string') {
-        relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
-          bg.name.trim() &&
-          new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\b`, 'i').test(sceneDescription)
-        );
+      console.log("[generate-prompt]   - No backgrounds found, performing regex fallback...");
+      relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
+        bg.name?.trim() &&
+        new RegExp(`\\b${bg.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
+      );
+      console.log(`[generate-prompt]   - Found ${relevantBackgrounds.length} backgrounds after regex fallback.`);
     }
 
-    // Build the comprehensive prompt
+    // --- Prompt Assembly ---
+    console.log("\n[generate-prompt] Assembling final prompt string...");
     let prompt = `Scene Description: ${sceneDescription || structuredDescription?.summary || ''}\n\n`;
 
-    if (previousSceneDescription) {
+    if (previousSceneDescription?.summary) {
         prompt += `Previous Scene Context: ${previousSceneDescription.summary}\n\n`;
     }
 
-    // Add shot type instruction
     if (shotType && shotType !== 'automatic') {
       prompt += `Shot Type: ${shotType.replace(/_/g, ' ')}\n\n`;
     }
 
-    // Add character references
     if (relevantCharacters.length > 0) {
       prompt += `═══════════════════════════════════════\n`;
       prompt += `👤 CHARACTER REFERENCES (HIGHEST PRIORITY)\n`;
@@ -89,7 +122,6 @@ export default async function handler(req: any, res: any) {
 
       relevantCharacters.forEach((char: any, index: number) => {
         prompt += `━━━ Character ${index + 1}: ${char.name} ━━━\n\n`;
-
         if (char.description) {
           prompt += `📋 CHARACTER APPEARANCE ANALYSIS:\n`;
           prompt += `${char.description}\n\n`;
@@ -101,7 +133,6 @@ export default async function handler(req: any, res: any) {
         } else {
           prompt += `⚠️ No AI analysis available. Refer carefully to the reference image.\n\n`;
         }
-
         if (char.image) {
           prompt += `📷 Reference image: Registered and will be used for generation\n\n`;
         } else {
@@ -110,7 +141,6 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // Add art style reference
     if (artStyleDescription) {
       prompt += `═══════════════════════════════════════\n`;
       prompt += `🎨 ART STYLE (DRAWING TECHNIQUE ONLY)\n`;
@@ -123,7 +153,6 @@ export default async function handler(req: any, res: any) {
       prompt += `   → Apply this technique to the CHARACTER appearance defined above!\n\n`;
     }
 
-    // Add background references
     if (relevantBackgrounds.length > 0) {
       prompt += `═══════════════════════════════════════\n`;
       prompt += `🏞️  BACKGROUND REFERENCES\n`;
@@ -132,7 +161,7 @@ export default async function handler(req: any, res: any) {
       relevantBackgrounds.forEach((bg: any, index: number) => {
         prompt += `━━━ Background ${index + 1}: ${bg.name} ━━━\n\n`;
         if (bg.description) {
-          prompt += `📋 SETTING ANALYSIS:\n${bg.description}\n\n`;
+          prompt += `📋 SETTING ANALYSIS:${bg.description}\n\n`;
         }
         if (bg.image) {
           prompt += `📷 Reference image: Registered and will be used for generation\n\n`;
@@ -140,7 +169,6 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // Add final instructions
     if (relevantCharacters.length > 0) {
       prompt += `═══════════════════════════════════════\n`;
       prompt += `✅ FINAL CHECKLIST\n`;
@@ -153,10 +181,15 @@ export default async function handler(req: any, res: any) {
       prompt += `⚠️ NOTE: This is a preview. The actual generation will include all reference images.\n`;
     }
 
+    console.log("[generate-prompt] Prompt assembly complete. Sending response.");
     return res.status(200).json({ prompt });
 
   } catch (error: any) {
-    console.error("Error generating prompt:", error);
-    return res.status(500).json({ error: error.message || 'Failed to generate prompt' });
+    console.error("\n\n🔥🔥🔥 [generate-prompt] CATASTROPHIC FAILURE 🔥🔥🔥\n\n");
+    console.error("[generate-prompt] The API handler has crashed unexpectedly.");
+    console.error("Error Message:", error.message);
+    console.error("Error Stack:", error.stack);
+    console.error("\n\n--- END OF CRASH REPORT ---\n\n");
+    return res.status(500).json({ error: 'A critical error occurred on the server. Check server logs for details.', details: error.message });
   }
 }
