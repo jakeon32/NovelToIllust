@@ -322,7 +322,7 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
         {/* Preview */}
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
           <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow">
-            <h1 className="text-3xl font-bold mb-6 text-center border-b-2 border-blue-500 pb-4">
+            <h1 className="text-3xl font-bold mb-6 text-center border-b-2 border-blue-500 pb-4 text-gray-900">
               {removeMarkdown(story.title)}
             </h1>
 
