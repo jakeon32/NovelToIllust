@@ -20,27 +20,92 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
   // Process novel text and insert images at appropriate positions
   const novelSections = useMemo(() => {
     const sections: NovelSection[] = [];
-    let remainingText = story.novelText;
     let processedIndex = 0;
+
+    console.log('🔍 WebNovelExporter: Processing novel text');
+    console.log('📝 Novel text length:', story.novelText.length);
+    console.log('🎬 Total scenes:', story.scenes.length);
+
+    // Normalize text for better matching (remove extra whitespace, normalize quotes)
+    const normalizeText = (text: string): string => {
+      return text
+        .replace(/\s+/g, ' ')  // Normalize whitespace
+        .replace(/[""]/g, '"')  // Normalize quotes
+        .replace(/['']/g, "'")  // Normalize apostrophes
+        .trim();
+    };
+
+    const normalizedNovelText = normalizeText(story.novelText);
 
     // Get scenes with images, sorted by their appearance in the text
     const scenesWithImages = story.scenes
-      .filter(scene => scene.imageUrl && scene.structuredDescription?.sourceExcerpt)
-      .map(scene => ({
-        scene,
-        index: story.novelText.indexOf(scene.structuredDescription!.sourceExcerpt)
-      }))
+      .filter(scene => {
+        const hasImage = !!scene.imageUrl;
+        const hasExcerpt = !!scene.structuredDescription?.sourceExcerpt;
+        console.log(`🎬 Scene ${scene.id}:`, { hasImage, hasExcerpt, excerpt: scene.structuredDescription?.sourceExcerpt?.substring(0, 50) });
+        return hasImage && hasExcerpt;
+      })
+      .map(scene => {
+        const excerpt = scene.structuredDescription!.sourceExcerpt;
+        const normalizedExcerpt = normalizeText(excerpt);
+        const index = normalizedNovelText.indexOf(normalizedExcerpt);
+
+        console.log(`🔎 Searching for excerpt in novel:`, {
+          excerpt: excerpt.substring(0, 80) + '...',
+          found: index !== -1,
+          index
+        });
+
+        return {
+          scene,
+          originalExcerpt: excerpt,
+          index
+        };
+      })
       .filter(item => item.index !== -1)
       .sort((a, b) => a.index - b.index);
 
+    console.log(`✅ Found ${scenesWithImages.length} scenes with matching excerpts`);
+
+    // If no matching scenes, just return the full text
+    if (scenesWithImages.length === 0) {
+      console.log('⚠️ No scenes with matching excerpts found, returning full text');
+      sections.push({
+        type: 'text',
+        content: story.novelText
+      });
+      return sections;
+    }
+
+    // Build mapping from normalized positions to original positions
+    let originalIndex = 0;
+    let normalizedIndex = 0;
+    const positionMap: number[] = [];
+
+    for (let i = 0; i < story.novelText.length; i++) {
+      const char = story.novelText[i];
+      if (char.match(/\s/)) {
+        // Skip consecutive whitespace in normalized version
+        if (normalizedIndex < normalizedNovelText.length && normalizedNovelText[normalizedIndex] === ' ') {
+          positionMap[normalizedIndex] = i;
+          normalizedIndex++;
+        }
+      } else {
+        positionMap[normalizedIndex] = i;
+        normalizedIndex++;
+      }
+    }
+
     // Build sections by interleaving text and images
-    scenesWithImages.forEach(({ scene, index }) => {
-      const excerpt = scene.structuredDescription!.sourceExcerpt;
-      const excerptEnd = index + excerpt.length;
+    scenesWithImages.forEach(({ scene, originalExcerpt, index }) => {
+      // Map normalized index back to original text index
+      const originalStartIndex = positionMap[index] || index;
+      const excerptEnd = index + normalizeText(originalExcerpt).length;
+      const originalEndIndex = positionMap[excerptEnd] || (originalStartIndex + originalExcerpt.length);
 
       // Add text before this scene
-      if (index > processedIndex) {
-        const textBeforeScene = story.novelText.substring(processedIndex, index);
+      if (originalStartIndex > processedIndex) {
+        const textBeforeScene = story.novelText.substring(processedIndex, originalStartIndex);
         if (textBeforeScene.trim()) {
           sections.push({
             type: 'text',
@@ -49,10 +114,11 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
         }
       }
 
-      // Add the source excerpt text
+      // Add the source excerpt text (from original)
+      const actualExcerpt = story.novelText.substring(originalStartIndex, originalEndIndex);
       sections.push({
         type: 'text',
-        content: excerpt
+        content: actualExcerpt
       });
 
       // Add the image
@@ -64,7 +130,7 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
         sceneDescription: scene.structuredDescription?.summary || scene.description
       });
 
-      processedIndex = excerptEnd;
+      processedIndex = originalEndIndex;
     });
 
     // Add remaining text after last scene
@@ -78,6 +144,7 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
       }
     }
 
+    console.log(`📚 Generated ${sections.length} sections (text + images)`);
     return sections;
   }, [story]);
 
@@ -104,12 +171,14 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
   };
 
   const generateHTMLDocument = (): string => {
+    const cleanTitle = removeMarkdown(story.title);
+
     return `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(story.title)}</title>
+  <title>${escapeHtml(cleanTitle)}</title>
   <style>
     * {
       margin: 0;
@@ -146,8 +215,11 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
     .text-section {
       margin-bottom: 1.5rem;
       text-align: justify;
-      text-indent: 1em;
-      white-space: pre-wrap;
+      line-height: 1.9;
+    }
+
+    .text-section:not(:first-of-type) {
+      text-indent: 1.5em;
     }
 
     .image-section {
@@ -191,15 +263,25 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
 </head>
 <body>
   <div class="container">
-    <h1>${escapeHtml(story.title)}</h1>
+    <h1>${escapeHtml(cleanTitle)}</h1>
 
     ${novelSections.map(section => {
       if (section.type === 'text') {
-        return `<div class="text-section">${escapeHtml(section.content)}</div>`;
+        // Remove markdown and split into paragraphs
+        const cleanText = removeMarkdown(section.content);
+        const paragraphs = cleanText
+          .split(/\n\n+/)
+          .map(p => p.trim())
+          .filter(p => p.length > 0);
+
+        return paragraphs.map(para =>
+          `<div class="text-section">${escapeHtml(para)}</div>`
+        ).join('\n    ');
       } else {
+        const cleanDescription = removeMarkdown(section.sceneDescription || '');
         return `<div class="image-section">
-          <img src="${section.imageUrl}" alt="${escapeHtml(section.sceneDescription || 'Scene illustration')}" />
-          <div class="image-caption">${escapeHtml(section.sceneDescription || '')}</div>
+          <img src="${section.imageUrl}" alt="${escapeHtml(cleanDescription || 'Scene illustration')}" />
+          <div class="image-caption">${escapeHtml(cleanDescription)}</div>
         </div>`;
       }
     }).join('\n    ')}
@@ -210,6 +292,20 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
   </div>
 </body>
 </html>`;
+  };
+
+  const removeMarkdown = (text: string): string => {
+    return text
+      // Remove headers (##, ###, etc.)
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bold (**text** or __text__)
+      .replace(/(\*\*|__)(.*?)\1/g, '$2')
+      // Remove italic (*text* or _text_)
+      .replace(/(\*|_)(.*?)\1/g, '$2')
+      // Remove inline code (`code`)
+      .replace(/`([^`]+)`/g, '$1')
+      // Remove strikethrough (~~text~~)
+      .replace(/~~(.*?)~~/g, '$1');
   };
 
   const escapeHtml = (text: string): string => {
@@ -236,27 +332,34 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
           <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow">
             <h1 className="text-3xl font-bold mb-6 text-center border-b-2 border-blue-500 pb-4">
-              {story.title}
+              {removeMarkdown(story.title)}
             </h1>
 
             {novelSections.map((section, index) => {
               if (section.type === 'text') {
-                return (
-                  <div key={index} className="mb-4 whitespace-pre-wrap text-justify indent-4">
-                    {section.content}
+                const cleanText = removeMarkdown(section.content);
+                const paragraphs = cleanText
+                  .split(/\n\n+/)
+                  .map(p => p.trim())
+                  .filter(p => p.length > 0);
+
+                return paragraphs.map((para, pIndex) => (
+                  <div key={`${index}-${pIndex}`} className="mb-4 text-justify indent-4">
+                    {para}
                   </div>
-                );
+                ));
               } else {
+                const cleanDescription = removeMarkdown(section.sceneDescription || '');
                 return (
                   <div key={index} className="my-8 text-center">
                     <img
                       src={section.imageUrl}
-                      alt={section.sceneDescription || 'Scene illustration'}
+                      alt={cleanDescription || 'Scene illustration'}
                       className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
                     />
-                    {section.sceneDescription && (
+                    {cleanDescription && (
                       <p className="mt-2 text-sm text-gray-600 italic">
-                        {section.sceneDescription}
+                        {cleanDescription}
                       </p>
                     )}
                   </div>
