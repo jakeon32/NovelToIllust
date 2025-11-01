@@ -84,6 +84,8 @@ export const generatePrompt = async (
 
 export const generateIllustration = async (
   customPrompt: string, // The fully-formed prompt from the generate-prompt step
+  structuredDescription: StructuredSceneDescription | undefined,
+  previousSceneDescription: StructuredSceneDescription | undefined,
   characters: Character[],
   backgrounds: Background[],
   artStyle: ImageFile | null,
@@ -95,6 +97,8 @@ export const generateIllustration = async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         customPrompt,
+        structuredDescription,
+        previousSceneDescription,
         characters,
         backgrounds,
         artStyle,

@@ -3,35 +3,102 @@ import { GoogleGenAI, Modality } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 const illustrationModel = "gemini-2.5-flash-image";
 
+// Helper functions are restored as they are needed for the filtering logic.
+function createDetailedScenePrompt(structured: any, isContext: boolean = false): string {
+  if (!structured) return '';
+  const title = isContext ? '**CONTEXT FROM PREVIOUS SCENE:**' : '**DETAILED SCENE BREAKDOWN:**';
+  let prompt = `
+${title}
+
+`;
+  prompt += `**Scene Summary:** ${structured.summary}
+
+`;
+  if (structured.characters && structured.characters.length > 0) {
+    prompt += `**Characters in Scene:**
+`;
+    structured.characters.forEach((char: any, idx: number) => {
+      prompt += `${idx + 1}. **${char.name}**
+`;
+      prompt += `   - Action: ${char.action}
+`;
+      prompt += `   - Expression: ${char.expression}
+`;
+    });
+    prompt += '\n';
+  }
+  if (structured.environment) {
+    prompt += `**Environment:**
+`;
+    prompt += `   - Location: ${structured.environment.location}
+`;
+    prompt += `   - Atmosphere: ${structured.environment.atmosphere}
+
+`;
+  }
+  return prompt;
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // V3: This endpoint now receives the final, user-approved prompt.
-    // Its only job is to attach the relevant image references and generate the image.
-    const { customPrompt, characters, backgrounds, artStyle, aspectRatio } = req.body;
+    const { customPrompt, structuredDescription, previousSceneDescription, characters, backgrounds, artStyle, aspectRatio } = req.body;
 
     if (!customPrompt) {
       return res.status(400).json({ error: 'Custom prompt is required' });
     }
+    if (!structuredDescription) {
+      return res.status(400).json({ error: 'Structured description is required for filtering' });
+    }
 
-    // --- Filtering Logic (using customPrompt for context) ---
-    // We still need to filter the master list of references to send only the relevant
-    // images along with the prompt.
+    // --- INTELLIGENT FILTERING LOGIC (RESTORED) ---
+    // This logic correctly identifies which characters and backgrounds are in the current scene
+    // based on the AI-generated structuredDescription, not the entire prompt text.
+    let relevantCharacters: any[] = [];
+    let sceneCharacterNames = new Set<string>();
 
-    const relevantCharacters = (characters || []).filter((char: any) =>
-      char.name?.trim() &&
-      new RegExp(`\b${char.name.replace(/[-\/\\^$*+?.()|\[\]{}]/g, '\\$&')}\b`, 'i').test(customPrompt)
-    );
+    if (structuredDescription.characters?.length > 0) {
+      structuredDescription.characters.forEach((c: any) => {
+        if (c?.name) sceneCharacterNames.add(c.name.toLowerCase().trim());
+      });
+    }
 
-    const relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
-      bg.name?.trim() &&
-      new RegExp(`\b${bg.name.replace(/[-\/\\^$*+?.()|\[\]{}]/g, '\\$&')}\b`, 'i').test(customPrompt)
-    );
+    // Continuity check with previous scene
+    if (previousSceneDescription?.characters?.length > 0) {
+      const prevLocation = previousSceneDescription.environment?.location?.toLowerCase().trim();
+      const currentLocation = structuredDescription.environment?.location?.toLowerCase().trim();
+      if (prevLocation && currentLocation && prevLocation === currentLocation) {
+        previousSceneDescription.characters.forEach((c: any) => {
+          if (c?.name) sceneCharacterNames.add(c.name.toLowerCase().trim());
+        });
+      }
+    }
+
+    if (sceneCharacterNames.size > 0) {
+      relevantCharacters = (characters || []).filter((char: any) => {
+        const charNameLower = char?.name?.toLowerCase().trim();
+        if (!charNameLower) return false;
+        return Array.from(sceneCharacterNames).some(sceneNameLower => 
+          sceneNameLower.startsWith(charNameLower) || charNameLower.startsWith(sceneNameLower)
+        );
+      });
+    }
+
+    let relevantBackgrounds: any[] = [];
+    const sceneLocationName = structuredDescription.environment?.location?.toLowerCase().trim();
+    if (sceneLocationName) {
+      relevantBackgrounds = (backgrounds || []).filter((bg: any) =>
+        bg.name?.trim() && sceneLocationName.includes(bg.name.toLowerCase().trim())
+      );
+    }
+    // --- END OF FILTERING LOGIC ---
 
     // --- API Payload Assembly ---
+    // The text part is the user-approved customPrompt.
+    // The image parts are determined by the intelligent filtering logic above.
     const parts: any[] = [{ text: customPrompt }];
 
     if (artStyle) {
@@ -69,7 +136,7 @@ export default async function handler(req: any, res: any) {
         const base64ImageBytes: string = part.inlineData.data;
         return res.status(200).json({
           image: `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`,
-          prompt: customPrompt // Return the same prompt that was used
+          prompt: customPrompt
         });
       }
     }

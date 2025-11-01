@@ -752,7 +752,9 @@ const App: React.FC = () => {
       const previousScene = sceneIndex > 0 ? latestStory.scenes[sceneIndex - 1] : undefined;
 
       const result = await generateIllustration(
-        scene.customPrompt, // Use the pre-generated and user-editable prompt
+        scene.customPrompt,
+        scene.structuredDescription,
+        previousScene?.structuredDescription,
         latestStory.characters,
         latestStory.backgrounds,
         latestStory.artStyle,
