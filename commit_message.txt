@@ -1,9 +1,7 @@
-fix(logic): Implement bidirectional character name matching
+chore(debug): Add hyper-detailed comparison logging
 
-This commit resolves the regression where character references were not being included in generated prompts.
+This is a diagnostic commit to find the root cause of the character filtering failure.
 
-The root cause was a flawed, one-way `startsWith` check for character names. This failed when the AI-provided name was less specific than the user-registered name (e.g., AI: "Erin", User: "Erin (Official)").
+Previous attempts to fix the logic have failed. This version adds detailed logging to the character filter loop, printing the exact two strings being compared in every `startsWith` check.
 
-The filtering logic in both `api/generate-prompt.ts` and `api/generate-illustration.ts` has been updated to be bidirectional, checking if `A.startsWith(B)` or `B.startsWith(A)`. This ensures a match regardless of which name is more specific.
-
-Additionally, `.trim()` has been added to all name comparisons to prevent whitespace issues. This finally resolves the character filtering problem.
+This will provide the ground-truth data needed to finally understand why the filtering is failing.
