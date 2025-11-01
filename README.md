@@ -13,6 +13,27 @@ Novel to Illustration AI는 작가와 창작자를 위한 도구로, 소설이�
 - 캐릭터와 배경 레퍼런스를 참고하여 일관된 스타일의 일러스트 생성
 - 자연어로 이미지를 수정하고 재생성
 
+## 🆕 최근 업데이트
+
+### 2025년 10월 31일
+- ☁️ **Google OAuth & Supabase 클라우드 통합**
+  - Google 계정으로 로그인 기능 추가
+  - Supabase PostgreSQL 클라우드 데이터베이스 연동
+  - IndexedDB에서 Supabase로 자동 데이터 마이그레이션
+  - Row Level Security로 사용자별 데이터 격리
+  - 로그아웃 기능 및 사용자 이메일 표시
+
+- 💾 **데이터 영속화 개선**
+  - 모든 ID를 UUID 형식으로 변환 (데이터베이스 호환성)
+  - 현재 작업 중인 스토리 ID 자동 저장 및 복원
+  - IndexedDB를 통한 씬(장면) 데이터 영속화
+  - 페이지 새로고침 시 데이터 손실 방지
+
+- 🎨 **아트 스타일 레퍼런스 처리 강화**
+  - 아트 스타일 레퍼런스 프로세싱 상세 로깅
+  - 캐릭터 일관성 유지를 위한 우선순위 시스템 개선
+  - 디버깅을 위한 상세 로그 추가
+
 ## ✨ 주요 기능
 
 ### 1. 스마트 장면 분석
@@ -40,7 +61,8 @@ Novel to Illustration AI는 작가와 창작자를 위한 도구로, 소설이�
 
 ### 5. 멀티 스토리 관리
 - 여러 작품을 동시에 관리
-- localStorage 기반 자동 저장
+- Supabase 클라우드 저장 + IndexedDB 로컬 백업
+- Google 계정으로 로그인하여 어디서나 작업 이어가기
 - 프로젝트별 독립적인 레퍼런스 관리
 
 ## 🛠️ 기술 스택
@@ -52,6 +74,8 @@ Novel to Illustration AI는 작가와 창작자를 위한 도구로, 소설이�
 | Vite | 빌드 도구 |
 | Tailwind CSS | 스타일링 |
 | Google Gemini API | AI 텍스트 분석 및 이미지 생성 |
+| Supabase | 클라우드 데이터베이스 (PostgreSQL) 및 인증 (Google OAuth) |
+| IndexedDB | 브라우저 로컬 데이터 저장 |
 | Vercel | 배포 및 Serverless Functions |
 
 ## 🚀 로컬 실행 방법
@@ -159,9 +183,11 @@ NovelToIllust/
 ## 🔒 보안 및 개인정보 보호
 
 ### 데이터 저장
-- 모든 프로젝트 데이터는 **브라우저의 localStorage**에 저장
-- 서버에 프로젝트 데이터 전송 없음
-- 생성된 이미지는 base64로 로컬 저장
+- Google OAuth를 통한 안전한 사용자 인증
+- Supabase PostgreSQL 클라우드 데이터베이스에 프로젝트 데이터 저장
+- Row Level Security (RLS)로 사용자별 데이터 완전 격리
+- IndexedDB를 통한 로컬 백업 (씬 이미지 포함)
+- 생성된 이미지는 base64로 IndexedDB에 저장
 
 ### API 키 보호
 - API 키는 Vercel 환경 변수로 안전하게 관리
@@ -213,4 +239,3 @@ NovelToIllust/
 ---
 
 **Made with ❤️ using Google Gemini AI**
-# Force redeploy 2025년 11월  1일 토 오전 10:39:56
