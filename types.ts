@@ -19,9 +19,55 @@ export interface Background {
   description?: string; // AI-generated detailed description of background/setting
 }
 
+// Structured scene description for better AI consistency
+export interface SceneCharacter {
+  name: string;
+  action: string;          // What the character is doing
+  expression: string;      // Facial expression
+  posture: string;         // Body language/posture
+  position: string;        // Where in the scene
+}
+
+export interface SceneEnvironment {
+  location: string;
+  timeOfDay: string;
+  lighting: string;
+  weather?: string;
+  atmosphere: string;
+}
+
+export interface SceneObject {
+  item: string;
+  description: string;
+  importance: string;
+}
+
+export interface SceneMood {
+  emotionalTone: string;
+  tensionLevel: string;
+  keyFeeling: string;
+}
+
+export interface SceneInteraction {
+  characters: string[];
+  type: string;            // "confrontation" / "conversation" / "support"
+  description: string;
+  physicalDistance: string;
+}
+
+export interface StructuredSceneDescription {
+  summary: string;
+  characters: SceneCharacter[];
+  environment: SceneEnvironment;
+  importantObjects: SceneObject[];
+  mood: SceneMood;
+  interactions?: SceneInteraction[];
+}
+
 export interface Scene {
   id: string;
-  description: string;
+  description: string; // Legacy: Keep for backward compatibility, will be summary
+  structuredDescription?: StructuredSceneDescription; // New structured format
   imageUrl: string | null;
   isGenerating: boolean;
   shotType: string; // e.g., 'automatic', 'wide_shot', 'close_up'

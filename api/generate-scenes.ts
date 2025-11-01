@@ -48,12 +48,36 @@ IMPORTANT GUIDELINES FOR SCENE SELECTION:
    - If dialogue is crucial, describe what characters are doing WHILE speaking
    - Include their expressions, gestures, and the surrounding context
 
-For each selected scene, provide:
-- A vivid, detailed description focusing on visual elements
-- Character positions, expressions, and actions
-- Setting details (lighting, atmosphere, background)
-- The emotional tone and mood
-- Any important objects or environmental details
+**STRUCTURED OUTPUT FORMAT:**
+
+For each scene, provide a JSON object with the following structure:
+
+- **summary**: One sentence describing the overall scene
+- **characters**: Array of characters in the scene, each with:
+  - name: Character's name
+  - action: What they are physically doing
+  - expression: Their facial expression
+  - posture: Body language and posture
+  - position: Where they are in the scene
+- **environment**:
+  - location: Where the scene takes place
+  - timeOfDay: Time (morning/afternoon/evening/night)
+  - lighting: Description of lighting
+  - weather: Weather conditions (if relevant/outdoor)
+  - atmosphere: Overall mood of the environment
+- **importantObjects**: Array of crucial objects/props, each with:
+  - item: Name of the object
+  - description: Visual description
+  - importance: Why it matters to the scene
+- **mood**:
+  - emotionalTone: Overall emotional feeling
+  - tensionLevel: low/medium/high
+  - keyFeeling: The primary emotion being conveyed
+- **interactions** (optional, if multiple characters):
+  - characters: Array of character names involved
+  - type: Type of interaction (confrontation/conversation/support/etc)
+  - description: How they are interacting
+  - physicalDistance: How close/far they are
 
 Based on the novel's length, select 3-8 scenes that work together as a cohesive visual narrative.
 
@@ -74,9 +98,78 @@ ${novelText}
           properties: {
             scenes: {
               type: Type.ARRAY,
-              items: { type: Type.STRING }
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  summary: { type: Type.STRING },
+                  characters: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        name: { type: Type.STRING },
+                        action: { type: Type.STRING },
+                        expression: { type: Type.STRING },
+                        posture: { type: Type.STRING },
+                        position: { type: Type.STRING },
+                      },
+                      required: ["name", "action", "expression", "posture", "position"]
+                    }
+                  },
+                  environment: {
+                    type: Type.OBJECT,
+                    properties: {
+                      location: { type: Type.STRING },
+                      timeOfDay: { type: Type.STRING },
+                      lighting: { type: Type.STRING },
+                      weather: { type: Type.STRING },
+                      atmosphere: { type: Type.STRING },
+                    },
+                    required: ["location", "timeOfDay", "lighting", "atmosphere"]
+                  },
+                  importantObjects: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        item: { type: Type.STRING },
+                        description: { type: Type.STRING },
+                        importance: { type: Type.STRING },
+                      },
+                      required: ["item", "description", "importance"]
+                    }
+                  },
+                  mood: {
+                    type: Type.OBJECT,
+                    properties: {
+                      emotionalTone: { type: Type.STRING },
+                      tensionLevel: { type: Type.STRING },
+                      keyFeeling: { type: Type.STRING },
+                    },
+                    required: ["emotionalTone", "tensionLevel", "keyFeeling"]
+                  },
+                  interactions: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        characters: {
+                          type: Type.ARRAY,
+                          items: { type: Type.STRING }
+                        },
+                        type: { type: Type.STRING },
+                        description: { type: Type.STRING },
+                        physicalDistance: { type: Type.STRING },
+                      },
+                      required: ["characters", "type", "description", "physicalDistance"]
+                    }
+                  }
+                },
+                required: ["summary", "characters", "environment", "importantObjects", "mood"]
+              }
             }
-          }
+          },
+          required: ["scenes"]
         },
       },
     });

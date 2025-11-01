@@ -3,14 +3,80 @@ import { GoogleGenAI, Modality } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 const illustrationModel = "gemini-2.5-flash-image";
 
+// Helper function to create detailed prompt from structured scene description
+function createDetailedScenePrompt(structured: any): string {
+  if (!structured) return '';
+
+  let prompt = `\n**DETAILED SCENE BREAKDOWN:**\n\n`;
+
+  // Summary
+  prompt += `**Scene Summary:** ${structured.summary}\n\n`;
+
+  // Characters
+  if (structured.characters && structured.characters.length > 0) {
+    prompt += `**Characters in Scene:**\n`;
+    structured.characters.forEach((char: any, idx: number) => {
+      prompt += `${idx + 1}. **${char.name}**\n`;
+      prompt += `   - Action: ${char.action}\n`;
+      prompt += `   - Expression: ${char.expression}\n`;
+      prompt += `   - Posture: ${char.posture}\n`;
+      prompt += `   - Position: ${char.position}\n`;
+    });
+    prompt += '\n';
+  }
+
+  // Environment
+  if (structured.environment) {
+    prompt += `**Environment:**\n`;
+    prompt += `   - Location: ${structured.environment.location}\n`;
+    prompt += `   - Time of Day: ${structured.environment.timeOfDay}\n`;
+    prompt += `   - Lighting: ${structured.environment.lighting}\n`;
+    if (structured.environment.weather) {
+      prompt += `   - Weather: ${structured.environment.weather}\n`;
+    }
+    prompt += `   - Atmosphere: ${structured.environment.atmosphere}\n\n`;
+  }
+
+  // Important Objects
+  if (structured.importantObjects && structured.importantObjects.length > 0) {
+    prompt += `**Important Objects:**\n`;
+    structured.importantObjects.forEach((obj: any, idx: number) => {
+      prompt += `${idx + 1}. **${obj.item}**: ${obj.description} (${obj.importance})\n`;
+    });
+    prompt += '\n';
+  }
+
+  // Mood
+  if (structured.mood) {
+    prompt += `**Mood & Atmosphere:**\n`;
+    prompt += `   - Emotional Tone: ${structured.mood.emotionalTone}\n`;
+    prompt += `   - Tension Level: ${structured.mood.tensionLevel}\n`;
+    prompt += `   - Key Feeling: ${structured.mood.keyFeeling}\n\n`;
+  }
+
+  // Interactions
+  if (structured.interactions && structured.interactions.length > 0) {
+    prompt += `**Character Interactions:**\n`;
+    structured.interactions.forEach((interaction: any, idx: number) => {
+      prompt += `${idx + 1}. ${interaction.characters.join(' & ')}\n`;
+      prompt += `   - Type: ${interaction.type}\n`;
+      prompt += `   - Description: ${interaction.description}\n`;
+      prompt += `   - Physical Distance: ${interaction.physicalDistance}\n`;
+    });
+    prompt += '\n';
+  }
+
+  return prompt;
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { sceneDescription, characters, backgrounds, artStyle, artStyleDescription, shotType, aspectRatio } = req.body;
+  const { sceneDescription, structuredDescription, characters, backgrounds, artStyle, artStyleDescription, shotType, aspectRatio } = req.body;
 
-  if (!sceneDescription) {
+  if (!sceneDescription && !structuredDescription) {
     return res.status(400).json({ error: 'Scene description is required' });
   }
 
@@ -51,10 +117,21 @@ export default async function handler(req: any, res: any) {
 
   try {
     // Find which characters are actually mentioned in this specific scene
-    let relevantCharacters = (characters || []).filter((char: any) =>
-      char.name.trim() &&
-      new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
-    );
+    let relevantCharacters: any[] = [];
+
+    if (structuredDescription && structuredDescription.characters) {
+      // Use character names from structured description
+      const sceneCharacterNames = structuredDescription.characters.map((c: any) => c.name.toLowerCase());
+      relevantCharacters = (characters || []).filter((char: any) =>
+        sceneCharacterNames.includes(char.name.toLowerCase())
+      );
+    } else {
+      // Fallback to text matching if no structured description
+      relevantCharacters = (characters || []).filter((char: any) =>
+        char.name.trim() &&
+        new RegExp(`\\b${char.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(sceneDescription)
+      );
+    }
 
     // FALLBACK: If no characters matched but we have characters, use all of them
     // This ensures character consistency even when names aren't explicitly mentioned
@@ -101,12 +178,17 @@ export default async function handler(req: any, res: any) {
       ? `Composition: Use a **${shotType.replace(/_/g, ' ')}** for this scene.`
       : '';
 
+    // Use structured description if available, otherwise fall back to plain text
+    const scenePrompt = structuredDescription
+      ? createDetailedScenePrompt(structuredDescription)
+      : `Scene Description: "${sceneDescription}"`;
+
     parts.push(
       { text: `Your task is to create a single, cohesive illustration for the following scene description. You MUST use the provided reference images to maintain PERFECT CONSISTENCY across all generated scenes.
 
 ${shotTypeInstruction}
 
-Scene Description: "${sceneDescription}"
+${scenePrompt}
 
 **━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
 **🎨 REFERENCE PRIORITY ORDER:**

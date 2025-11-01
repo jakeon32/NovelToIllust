@@ -557,9 +557,10 @@ const App: React.FC = () => {
         }
 
       const sceneDescriptions = await generateScenesFromText(currentStory.novelText);
-      const newScenes: Scene[] = sceneDescriptions.map((desc, index) => ({
+      const newScenes: Scene[] = sceneDescriptions.map((structuredDesc, index) => ({
         id: crypto.randomUUID(),
-        description: desc,
+        description: structuredDesc.summary, // Use summary for backward compatibility
+        structuredDescription: structuredDesc, // Store full structured data
         imageUrl: null,
         isGenerating: false,
         shotType: 'automatic',
@@ -683,6 +684,7 @@ const App: React.FC = () => {
       console.log('🚀 Calling API to generate illustration...');
       const result = await generateIllustration(
         scene.description,
+        scene.structuredDescription,
         latestStory.characters,
         latestStory.backgrounds,
         latestStory.artStyle,

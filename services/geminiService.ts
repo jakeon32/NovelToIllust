@@ -1,4 +1,4 @@
-import type { ImageFile, Character, Background } from '../types';
+import type { ImageFile, Character, Background, StructuredSceneDescription } from '../types';
 
 // API base URL - works both in development and production
 // Empty string = same-origin requests
@@ -26,7 +26,7 @@ export const generateTitleFromText = async (novelText: string): Promise<string> 
   }
 };
 
-export const generateScenesFromText = async (novelText: string): Promise<string[]> => {
+export const generateScenesFromText = async (novelText: string): Promise<StructuredSceneDescription[]> => {
   try {
     const response = await fetch(`${API_BASE}/api/generate-scenes`, {
       method: 'POST',
@@ -80,6 +80,7 @@ export const generatePrompt = async (
 
 export const generateIllustration = async (
   sceneDescription: string,
+  structuredDescription: StructuredSceneDescription | undefined,
   characters: Character[],
   backgrounds: Background[],
   artStyle: ImageFile | null,
@@ -93,6 +94,7 @@ export const generateIllustration = async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sceneDescription,
+        structuredDescription,
         characters,
         backgrounds,
         artStyle,
