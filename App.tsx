@@ -964,7 +964,21 @@ const App: React.FC = () => {
                 </div>
               </div>
             </header>
-            
+
+            {/* Story Title Section */}
+            <div className="mb-6 bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                스토리 제목
+              </label>
+              <input
+                type="text"
+                value={currentStory.title}
+                onChange={(e) => handleUpdateCurrentStory({ title: e.target.value })}
+                className="w-full p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-white placeholder-gray-500"
+                placeholder="스토리 제목을 입력하세요..."
+              />
+            </div>
+
             {error && (
             <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-md relative mb-6" role="alert">
                 <strong className="font-bold">오류: </strong>

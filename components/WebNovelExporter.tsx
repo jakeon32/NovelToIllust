@@ -234,13 +234,6 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
-    .image-caption {
-      margin-top: 0.75rem;
-      font-size: 0.9rem;
-      color: #718096;
-      font-style: italic;
-    }
-
     .footer {
       margin-top: 4rem;
       padding-top: 2rem;
@@ -278,10 +271,8 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
           `<div class="text-section">${escapeHtml(para)}</div>`
         ).join('\n    ');
       } else {
-        const cleanDescription = removeMarkdown(section.sceneDescription || '');
         return `<div class="image-section">
-          <img src="${section.imageUrl}" alt="${escapeHtml(cleanDescription || 'Scene illustration')}" />
-          <div class="image-caption">${escapeHtml(cleanDescription)}</div>
+          <img src="${section.imageUrl}" alt="Scene illustration" />
         </div>`;
       }
     }).join('\n    ')}
@@ -344,24 +335,18 @@ export default function WebNovelExporter({ story, onClose }: WebNovelExporterPro
                   .filter(p => p.length > 0);
 
                 return paragraphs.map((para, pIndex) => (
-                  <div key={`${index}-${pIndex}`} className="mb-4 text-justify indent-4">
+                  <div key={`${index}-${pIndex}`} className="mb-4 text-justify indent-4 text-gray-800 leading-relaxed">
                     {para}
                   </div>
                 ));
               } else {
-                const cleanDescription = removeMarkdown(section.sceneDescription || '');
                 return (
                   <div key={index} className="my-8 text-center">
                     <img
                       src={section.imageUrl}
-                      alt={cleanDescription || 'Scene illustration'}
+                      alt="Scene illustration"
                       className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
                     />
-                    {cleanDescription && (
-                      <p className="mt-2 text-sm text-gray-600 italic">
-                        {cleanDescription}
-                      </p>
-                    )}
                   </div>
                 );
               }
