@@ -588,6 +588,11 @@ const App: React.FC = () => {
     if (!scene.customPrompt) {
       console.log('📝 No custom prompt found, generating prompt first...');
 
+      // Show loading state during prompt generation
+      handleUpdateCurrentStory(prevStory => ({
+        scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, isGenerating: true } : s)
+      }));
+
       try {
         const generatedPrompt = await generatePrompt(
           scene.description,
@@ -600,16 +605,21 @@ const App: React.FC = () => {
         // Save the generated prompt to the scene
         handleUpdateCurrentStory(prevStory => ({
           scenes: prevStory.scenes.map(s =>
-            s.id === sceneId ? { ...s, customPrompt: generatedPrompt } : s
+            s.id === sceneId ? { ...s, customPrompt: generatedPrompt, isGenerating: false } : s
           )
         }));
 
         console.log('✅ Prompt generated and saved:', generatedPrompt.substring(0, 200) + '...');
-        alert('프롬프트가 생성되었습니다. 장면 카드에서 프롬프트를 확인하고 수정한 후 다시 이미지 생성 버튼을 눌러주세요.');
+        // No alert - user can see the prompt in the scene card and edit it
         return; // Stop here, user needs to review the prompt
       } catch (err) {
         console.error('Failed to generate prompt:', err);
         setError('프롬프트 생성에 실패했습니다.');
+
+        // Clear loading state on error
+        handleUpdateCurrentStory(prevStory => ({
+          scenes: prevStory.scenes.map(s => s.id === sceneId ? { ...s, isGenerating: false } : s)
+        }));
         return;
       }
     }
