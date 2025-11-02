@@ -8,6 +8,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Use a new, unique variable name to avoid any possible conflict.
   const { novelText, characters: characterReferences } = req.body;
 
   if (!novelText) {
@@ -21,17 +22,29 @@ export default async function handler(req: any, res: any) {
 **AVAILABLE CHARACTERS:**
 ${characterNames.length > 0 ? characterNames.join(', ') : 'None'}
 
-**CRITICAL RULE: When filling the \`name\` field for a character in your JSON response, you MUST use a name from the \`AVAILABLE CHARACTERS\` list above. Do not translate or create new names.**
+**CRITICAL RULE: When filling the 
+`name`
+ field for a character in your JSON response, you MUST use a name from the 
+`AVAILABLE CHARACTERS`
+ list above. Do not translate or create new names.**
 
 IMPORTANT GUIDELINES FOR SCENE SELECTION:
 
 1. **Contextual Character Presence (NEW RULE)**
    - You must maintain a mental model of who is in the room.
    - If a character enters a location, they are assumed to be present in subsequent scenes in that same location until they are explicitly described as leaving.
-   - When a character is contextually present but not the main actor, include them in the `characters` array with a suitable background action (e.g., `action: 'listening quietly'`, `expression: 'observing'`).
+   - When a character is contextually present but not the main actor, include them in the 
+`sceneCharacters`
+ array with a suitable background action (e.g., 
+`action: 'listening quietly'`
+, 
+`expression: 'observing'`
+).
 
 2. **Intelligent Location Tracking (NEW RULE)**
-   - The `environment.location` MUST be the physical space where the scene's primary action occurs.
+   - The 
+`environment.location`
+ MUST be the physical space where the scene's primary action occurs.
    - Do NOT change the location just because another place is mentioned in dialogue or as a source of a sound. 
    - Example: If characters are in the 'living room' and hear a noise from the 'kitchen', the location for that scene remains 'living room'. A location change only happens when characters physically move to the new location.
 
@@ -65,7 +78,6 @@ IMPORTANT GUIDELINES FOR SCENE SELECTION:
    - Describe what characters are doing WHILE speaking
    - Include their expressions, gestures, body language, and setting
    - Example: "Butler formally reporting to lady at breakfast, morning light streaming through windows, she looks up with interest"
-   - Dialogue-heavy moments often reveal character relationships and emotions - don't skip them!
 
 **STRUCTURED OUTPUT FORMAT:**
 
@@ -73,7 +85,7 @@ For each scene, provide a JSON object with the following structure:
 
 - **summary**: One sentence describing the overall scene
 - **sourceExcerpt**: The exact excerpt from the original novel text that this scene is based on (1-3 sentences from the source)
-- **characters**: Array of characters in the scene, each with:
+- **sceneCharacters**: Array of characters in the scene, each with: 
   - name: Character's name
   - action: What they are physically doing
   - expression: Their facial expression
@@ -94,7 +106,7 @@ For each scene, provide a JSON object with the following structure:
   - tensionLevel: low/medium/high
   - keyFeeling: The primary emotion being conveyed
 - **interactions** (optional, if multiple characters):
-  - characters: Array of character names involved
+  - interactionParticipants: Array of character names involved
   - type: Type of interaction (confrontation/conversation/support/etc)
   - description: How they are interacting
   - physicalDistance: How close/far they are
@@ -129,7 +141,7 @@ ${novelText}
                 properties: {
                   summary: { type: Type.STRING },
                   sourceExcerpt: { type: Type.STRING },
-                  characters: {
+                  sceneCharacters: { // Renamed to avoid conflict
                     type: Type.ARRAY,
                     items: {
                       type: Type.OBJECT,
@@ -180,7 +192,7 @@ ${novelText}
                     items: {
                       type: Type.OBJECT,
                       properties: {
-                        characterNamesInInteraction: {
+                        interactionParticipants: { // Renamed to avoid conflict
                           type: Type.ARRAY,
                           items: { type: Type.STRING }
                         },
@@ -188,11 +200,11 @@ ${novelText}
                         description: { type: Type.STRING },
                         physicalDistance: { type: Type.STRING },
                       },
-                      required: ["characterNamesInInteraction", "type", "description", "physicalDistance"]
+                      required: ["interactionParticipants", "type", "description", "physicalDistance"]
                     }
                   }
                 },
-                required: ["summary", "sourceExcerpt", "characters", "environment", "importantObjects", "mood"]
+                required: ["summary", "sourceExcerpt", "sceneCharacters", "environment", "importantObjects", "mood"]
               }
             }
           },
@@ -204,8 +216,17 @@ ${novelText}
     const jsonString = response.text;
     const result = JSON.parse(jsonString);
 
+    // IMPORTANT: We must now rename `sceneCharacters` back to `characters` so the frontend can understand it.
+    const processedScenes = result.scenes.map((scene: any) => {
+        return {
+            ...scene,
+            characters: scene.sceneCharacters, // Rename sceneCharacters to characters
+            sceneCharacters: undefined, // Remove the old key
+        };
+    });
+
     if (result && Array.isArray(result.scenes)) {
-      return res.status(200).json({ scenes: result.scenes });
+      return res.status(200).json({ scenes: processedScenes });
     }
 
     return res.status(500).json({ error: 'Invalid response from AI' });
