@@ -8,13 +8,13 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { novelText, characters } = req.body;
+  const { novelText, characters: characterReferences } = req.body;
 
   if (!novelText) {
     return res.status(400).json({ error: 'Novel text is required' });
   }
 
-  const characterNames = (characters || []).map((c: any) => c.name).filter(Boolean);
+  const characterNames = (characterReferences || []).map((c: any) => c.name).filter(Boolean);
 
   const prompt = `You are an expert illustration director for novels. Your task is to select the MOST VISUALLY IMPACTFUL and NARRATIVELY SIGNIFICANT moments from the following novel excerpt to be turned into illustrations.
 
