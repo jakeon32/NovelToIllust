@@ -8,13 +8,20 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { novelText } = req.body;
+  const { novelText, characters } = req.body;
 
   if (!novelText) {
     return res.status(400).json({ error: 'Novel text is required' });
   }
 
+  const characterNames = (characters || []).map((c: any) => c.name).filter(Boolean);
+
   const prompt = `You are an expert illustration director for novels. Your task is to select the MOST VISUALLY IMPACTFUL and NARRATIVELY SIGNIFICANT moments from the following novel excerpt to be turned into illustrations.
+
+**AVAILABLE CHARACTERS:**
+${characterNames.length > 0 ? characterNames.join(', ') : 'None'}
+
+**CRITICAL RULE: When filling the \`name\` field for a character in your JSON response, you MUST use a name from the \`AVAILABLE CHARACTERS\` list above. Do not translate or create new names.**
 
 IMPORTANT GUIDELINES FOR SCENE SELECTION:
 

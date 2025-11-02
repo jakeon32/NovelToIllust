@@ -26,12 +26,12 @@ export const generateTitleFromText = async (novelText: string): Promise<string> 
   }
 };
 
-export const generateScenesFromText = async (novelText: string): Promise<StructuredSceneDescription[]> => {
+export const generateScenesFromText = async (novelText: string, characters: Character[]): Promise<StructuredSceneDescription[]> => {
   try {
     const response = await fetch(`${API_BASE}/api/generate-scenes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ novelText }),
+      body: JSON.stringify({ novelText, characters }),
     });
 
     if (!response.ok) {

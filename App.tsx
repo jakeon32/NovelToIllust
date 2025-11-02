@@ -570,7 +570,7 @@ const App: React.FC = () => {
             title = await generateTitleFromText(currentStory.novelText);
         }
 
-      const sceneDescriptions = await generateScenesFromText(currentStory.novelText);
+      const sceneDescriptions = await generateScenesFromText(currentStory.novelText, currentStory.characters);
 
       // Post-processing for character continuity
       let currentLocation = null;
