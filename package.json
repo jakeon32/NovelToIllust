@@ -6,9 +6,7 @@
   "scripts": {
     "dev": "vercel dev",
     "dev:vite": "vite",
-    "build:frontend": "vite build",
-    "build:backend": "tsc --project tsconfig.api.json",
-    "vercel-build": "npm run build:backend && npm run build:frontend",
+    "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
