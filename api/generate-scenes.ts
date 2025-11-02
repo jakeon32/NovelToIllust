@@ -25,7 +25,17 @@ ${characterNames.length > 0 ? characterNames.join(', ') : 'None'}
 
 IMPORTANT GUIDELINES FOR SCENE SELECTION:
 
-1. **Prioritize Visual Action over Dialogue**
+1. **Contextual Character Presence (NEW RULE)**
+   - You must maintain a mental model of who is in the room.
+   - If a character enters a location, they are assumed to be present in subsequent scenes in that same location until they are explicitly described as leaving.
+   - When a character is contextually present but not the main actor, include them in the `characters` array with a suitable background action (e.g., `action: 'listening quietly'`, `expression: 'observing'`).
+
+2. **Intelligent Location Tracking (NEW RULE)**
+   - The `environment.location` MUST be the physical space where the scene's primary action occurs.
+   - Do NOT change the location just because another place is mentioned in dialogue or as a source of a sound. 
+   - Example: If characters are in the 'living room' and hear a noise from the 'kitchen', the location for that scene remains 'living room'. A location change only happens when characters physically move to the new location.
+
+3. **Prioritize Visual Action over Dialogue**
    - Choose moments where characters are DOING something, not just talking
    - Focus on facial expressions, body language, and physical interactions
    - Example: Instead of "They discussed the plan", choose "She slammed her fist on the table, eyes blazing"
