@@ -80,15 +80,6 @@ function createSceneInstruction(structured: any, previousScene: any, shotType: s
   if (shotType && shotType !== 'automatic') {
     text += `*   **Composition:** Use a **${shotType.replace(/_/g, ' ')}**.\n`;
   }
-
-  // Simplified continuity note
-  if (previousScene) {
-      const prevLocation = previousScene.environment?.location?.toLowerCase().trim();
-      const currentLocation = structured.environment?.location?.toLowerCase().trim();
-      if (prevLocation && currentLocation && prevLocation === currentLocation) {
-        text += `*   **Continuity Note:** Characters from the previous scene may still be present if not explicitly stated otherwise.\n`;
-      }
-  }
   return text;
 }
 
