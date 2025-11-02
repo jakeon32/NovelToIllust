@@ -138,7 +138,7 @@ export default async function handler(req: any, res: any) {
       promptText += formatStructuredArtStyleAnalysis(artStyleStructuredAnalysis);
     }
 
-    promptText += `\n---\n## 📚 REFERENCE APPENDIX\nUse the following reference details to ensure perfect consistency for characters and backgrounds.\n`;
+    promptText += `\n---\n## 📚 REFERENCE APPENDIX\n**CRITICAL RULE FOR USING REFERENCES:** Use the provided reference images and descriptions ONLY to understand the physical appearance (face, hair, body, clothing) of characters and the general style of backgrounds. You MUST IGNORE the specific POSE, ACTION, and COMPOSITION of the reference images. The character's actual pose, action, and expression MUST be determined by the \`## 🎨 SCENE TO ILLUSTRATE\` section above.\n\nUse the following reference details to ensure perfect consistency for characters and backgrounds.\n`;
 
     if (relevantCharacters.length > 0) {
       promptText += `\n### CHARACTERS\n`;
