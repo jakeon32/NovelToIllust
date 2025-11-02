@@ -170,8 +170,7 @@ ${novelText}
                     type: Type.ARRAY,
                     items: {
                       type: Type.OBJECT,
-                      properties: {
-                        item: { type: Type.STRING },
+                      properties: { item: { type: Type.STRING },
                         description: { type: Type.STRING },
                         importance: { type: Type.STRING },
                       },
