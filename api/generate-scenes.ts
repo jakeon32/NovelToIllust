@@ -40,27 +40,27 @@ IMPORTANT GUIDELINES FOR SCENE SELECTION:
    - Focus on facial expressions, body language, and physical interactions
    - Example: Instead of "They discussed the plan", choose "She slammed her fist on the table, eyes blazing"
 
-2. **Capture Emotional Turning Points**
+4. **Capture Emotional Turning Points**
    - Select scenes where emotions shift dramatically
    - Moments of realization, shock, joy, or despair
    - The character's internal state should be visible in their actions/expressions
 
-3. **Include Atmospheric Setting**
+5. **Include Atmospheric Setting**
    - Choose scenes where the environment contributes to the mood
    - Lighting, weather, or location that enhances the story
    - Describe how the setting affects the characters
 
-4. **Ensure Story Flow Coverage**
+6. **Ensure Story Flow Coverage**
    - Distribute scenes across: introduction → development → climax → resolution
    - Each scene should advance understanding of the plot
    - Avoid clustering too many scenes in one part of the story
 
-5. **Character Relationships & Interactions**
+7. **Character Relationships & Interactions**
    - Show relationships through positioning, eye contact, distance
    - Capture moments of connection, conflict, or tension between characters
    - Physical proximity and body language reveal dynamics
 
-6. **Include Important Dialogue Scenes (With Visual Context)**
+8. **Include Important Dialogue Scenes (With Visual Context)**
    - Important conversations CAN and SHOULD be illustrated
    - Describe what characters are doing WHILE speaking
    - Include their expressions, gestures, body language, and setting
