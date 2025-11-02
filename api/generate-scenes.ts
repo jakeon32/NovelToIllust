@@ -180,7 +180,7 @@ ${novelText}
                     items: {
                       type: Type.OBJECT,
                       properties: {
-                        characters: {
+                        characterNamesInInteraction: {
                           type: Type.ARRAY,
                           items: { type: Type.STRING }
                         },
@@ -188,7 +188,7 @@ ${novelText}
                         description: { type: Type.STRING },
                         physicalDistance: { type: Type.STRING },
                       },
-                      required: ["characters", "type", "description", "physicalDistance"]
+                      required: ["characterNamesInInteraction", "type", "description", "physicalDistance"]
                     }
                   }
                 },
