@@ -133,7 +133,7 @@ export default async function handler(req: any, res: any) {
     let promptText = `Your primary task is to create a single, high-quality illustration for the following scene.\n\n---\n## 🎨 SCENE TO ILLUSTRATE\n`;
     promptText += createSceneInstruction(structuredDescription, previousSceneDescription, shotType);
 
-    if (artStyleDescription) {
+    if (artStyleStructuredAnalysis) {
       promptText += `\n---\n## 🖼️ ART STYLE\nStrictly adhere to the following art style for the entire illustration.\n`;
       promptText += formatStructuredArtStyleAnalysis(artStyleStructuredAnalysis);
     }
