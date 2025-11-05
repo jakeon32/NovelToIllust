@@ -70,7 +70,7 @@ export default async function handler(req: any, res: any) {
     const response = await ai.models.generateContent({
       model: sceneGenerationModel,
       contents: prompt,
-      config: {
+      generationConfig: {
         // By requesting a JSON mime type, we instruct the model to be extra careful in its output format.
         responseMimeType: "application/json",
       },
