@@ -62,16 +62,13 @@ export default async function handler(req: any, res: any) {
     - NEVER generate fewer than 4 scenes.
 
     Novel Text:
-    ```
     ${novelText}
-    ```
     `;
 
     const response = await ai.models.generateContent({
       model: sceneGenerationModel,
       contents: prompt,
-      generationConfig: {
-        // By requesting a JSON mime type, we instruct the model to be extra careful in its output format.
+      config: {
         responseMimeType: "application/json",
       },
     });
