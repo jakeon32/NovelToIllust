@@ -146,11 +146,13 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDe
           {/* Custom Prompt Section - only show if prompt exists or user wants to edit */}
           {scene.customPrompt && (
             <div className="mt-4 border-t border-gray-700 pt-4">
-              <button
-                onClick={() => setIsPromptExpanded(!isPromptExpanded)}
-                className="flex items-center justify-between w-full text-left text-xs font-medium text-gray-400 hover:text-gray-300 transition-colors"
-              >
-                <span>생성 프롬프트 {isPromptExpanded ? '▼' : '▶'}</span>
+              <div className="flex items-center justify-between w-full text-xs font-medium text-gray-400">
+                <button
+                  onClick={() => setIsPromptExpanded(!isPromptExpanded)}
+                  className="text-left hover:text-gray-300 transition-colors"
+                >
+                  생성 프롬프트 {isPromptExpanded ? '▼' : '▶'}
+                </button>
                 <div className="flex items-center gap-2">
                   {!isEditingPrompt && (
                     <>
@@ -180,7 +182,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onView, onDe
                     </>
                   )}
                 </div>
-              </button>
+              </div>
 
               {isPromptExpanded && (
                 <div className="mt-2">

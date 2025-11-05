@@ -20,16 +20,12 @@ export default async function handler(req: any, res: any) {
     const characterNames = (characters || []).map((c: any) => c.name).filter(Boolean);
 
     // The prompt now describes the desired JSON structure directly.
-    const prompt = `You are an expert illustration director for novels. Your task is to analyze the following novel excerpt and generate a JSON object containing a list of scenes. 
+    const prompt = `You are an expert illustration director for novels. Your task is to analyze the following novel excerpt and generate a JSON object containing a list of scenes.
 
     **AVAILABLE CHARACTERS:**
     ${characterNames.length > 0 ? characterNames.join(', ') : 'None'}
 
-    **CRITICAL RULE: When filling the 
-`name`
- field for a character in your JSON response, you MUST use a name from the 
-`AVAILABLE CHARACTERS`
- list above. Do not translate or create new names.**
+    **CRITICAL RULE: When filling the "name" field for a character in your JSON response, you MUST use a name from the "AVAILABLE CHARACTERS" list above. Do not translate or create new names.**
 
     IMPORTANT GUIDELINES FOR SCENE SELECTION:
 
