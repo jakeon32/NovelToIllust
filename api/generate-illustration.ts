@@ -105,11 +105,13 @@ export default async function handler(req: any, res: any) {
       parts.push({ inlineData: { mimeType: artStyle.mimeType, data: artStyle.base64 } });
     }
 
-    relevantBackgrounds.forEach(bg => {
-      if (bg.image) {
-        parts.push({ inlineData: { mimeType: bg.image.mimeType, data: bg.image.base64 } });
-      }
-    });
+    // NOTE: Background images are intentionally NOT included to prevent composition copying
+    // Only structured text descriptions are used to preserve scene composition independence
+    // relevantBackgrounds.forEach(bg => {
+    //   if (bg.image) {
+    //     parts.push({ inlineData: { mimeType: bg.image.mimeType, data: bg.image.base64 } });
+    //   }
+    // });
 
     relevantCharacters.forEach(char => {
       if (char.image) {
