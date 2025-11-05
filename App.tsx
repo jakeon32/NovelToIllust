@@ -186,13 +186,31 @@ const App: React.FC = () => {
       }
     };
 
-    // Debounce saves to avoid too many writes
+    // Debounce saves to avoid too many writes (reduced delay for faster saves)
     const timeoutId = setTimeout(() => {
       saveStoriesAsync();
-    }, 500);
+    }, 200);
 
     return () => clearTimeout(timeoutId);
   }, [stories, user]);
+
+  // Save immediately when leaving the page (prevent data loss)
+  useEffect(() => {
+    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
+      if (stories.length > 0) {
+        try {
+          // Save to IndexedDB immediately
+          await saveStories(stories);
+          console.log('🚀 Emergency save to IndexedDB before page unload');
+        } catch (error) {
+          console.error('Failed to emergency save:', error);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [stories]);
 
   const currentStory = stories.find(s => s.id === currentStoryId);
 
